@@ -1,0 +1,39 @@
+#include "CRWManage.h"
+#include "Information_Widget.h"
+#include <QDateTime>
+#include <QCoreApplication>
+
+CRWManage::CRWManage(void)
+{
+
+}
+
+CRWManage::~CRWManage(void)
+{
+
+}
+//------------------------------------------------------------
+//--Write Inp
+//------------------------------------------------------------
+//--鍧囧竷鑽疯浇
+bool CRWManage::WriteUniformLoadInpFile(QFile *file,Gravity_Inp m_Gravity,QList<SectionInpS> m_nodeList)
+{
+	QString data;
+    if (m_Gravity.Value==""||m_Gravity.direation==""){
+        return false;
+    }
+	int IJ=m_nodeList.size();
+	if(IJ<=0)return false;
+
+    data = "*DLOAD\n";
+    file->write(data.toAscii());
+
+    for (int i=0; i<IJ; i++)
+    {
+        data =m_nodeList.at(i).strelset+",GRAV,"+m_Gravity.Value+m_Gravity.direation+"\n";
+        file->write(data.toAscii());
+    }
+     file->write("** \n");
+     return true;
+}
+//--鑺傜偣銆佸崟鍏冦€侀泦鍚堬紙鑺傜偣銆佸崟鍏冦€佽〃闈

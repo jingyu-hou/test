@@ -1,0 +1,22 @@
+#ifndef  AD_DEFINED
+#define  AD_DEFINED
+
+#include <QString>
+#include <QStringList>
+#include <QVector>
+#include <QMenu>
+using namespace std;
+
+
+#define PLOTOPTNAME "/CommonPlot.cfg"
+#define PLOTOPTNAMESTART "PlotOption"
+#define READRESULT "/CommonVTKtext.cfg"
+#define READRESULTSTART "ReadResult"
+enum MaterialENUM{
+	M_ENUM_DENSITY=0,
+	M_ENUM_ELASTIC=1,
+	M_ENUM_PLASTIC=2,
+	M_ENUM_EXPANS=3,
+	M_ENUM_CONDUCT=4,
+	M_ENUM_SPECIFICE=5,
+    M_ENUM_METALPOWDER=6,//绮夋湯鐗规€

@@ -1,0 +1,7 @@
+# Linux shared library symlinks — Windows git cannot read them
+*.so
+*.so.*
+!*.so.*.*.*
+
+# Symlink in Debian doc directory
+all/gui/local_deps/root/usr/share/doc/libxcb-shape0/changelog.Debian.gz

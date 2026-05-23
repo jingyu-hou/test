@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/image">
+        <file>resource/ribbonPannelOptionButton.png</file>
+        <file>resource/ArrowDown.png</file>
+        <file>resource/ArrowMore.png</file>
+        <file>resource/ArrowUp.png</file>
+        <file>resource/welcme.png</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>resource/default.qss</file>
+    </qresource>
+</RCC>
