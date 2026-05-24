@@ -3,5 +3,13 @@
 *.so.*
 !*.so.*.*.*
 
+# Build artifacts
+all/gui/tmp/
+all/gui/WeICME
+all/gui/Makefile
+
+# Backups of replaced commercial-dependent source files
+*.disabled
+
 # Symlink in Debian doc directory
 all/gui/local_deps/root/usr/share/doc/libxcb-shape0/changelog.Debian.gz

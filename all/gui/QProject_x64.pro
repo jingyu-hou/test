@@ -7,19 +7,17 @@ MOC_DIR = $$TMPDIR
 RCC_DIR = $$TMPDIR
 UI_DIR = $$TMPDIR
 VTK_DIR = $$PWD/../components/open_source/vtk
-VISLIB_DIR = $$PWD/../components/commercial/vis/lib_linux
-Chart_DIR = $$PWD/../components/commercial/chartdirector
 FFMPEG_DIR = $$PWD/../components/open_source/ffmpeg
 
-INCLUDEPATH += $$VTK_DIR/include/vtk-5.4 $$PWD/../components/commercial/vis/include $$Chart_DIR/include $$FFMPEG_DIR/include
+# Commercial ChartDirector and VIS replaced with open-source implementations.
+# See opensource_replacements.pri for details.
+INCLUDEPATH += $$VTK_DIR/include/vtk-5.4 $$FFMPEG_DIR/include
 LIBS += -L$$VTK_DIR/lib/vtk-5.4 -lQVTK -lvtkGraphics -lvtkQtChart -lvtkHybrid -lvtkRendering \
 			-lvtkalglib -lvtkImaging -lvtksqlite -lvtkCommon -lvtkInfovis -lvtksys \
 			-lvtkDICOMParser -lvtkIO -lvtktiff -lvtkexoIIc -lvtkjpeg -lvtkverdict -lvtkexpat \
 			-lvtklibxml2 -lvtkViews -lvtkFiltering -lvtkmetaio -lvtkVolumeRendering \
 			-lvtkfreetype -lvtkNetCDF -lvtkWidgets -lvtkftgl -lvtkzlib \
 			-lvtkGenericFiltering -lvtkpng -lvtkGeovis -lvtkproj4 -lvtkParallel
-LIBS += -L$$VISLIB_DIR -lvtkVISCommon -lvtkVISUnstructuredGrid -lvtkVISXYPlot
-LIBS += -L$$Chart_DIR/libLinux -lchartdir
 LIBS += -L$$FFMPEG_DIR/lib -lavcodec -lavdevice -lavfilter -lavformat\
 		   -lavutil -lswresample -lswscale
 
@@ -39,6 +37,8 @@ SOURCES += $$PWD/src/*.cpp \
            $$PWD/src/Language/*.cpp
 
 LIBS += -L$$SARibbonBar_DIR/lib -lSARibbonBar
-QMAKE_LFLAGS += -Wl,-rpath,\$$ORIGIN/../components/open_source/saribbon/lib
+QMAKE_LFLAGS += -Wl,-rpath,$$PWD/../components/open_source/saribbon/lib
 
 RESOURCES += welcme.qrc
+
+include($$PWD/opensource_replacements.pri)

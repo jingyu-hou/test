@@ -590,7 +590,7 @@ void MainWindow::InitTree()
 void MainWindow::creatRibbon()
 { 
     //setWindowTitle(tr("WelCME"));
-    this->setWindowFlags(Qt::FramelessWindowHint);
+    // Keep the native window frame so the WSLg/Windows title bar remains draggable.
 	m_ribbon= ribbonBar();
 	m_FilBtn=m_ribbon->applitionButton();
 	m_FilBtn->setText(tr(" 文件"));
