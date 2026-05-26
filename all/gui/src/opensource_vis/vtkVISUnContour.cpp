@@ -45,6 +45,14 @@ void vtkVISUnContour::CreateContourDisplay(char* scalarName, char* vectorName)
         scalarRange_[1] = _source->scalarRange[contourScalarIndex_][1];
     }
 
+    // Set scalar data on the grid before building the pipeline
+    if (_source->scalarSource && _source->scalarSource[contourScalarIndex_]
+        && _source->scalarSource[contourScalarIndex_]->GetDataSize() != 0)
+        _source->unstruGrid->GetPointData()->SetScalars(_source->scalarSource[contourScalarIndex_]);
+    else if (_source->cellScalarSource_ && _source->cellScalarSource_[contourScalarIndex_]
+             && _source->cellScalarSource_[contourScalarIndex_]->GetDataSize() != 0)
+        _source->unstruGrid->GetCellData()->SetScalars(_source->cellScalarSource_[contourScalarIndex_]);
+
     // Build geometry filter
     vtkGeometryFilter* geo = vtkGeometryFilter::New();
     geo->SetInput(_source->unstruGrid);

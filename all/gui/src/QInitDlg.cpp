@@ -3,7 +3,7 @@
 QInitDlg::QInitDlg(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle("初始化");
+    setWindowTitle(QString::fromUtf8("初始化"));
     QWidget *Hwid1 = new QWidget(this);
     QHBoxLayout *Hlayout = new QHBoxLayout();
     m_ApplyBtn = new QPushButton(tr("应用"));

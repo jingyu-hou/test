@@ -14,7 +14,7 @@ QHPSolveSetDlg::~QHPSolveSetDlg()
 
 void QHPSolveSetDlg::CreatGUI()
 {
-    setWindowTitle(tr("求解器设置"));
+    setWindowTitle(QString::fromUtf8("求解器设置"));
     m_Tab1=new QWidget();//(tr("ddd1"));
     //m_checkBoxHostStress = new QCheckBox(tr("主应力"),m_Tab1);
     //m_checkBoxNodeTemper = new QCheckBox(tr("节点温度"),m_Tab1);

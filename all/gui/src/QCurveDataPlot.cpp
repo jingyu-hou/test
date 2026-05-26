@@ -7,7 +7,7 @@
 QCurveDataPlot::QCurveDataPlot(QWidget *parent)
 : QDialog(parent)
 {
-    setWindowTitle("新建");
+    setWindowTitle(QString::fromUtf8("新建"));
     QWidget *Hwid1 = new QWidget(this);
     Hwid1->setMaximumHeight(300);//去掉黄色LOGO
     QWidget *HwidBtn = new QWidget(this);

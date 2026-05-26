@@ -1,4 +1,29 @@
 #include "QPostWigFile.h"
+#include <QFileInfo>
+#include "Information_Widget.h"
+
+static QString SafeGetOpenFileName(QWidget *parent, const QString &caption, const QString &dir, const QString &filter)
+{
+    static QFileDialog *dlg = NULL;
+    if (!dlg) {
+        dlg = new QFileDialog(parent);
+        dlg->setOption(QFileDialog::DontUseNativeDialog, true);
+        dlg->setFileMode(QFileDialog::ExistingFile);
+        dlg->setAcceptMode(QFileDialog::AcceptOpen);
+    }
+    dlg->setWindowTitle(caption);
+    dlg->setDirectory(dir);
+    dlg->setNameFilter(filter);
+    dlg->selectFile(QString());
+    if (dlg->exec() != QDialog::Accepted) {
+        return QString();
+    }
+    QStringList files = dlg->selectedFiles();
+    if (files.isEmpty()) {
+        return QString();
+    }
+    return files.first();
+}
 
  int QPostWigFile::m_WigFrdNumOld=0;
 QPostWigFile::QPostWigFile(QWidget *parent, VTKColorS* mColor)
@@ -77,34 +102,40 @@ void QPostWigFile::SwitchActorPickSlot(bool b)
 }
 void QPostWigFile::BtnOpenFrdSlot()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Read Frd/Dat from file", "", "Frd Files (*.Frd *.frd);;Dat Files (*.Dat *.dat)");
-    if (fileName.size() == 0)return;
-	QFile file(fileName);
+    QString fileName = SafeGetOpenFileName(this, "Read Frd/Dat from file", "", "Frd Files (*.Frd *.frd);;Dat Files (*.Dat *.dat)");
+    if (fileName.isEmpty()) return;
     m_ReadEdit->setText(fileName);
-    QStringList fileName2=fileName.split(".",QString::SkipEmptyParts);
-	if(fileName2.at(1).toLower()=="frd")readOpenFrd(fileName);
-	else if (fileName2.at(1).toLower()=="dat")readOpenDat(fileName);
-   
+    QString suffix = QFileInfo(fileName).suffix().toLower();
+    if (suffix == "frd") readOpenFrd(fileName);
+    else if (suffix == "dat") readOpenDat(fileName);
 }
 bool QPostWigFile::readOpenFrd(QString fileName)
 {
     QFrdDataPro	m_FrdDataPro;
     resultFrdS m_resultFrd;
     bool ret=m_FrdDataPro.ReadFileData(frdVIS_, fileName, m_resultFrd);
-    if (!ret) return false;
-    frdVIS_.Step4_SetupFrd();
-    //frdVIS_.SetMeshVisible(0,true,m_ClrInit);
-   const map<QString, QStringList>* scaler=frdVIS_.GetScalarInfo();
-   scaler=frdVIS_.GetScalarInfo();
-   if (scaler!=NULL)
-   {
-	   //emit emitDataOk();
-	   emit emitDataMenu(scaler);   
-	   emit frdDataOk(&frdVIS_);
-   }
-    m_ListActorWiget->upDataListWidget(frdVIS_.GetGridIds());
-    frdVIS_.ResetCamera();
-    frdVIS_.Update();
+    if (!ret) {
+        Information_Widget::GetInstance()->ShowInformation("FRD file read failed.");
+        return false;
+    }
+    if (!frdVIS_.Step4_SetupFrd()) {
+        Information_Widget::GetInstance()->ShowInformation("FRD data setup failed.");
+        return false;
+    }
+    const map<QString, QStringList>* scaler=frdVIS_.GetScalarInfo();
+    if (scaler!=NULL)
+    {
+        emit emitDataMenu(scaler);
+        emit frdDataOk(&frdVIS_);
+    }
+    const vector<int>* gridIds = frdVIS_.GetGridIds();
+    if (gridIds) {
+        m_ListActorWiget->upDataListWidget(gridIds);
+    }
+    if (frdVIS_.GetBindedRenderer()) {
+        frdVIS_.ResetCamera();
+        frdVIS_.Update();
+    }
     return true;
 }
 

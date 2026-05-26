@@ -555,7 +555,7 @@ QTCurveDataPlot::QTCurveDataPlot(QWidget *parent)
     //setMaximumHeight(400);//去掉黄色logo
     m_Hwid1=new QWidget(this);
     m_HwidCommon=new QWidget(this);
-    setWindowTitle("新建");
+    setWindowTitle(QString::fromUtf8("新建"));
     m_Hwid1->setMaximumHeight(300);//去掉黄色logo
     m_HLayout3= new QHBoxLayout(m_HwidCommon);
     m_TabAddBtn = new QPushButton(tr("增加"),m_HwidCommon);
@@ -623,7 +623,7 @@ QTCurveDataPlot::QTCurveDataPlot(QWidget *parent, int PlotId)
     m_Hwid1=new QWidget(this);
     m_HwidCommon=new QWidget(this);
     m_Hwid1->setMaximumHeight(300);//去掉黄色logo
-    setWindowTitle("新建");
+    setWindowTitle(QString::fromUtf8("新建"));
     m_HLayout3= new QHBoxLayout(m_HwidCommon);
     m_TabAddBtn = new QPushButton(tr("增加"),m_HwidCommon);
     m_TabDelBtn = new QPushButton(tr("删除"),m_HwidCommon);

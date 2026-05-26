@@ -171,6 +171,7 @@ public:
 
 	void setActorList(QStringList);
 private:
+    QStringList activeActorList() const;
     QTabWidget *m_tabView;
 	QStringList ActorListId_;
 signals:

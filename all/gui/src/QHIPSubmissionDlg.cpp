@@ -8,7 +8,7 @@ QHIPSubmissionDlg::QHIPSubmissionDlg(QWidget *parent)
 
 QHIPSubmissionDlg::~QHIPSubmissionDlg()
 {
-    setWindowTitle(tr("提交计算"));
+    setWindowTitle(QString::fromUtf8("提交计算"));
 }
 
 void QHIPSubmissionDlg::CreatGUI()

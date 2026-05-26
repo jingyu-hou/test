@@ -3,7 +3,7 @@
 QC_onst::QC_onst(QWidget *parent1)
       : QDialog(parent1)
 {
-  setWindowTitle("热交换");
+  setWindowTitle(QString::fromUtf8("热交换"));
   HExchangeLE=new QLineEdit();
   HExchangeLE->setText("");
 
@@ -65,7 +65,7 @@ QC_onst::~QC_onst()
 QAdvancedOptions::QAdvancedOptions(QWidget *parent1)
       : QDialog(parent1)
 {
-  setWindowTitle("高级选项");
+  setWindowTitle(QString::fromUtf8("高级选项"));
   QWidget *Data = new QWidget(this);
   QWidget *Data1 = new QWidget(this);
   QWidget *Data12 = new QWidget(this);
@@ -165,7 +165,7 @@ QAdvancedOptions::~QAdvancedOptions()
 ContactHelp::ContactHelp(QWidget *parent1)
       : QDialog(parent1)
 {
-  setWindowTitle("提示");
+  setWindowTitle(QString::fromUtf8("提示"));
   QTextEdit *Value1=new QTextEdit();
   Value1->setText("①法向刚度和切向刚度：材料抵抗法向变形和剪切变形的能力,一般情况下不需要设置，"
 	  "求解器会自动给定,当遇到穿透情况可查找关于法向和切向刚度取值说明的相关文件或者查看帮助文档。"
@@ -202,7 +202,7 @@ QForgingContactDlg::QForgingContactDlg(QWidget *parent)
 		}
 	}
 	//初始化索引结束
-    setWindowTitle("接触关系");
+    setWindowTitle(QString::fromUtf8("接触关系"));
     QHBoxLayout *Hlayout = new QHBoxLayout();
     QHBoxLayout *Hlayout2 = new QHBoxLayout();
 

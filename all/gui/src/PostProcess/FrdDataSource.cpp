@@ -26,6 +26,7 @@ FrdDataSource::FrdDataSource()
     pointResults_ = 0;
     this->scalarRange_ = 0;
 	varHeaderScalarMap_.clear();
+    scalarNumber_ = 0;
 }
 
 FrdDataSource::~FrdDataSource()
@@ -199,6 +200,7 @@ bool FrdDataSource::Step3_InitResults(_RESULT_STEP_S_ *rStruct)
         else
         {
             int s = resultVec_.size();
+            if (s < 3)  continue;
             vtkDoubleArray *darry1 = resultVec_[s-3];
             vtkDoubleArray *darry2 = resultVec_[s-2];
             vtkDoubleArray *darry3 = resultVec_[s-1];
@@ -384,12 +386,7 @@ vtkUnstructuredGrid* FrdDataSource::BuildDisplacementGrid(int gridId, const QStr
 
 const map<QString, QStringList>* FrdDataSource::GetScalarInfo()
 {
-	if (&varHeaderScalarMap_!=0){
-		return &varHeaderScalarMap_;
-	}else{ 
-		return 0;
-	}
-    
+    return &varHeaderScalarMap_;
 }
 
 const vector<int>* FrdDataSource::GetGridIds()

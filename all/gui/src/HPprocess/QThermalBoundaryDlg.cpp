@@ -3,7 +3,7 @@
 QTBConst::QTBConst(QWidget *parent1)
       : QDialog(parent1)
 {
-  setWindowTitle("常数");
+  setWindowTitle(QString::fromUtf8("常数"));
   ConstMotionParameters=new QLineEdit();
   ConstMotionParameters->setText("");
 
@@ -78,7 +78,7 @@ QTBConst::~QTBConst()
 		 }
 	 }
 	//初始化索引结束
-	 setWindowTitle("热边界");
+	 setWindowTitle(QString::fromUtf8("热边界"));
 	 QHBoxLayout *Hlayout = new QHBoxLayout();
      QHBoxLayout *Hlayout2 = new QHBoxLayout();
 

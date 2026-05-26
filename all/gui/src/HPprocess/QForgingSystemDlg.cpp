@@ -3,7 +3,7 @@
 QFSConst::QFSConst(QWidget *parent1)
       : QDialog(parent1)
 {
-  setWindowTitle("运动参数");
+  setWindowTitle(QString::fromUtf8("运动参数"));
   ConstMotionParameters=new QLineEdit();
   ConstMotionParameters->setText("");
 
@@ -76,7 +76,7 @@ QForgingSystemDlg::QForgingSystemDlg(QWidget *parent)
 	//初始化索引结束
 	FSNumber=0;
 
-	setWindowTitle("锻造制度");
+	setWindowTitle(QString::fromUtf8("锻造制度"));
 	QHBoxLayout *Hlayout1= new QHBoxLayout();
     QHBoxLayout *Hlayout2= new QHBoxLayout();
     QVBoxLayout *Vlayout = new QVBoxLayout();
@@ -695,7 +695,7 @@ void QForgingSystemDlg::ShowFS3(int styleB)
 	m_TableWiget->setHorizontalHeaderLabels(strList);
 	int NRow=m_TableWiget->rowCount();
 	if (styleB ==0){//凝固;
-		setWindowTitle("运动边界");
+		setWindowTitle(QString::fromUtf8("运动边界"));
 		m_TableWiget->setColumnHidden(0,false);
 		m_TableWiget->setColumnHidden(1,false);
 		m_TableWiget->setColumnHidden(2,false);
@@ -704,7 +704,7 @@ void QForgingSystemDlg::ShowFS3(int styleB)
 		m_TableWiget->setColumnHidden(5,false);
 		m_TableWiget->setColumnHidden(6,true);
 	}else if(styleB==2){//锻造
-		setWindowTitle("锻造制度");
+		setWindowTitle(QString::fromUtf8("锻造制度"));
 		m_TableWiget->setColumnHidden(0,false);
 		m_TableWiget->setColumnHidden(1,false);
 		m_TableWiget->setColumnHidden(2,false);

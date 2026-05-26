@@ -29,7 +29,8 @@ FrdDataVIS::~FrdDataVIS()
 void FrdDataVIS::InitRenderer(vtkRenderer *renderer)
 {
     renderer_ = renderer;
-    renWin_ = renderer_->GetRenderWindow();
+    if (renderer_)  renWin_ = renderer_->GetRenderWindow();
+    else renWin_ = 0;
 }
 
 vtkRenderer* FrdDataVIS::GetBindedRenderer()
@@ -39,7 +40,7 @@ vtkRenderer* FrdDataVIS::GetBindedRenderer()
 
 void FrdDataVIS::Update()
 {
-    if (renWin_)  renWin_->Render();
+    if (renderer_ && renWin_)  renWin_->Render();
 }
 
 void FrdDataVIS::Clean()
@@ -166,7 +167,7 @@ void FrdDataVIS::SetShadeVisible(int gridId, bool visible, VTKColorS tmpClr)
 //--reset camera
 void FrdDataVIS::ResetCamera()
 {
-    renderer_->ResetCamera();
+    if (renderer_)  renderer_->ResetCamera();
 }
 //--add AVI begin
 int FrdDataVIS::StartAVI(QString name,int rate)
@@ -576,7 +577,7 @@ void FrdDataVIS::createActor()
     m_geoFilter->SetInput(vbj->unstruGrid);
     m_geoFilter->ReleaseDataFlagOn();
     vtkFeatureEdges *edges =vtkFeatureEdges::New();
-    edges->SetInput(m_geoFilter->GetOutput());
+    edges->SetInputConnection(m_geoFilter->GetOutputPort());
     edges->ReleaseDataFlagOn();
     edges->BoundaryEdgesOn();
     edges->ColoringOff();
@@ -667,17 +668,28 @@ void FrdDataVIS::UpdataSelectActor(vtkActor *actor)
 //--actor show or hide
 void FrdDataVIS::AcotrVisibility(bool f)
 {
-    createActor();
-    QMapIterator<int,OutLineS> it(m_OutLineS);
-    if (f){
-        while (it.hasNext()){
-            it.next();
-            m_OutLineS[it.key()].vActor->VisibilityOn();  
+    VTKColorS outlineColor;
+    outlineColor.r = 0.0;
+    outlineColor.g = 0.0;
+    outlineColor.b = 0.0;
+
+    const vector<int> *gridIds = GetGridIds();
+    if (gridIds && !gridIds->empty()) {
+        for (vector<int>::const_iterator it = gridIds->begin(); it != gridIds->end(); ++it) {
+            SetOutlineVisible(*it, f, outlineColor);
         }
-    }else{
-        while (it.hasNext()){
-            it.next();
-             m_OutLineS[it.key()].vActor->VisibilityOff();   
+    } else {
+        QMapIterator<int,OutLineS> it(m_OutLineS);
+        if (f){
+            while (it.hasNext()){
+                it.next();
+                m_OutLineS[it.key()].vActor->VisibilityOn();
+            }
+        }else{
+            while (it.hasNext()){
+                it.next();
+                 m_OutLineS[it.key()].vActor->VisibilityOff();
+            }
         }
     }
     Update();

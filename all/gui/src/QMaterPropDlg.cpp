@@ -24,7 +24,7 @@ QMaterPropDlg* QMaterPropDlg::GetInstance()
 //--材料界面
 void QMaterPropDlg::CreatGUI()
 {
-	this->setWindowTitle(tr("编辑材料"));
+	this->setWindowTitle(QString::fromUtf8("编辑材料"));
     Qt::WindowFlags ture= Qt::Dialog;
     ture |= Qt::WindowMaximizeButtonHint;
     ture |= Qt::WindowMinimizeButtonHint;

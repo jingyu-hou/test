@@ -31,11 +31,16 @@ public:
     void CreateOMDisplay();
     void CreateOMDisplay_FD();
     void ToggleAxesDisplay();
+    bool IsBoundTo(vtkRenderWindow *renWin, vtkRenderWindowInteractor *interactor) const;
+    bool IsReady() const;
+    void ResetMarker();
 
 protected:
     vtkAnnotatedCubeActor* annActor_;
     vtkOrientationMarkerWidget *marker_;
     vtkAxesActor *markerAxes_;
+    vtkRenderWindow *boundRenWin_;
+    vtkRenderWindowInteractor *boundInteractor_;
 };
 
 #endif

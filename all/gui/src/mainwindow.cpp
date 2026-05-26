@@ -48,7 +48,12 @@ MainWindow::MainWindow(QWidget *par):SARibbonMainWindow(par)
 	QString workPath=options;
 	QDir::setCurrent(workPath);*/
 
-	InitDlg();
+    m_contextCategoryCasting = 0;
+    m_contextCategory_Casting_C = 0;
+    m_contextCategoryHE = 0;
+    m_contextCategory_HE_C = 0;
+
+    InitDlg();
     createActions();
     creatRibbon();
     createDockWindows();
@@ -631,9 +636,13 @@ void MainWindow::creatRibbon()
     
     creatContextHIPWindow(m_contextCategory_HIP_C);
 
-    m_contextCategoryHE = m_ribbon->addContextCategory(tr("热挤压"), Qt::yellow, 2);
-    m_contextCategory_HE_C = m_contextCategoryHE->addCategoryPage(tr("设置"));
-    creatContextHEWindow(m_contextCategory_HE_C);
+    QList<bool> sysFlags = AppKey::Instance()->PSystem();
+
+    if (sysFlags.size() > 1 && sysFlags.at(1)) {
+        m_contextCategoryHE = m_ribbon->addContextCategory(tr("热挤压"), Qt::yellow, 2);
+        m_contextCategory_HE_C = m_contextCategoryHE->addCategoryPage(tr("设置"));
+        creatContextHEWindow(m_contextCategory_HE_C);
+    }
 
     m_contextCategoryHP = m_ribbon->addContextCategory(tr("热处理"), Qt::blue, 3);
     m_contextCategory_HP_C = m_contextCategoryHP->addCategoryPage(tr("设置"));
@@ -643,9 +652,11 @@ void MainWindow::creatRibbon()
     m_contextCategory_Forging_C = m_contextCategoryForging->addCategoryPage(tr("设置"));
     creatContextForgingWindow(m_contextCategory_Forging_C);
 
-	m_contextCategoryCasting= m_ribbon->addContextCategory(tr("铸造"), Qt::yellow, 0);
-    m_contextCategory_Casting_C = m_contextCategoryCasting->addCategoryPage(tr("设置"));
-    creatContextCastingWindow(m_contextCategory_Casting_C);
+    if (sysFlags.size() > 4 && sysFlags.at(4)) {
+        m_contextCategoryCasting= m_ribbon->addContextCategory(tr("铸造"), Qt::yellow, 0);
+        m_contextCategory_Casting_C = m_contextCategoryCasting->addCategoryPage(tr("设置"));
+        creatContextCastingWindow(m_contextCategory_Casting_C);
+    }
 
 	
 
@@ -1631,8 +1642,8 @@ void MainWindow::retranslateUi(int iLanguage)
         printAct_->setText(tr("打印"));
         m_FilBtn->setText(tr(" 文件"));
         //--
-        DockPostPrc_->setWindowTitle("后处理");
-        DockPreHIPPrc_->setWindowTitle("前处理");
+        DockPostPrc_->setWindowTitle(QString::fromUtf8("后处理"));
+        DockPreHIPPrc_->setWindowTitle(QString::fromUtf8("前处理"));
     }else{
         openAct_->setText(tr("Open"));
         newAct_->setText(tr("新建"));
@@ -1685,22 +1696,26 @@ void MainWindow::UpDataRibbonLanguage(int iLanguage)
         //m_CategoryOPtim->changeWindowTitle(tr("优化"));//隐藏优化 luo
         //m_CategoryWindow->changeWindowTitle(tr("窗口"));//隐藏窗口 luo
         m_CategoryHelp->changeWindowTitle(tr("帮助"));
-		m_contextCategory_Casting_C->changeWindowTitle(tr("设置0"));
+		if (m_contextCategory_Casting_C) m_contextCategory_Casting_C->changeWindowTitle(tr("设置0"));
         m_contextCategory_HIP_C->changeWindowTitle(tr("设置1"));
-        m_contextCategory_HE_C->changeWindowTitle(tr("设置2"));
+	        if (m_contextCategory_HE_C) m_contextCategory_HE_C->changeWindowTitle(tr("设置2"));
         m_contextCategory_HP_C->changeWindowTitle(tr("设置3"));
 
+
+		if (m_contextCategoryCasting) {
 		m_contextCategoryCasting->setContextTitle("铸造");
-        m_contextCategory_Casting_C->changeWindowTitle("设置0");
-        m_contextCategoryHIP->setContextTitle("多孔介质");
-        m_contextCategory_HIP_C->changeWindowTitle("设置1");
-        m_contextCategoryHP->setContextTitle("热处理");
-        m_contextCategory_HP_C->changeWindowTitle("设置3");
-        m_contextCategoryHE->setContextTitle("热挤压");
-        m_contextCategory_HE_C->changeWindowTitle("设置3");
+	        m_contextCategory_Casting_C->changeWindowTitle("设置0");
+		}
+	        m_contextCategoryHIP->setContextTitle("多孔介质");
+	        m_contextCategory_HIP_C->changeWindowTitle("设置1");
+	        m_contextCategoryHP->setContextTitle("热处理");
+	        m_contextCategory_HP_C->changeWindowTitle("设置3");
+	        if (m_contextCategoryHE) {
+	        m_contextCategoryHE->setContextTitle("热挤压");
+	        m_contextCategory_HE_C->changeWindowTitle("设置3");
+	        }
 		m_contextCategoryForging->setContextTitle("锻造");
-        m_contextCategory_Forging_C->changeWindowTitle("设置2");
-		
+	        m_contextCategory_Forging_C->changeWindowTitle("设置2");
 
         AppStartAct_->setText(tr("启动"));
         AppMeshAct_->setText(tr("网格"));
@@ -1725,16 +1740,20 @@ void MainWindow::UpDataRibbonLanguage(int iLanguage)
         m_CategoryHelp->changeWindowTitle(tr("Help"));
 
 
+		if (m_contextCategoryCasting) {
 		m_contextCategoryCasting->setContextTitle("Casting");
-        m_contextCategory_Casting_C->changeWindowTitle("Set0");
-        m_contextCategoryHIP->setContextTitle("HIP");
-        m_contextCategory_HIP_C->changeWindowTitle("Set1");
-        m_contextCategoryHP->setContextTitle("HP");
-        m_contextCategory_HP_C->changeWindowTitle("Set3");
-        m_contextCategoryHE->setContextTitle("HE");
-        m_contextCategory_HE_C->changeWindowTitle("Set3");
+	        m_contextCategory_Casting_C->changeWindowTitle("Set0");
+		}
+	        m_contextCategoryHIP->setContextTitle("HIP");
+	        m_contextCategory_HIP_C->changeWindowTitle("Set1");
+	        m_contextCategoryHP->setContextTitle("HP");
+	        m_contextCategory_HP_C->changeWindowTitle("Set3");
+	        if (m_contextCategoryHE) {
+	        m_contextCategoryHE->setContextTitle("HE");
+	        m_contextCategory_HE_C->changeWindowTitle("Set3");
+	        }
 		m_contextCategoryForging->setContextTitle("Forging");
-        m_contextCategory_Forging_C->changeWindowTitle("Set2");
+	        m_contextCategory_Forging_C->changeWindowTitle("Set2");
    /*   m_contextCategory_HIP_C->changeWindowTitle(tr("Set1"));
         m_contextCategory_HE_C->changeWindowTitle(tr("Set2"));
         m_contextCategory_HP_C->changeWindowTitle(tr("Set3"));
@@ -1754,7 +1773,7 @@ void MainWindow::UpDataRibbonLanguage(int iLanguage)
         HIPpartAct_->setText(tr("Parts"));
     }
     m_ribbon->hideContextCategory(m_contextCategoryHIP);
-    m_ribbon->hideContextCategory(m_contextCategoryHE);
+    if (m_contextCategoryHE) m_ribbon->hideContextCategory(m_contextCategoryHE);
     m_ribbon->hideContextCategory(m_contextCategoryHP);
 }
 
@@ -1772,8 +1791,8 @@ void MainWindow::AddInNewMenuHIPSlot(bool on)
         iSetProStyle = ENUM_PRO_HIP;
         tabifyDockWidget(DockPostPrc_, DockPreHIPPrc_);//放置順序
    // if(on){
-        m_ribbon->hideContextCategory(m_contextCategoryCasting);
-		m_ribbon->hideContextCategory(m_contextCategoryHE);
+        if (m_contextCategoryCasting) m_ribbon->hideContextCategory(m_contextCategoryCasting);
+		if (m_contextCategoryHE) m_ribbon->hideContextCategory(m_contextCategoryHE);
         m_ribbon->hideContextCategory(m_contextCategoryHP);
 		m_ribbon->hideContextCategory(m_contextCategoryForging);
         m_ribbon->showContextCategory(m_contextCategoryHIP);
@@ -1793,11 +1812,11 @@ void MainWindow::AddInNewMenuHESlot(bool on)
 {
 
    // if(on){
-	    m_ribbon->hideContextCategory(m_contextCategoryCasting);
+	    if (m_contextCategoryCasting) m_ribbon->hideContextCategory(m_contextCategoryCasting);
         m_ribbon->hideContextCategory(m_contextCategoryHIP);
         m_ribbon->hideContextCategory(m_contextCategoryHP);
 		m_ribbon->hideContextCategory(m_contextCategoryForging);
-        m_ribbon->showContextCategory(m_contextCategoryHE);
+        if (m_contextCategoryHE) m_ribbon->showContextCategory(m_contextCategoryHE);
 		
     /*}else{
         m_ribbon->hideContextCategory(this->m_contextCategoryHE);
@@ -1812,10 +1831,10 @@ void MainWindow::AddInNewMenuForgingSlot(bool on)
 {
         iSetProStyle = ENUM_PRO_Forging;
    // if(on){
-		m_ribbon->hideContextCategory(m_contextCategoryCasting);
+		if (m_contextCategoryCasting) m_ribbon->hideContextCategory(m_contextCategoryCasting);
         m_ribbon->hideContextCategory(m_contextCategoryHIP);
         m_ribbon->hideContextCategory(m_contextCategoryHP);
-        m_ribbon->hideContextCategory(m_contextCategoryHE);
+        if (m_contextCategoryHE) m_ribbon->hideContextCategory(m_contextCategoryHE);
 		m_ribbon->showContextCategory(m_contextCategoryForging);
 		
 		
@@ -1832,9 +1851,9 @@ void MainWindow::AddInNewMenuHPSlot(bool on)
 {
         iSetProStyle = ENUM_PRO_HP;
    // if(on){
-		m_ribbon->hideContextCategory(m_contextCategoryCasting);
+		if (m_contextCategoryCasting) m_ribbon->hideContextCategory(m_contextCategoryCasting);
         m_ribbon->hideContextCategory(m_contextCategoryHIP);
-        m_ribbon->hideContextCategory(m_contextCategoryHE);
+        if (m_contextCategoryHE) m_ribbon->hideContextCategory(m_contextCategoryHE);
 		m_ribbon->hideContextCategory(m_contextCategoryForging);
         m_ribbon->showContextCategory(m_contextCategoryHP);
 		
@@ -1851,10 +1870,10 @@ void MainWindow::AddInNewMenuCastingSlot(bool on)
 {
 	 iSetProStyle = ENUM_PRO_Casting;
 	 m_ribbon->hideContextCategory(m_contextCategoryHIP);
-	 m_ribbon->hideContextCategory(m_contextCategoryHE);
+	 if (m_contextCategoryHE) m_ribbon->hideContextCategory(m_contextCategoryHE);
 	 m_ribbon->hideContextCategory(m_contextCategoryForging);
 	 m_ribbon->hideContextCategory(m_contextCategoryHP);
-	 m_ribbon->showContextCategory(m_contextCategoryCasting); 
+	 if (m_contextCategoryCasting) m_ribbon->showContextCategory(m_contextCategoryCasting);
 }
 
 void MainWindow::NewSlot()

@@ -14,7 +14,7 @@
 QPostWigReadResultDlg::QPostWigReadResultDlg(QWidget *parent)
 	: QDialog(parent)
 {
-	setWindowTitle(tr("读取结果"));
+	setWindowTitle(QString::fromUtf8("读取结果"));
 	QTabWidget *m_TabWig = new QTabWidget(this);
 	//QPostWigRResult_Basic *
 	TabPage1 = new QPostWigRResult_Basic(m_TabWig);
@@ -270,4 +270,3 @@ QPostWigRResult_Other::~QPostWigRResult_Other()
 	;
 
 }
-

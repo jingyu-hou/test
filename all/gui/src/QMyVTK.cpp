@@ -39,6 +39,10 @@ QMyVTK::QMyVTK()
 
 QMyVTK::~QMyVTK()
 {
+    if (m_staticMarker) {
+        m_staticMarker->Delete();
+        m_staticMarker = 0;
+    }
     render_->Delete();
     instance = 0;
 }
@@ -68,6 +72,10 @@ QMyVTK* QMyVTK::GetInstance()
 
 void QMyVTK::clear()
 {
+    if (m_staticMarker) {
+        m_staticMarker->Delete();
+        m_staticMarker = 0;
+    }
     render_->Delete();
     instance = 0;
 }
@@ -191,6 +199,29 @@ void QMyVTK::ViewChange(int index)
 */
 void QMyVTK::Orient()
 {
+    vtkRenderer *renderer = GetRenderer();
+    if (!renderer) return;
+    vtkRenderWindow *renWin = renderer->GetRenderWindow();
+    if (!renWin) return;
+    vtkRenderWindowInteractor *interactor = renWin->GetInteractor();
+    if (!interactor) return;
+
+    if (m_staticMarker && !m_staticMarker->IsBoundTo(renWin, interactor)) {
+        m_staticMarker->ResetMarker();
+        m_staticMarker->SetRenderTo(renderer, renWin);
+        m_staticMarker->CreateOMDisplay_FD();
+    } else if (m_staticMarker == 0) {
+        m_staticMarker =vtkVISOrientationMarker::New();
+        (m_staticMarker )->SetRenderTo(renderer,renWin);
+        (m_staticMarker )->CreateOMDisplay_FD();
+    } else if (!m_staticMarker->IsReady()) {
+        (m_staticMarker )->SetRenderTo(renderer,renWin);
+        (m_staticMarker )->CreateOMDisplay_FD();
+    } else {
+        (m_staticMarker )->ToggleAxesDisplay();
+    }
+    renWin->Render();
+}
     //vtkRenderer *renderer_=QMyVTK::GetInstance(0)->GetRenderer();
     //vtkRenderer *renderer = GetRenderer();
     
@@ -208,21 +239,7 @@ void QMyVTK::Orient()
     //    }else{
     //        (it.value()->m_staticMarker )->ToggleAxesDisplay();
     //    }  
-    //    renWin->Render();
-    //} 
-    vtkRenderer *renderer = GetRenderer();
-    vtkRenderWindow *renWin = renderer->GetRenderWindow();
-
-    if (m_staticMarker == 0){
-        m_staticMarker =vtkVISOrientationMarker::New();//QMyVtkOrienMarker::GetInstance();
-        (m_staticMarker )->SetRenderTo(renderer,renWin);
-        (m_staticMarker )->CreateOMDisplay_FD();
-    }else{
-        (m_staticMarker )->ToggleAxesDisplay();
-    }  
-    renWin->Render();
-}
-/*
+    /*
     backgroundColor
 */
 void QMyVTK::BackColor()

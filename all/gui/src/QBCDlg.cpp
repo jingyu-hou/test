@@ -3,7 +3,7 @@
 QBCDlg::QBCDlg(QWidget *parent)
       : QDialog(parent)
 {
-    setWindowTitle("边界设置");
+    setWindowTitle(QString::fromUtf8("边界设置"));
     QWidget *Hwid1 = new QWidget(this);
     QHBoxLayout *Hlayout = new QHBoxLayout();
     m_ApplyBtn = new QPushButton(tr("应用"));

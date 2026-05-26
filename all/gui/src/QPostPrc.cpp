@@ -314,11 +314,14 @@ void QPostPrc::SetOptionS(OptDlgS OptDlg,const vector<int>* idS)
 void QPostPrc::SetActorSlot(vector<int> dataId)
 {
     m_ActorListData=dataId;
+    if (m_ActorListData.empty() && !m_WholeActorData.empty()) {
+        m_ActorListData = m_WholeActorData;
+    }
     SetOptionS(m_optDlgs,&m_ActorListData);
 	QStringList strList;
-	for (int kk=0;kk<dataId.size();kk++)
+	for (int kk=0;kk<m_ActorListData.size();kk++)
 	{
-		strList<<QString("%1").arg(dataId.at(kk));
+		strList<<QString("%1").arg(m_ActorListData.at(kk));
 	}
 	m_PostWigResultOut->setActorList(strList);
 }
@@ -333,6 +336,9 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
     QString scalar=ResultVis.strName;
     if (scalar == ""){
         return;//没有加载文件
+    }
+    if (m_ActorListData.empty() && !m_WholeActorData.empty()) {
+        m_ActorListData = m_WholeActorData;
     }
     
     int iOrigCurrent=ResultVis.m_iOrigCurrentChg;

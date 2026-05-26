@@ -3,7 +3,7 @@
 QVariableOutputDlg::QVariableOutputDlg(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle("变量输出");
+    setWindowTitle(QString::fromUtf8("变量输出"));
     //QWidget *Hwid1 = new QWidget(this);
     QGroupBox *gbGroup = new QGroupBox(tr("Choose"));
     gbGroup->setStyleSheet(QString::fromUtf8("::title{color:blue}"));

@@ -1,0 +1,36 @@
+ldd proof for WeICME (2026-05-24)
+===================================
+Build: Open-source replacement mainline (no ChartDirector, no VIS commercial libs)
+
+Result: NO commercial library references found.
+
+Confirmed absent:
+- libchartdir.so
+- libvtkVISCommon.so
+- libvtkVISUnstructuredGrid.so
+- libvtkVISXYPlot.so
+
+liblzma.so.0 dependency: NOT present in ldd output. System has liblzma.so.5 available.
+
+VTK/Qt4 "not found" entries are expected — these are resolved at runtime via LD_LIBRARY_PATH set by env_qt4.sh.
+
+Full ldd output:
+linux-vdso.so.1 (0x00007ffe2ed28000)
+	libQVTK.so.5.4 => not found
+	libvtkGraphics.so.5.4 => not found
+	libvtkHybrid.so.5.4 => not found
+	libvtkRendering.so.5.4 => not found
+	libvtkCommon.so.5.4 => not found
+	libvtkIO.so.5.4 => not found
+	libvtkFiltering.so.5.4 => not found
+	libvtkWidgets.so.5.4 => not found
+	libswscale.so.5 => /lib/x86_64-linux-gnu/libswscale.so.5
+	libSARibbonBar.so.1 => [project]/components/open_source/saribbon/lib/libSARibbonBar.so.1
+	libQtGui.so.4 => not found
+	libQtCore.so.4 => not found
+	libstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6
+	libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6
+	libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6
+	libavutil.so.56 => /lib/x86_64-linux-gnu/libavutil.so.56
+	/lib64/ld-linux-x86-64.so.2

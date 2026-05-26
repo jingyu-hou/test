@@ -6,7 +6,7 @@
 QHPSystemDlg::QHPSystemDlg(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle(tr("热处理制度"));
+    setWindowTitle(QString::fromUtf8("热处理制度"));
     QWidget *Hwid1 = new QWidget(this);
     QHBoxLayout *Hlayout = new QHBoxLayout();
     QHBoxLayout *Hlayout2 = new QHBoxLayout();
@@ -1381,7 +1381,7 @@ void QHPSystemDlg::updateHPCurveDataSlot(QStringList combList,InpCurveInpS Curve
 //--------------------------------------
 QTemperateDialog::QTemperateDialog(QWidget *parent)
 {
-    setWindowTitle(tr("环境温度"));
+    setWindowTitle(QString::fromUtf8("环境温度"));
     QHBoxLayout *Hlayout1 = new QHBoxLayout();
     m_lab = new QLabel(tr("常量:"));
     m_LineValue = new QLineEdit(); 
@@ -1508,7 +1508,7 @@ InpCurveInpS QTemperateDialog::GetData(int style,InpCurveInpS data)
 //--------------------------------------
 QFilmDialog::QFilmDialog(QWidget *parent)
 {
-    setWindowTitle(tr("对流"));
+    setWindowTitle(QString::fromUtf8("对流"));
     QHBoxLayout *Hlayout1 = new QHBoxLayout();
     m_lab = new QLabel(tr("常量:"));
     m_LineValue = new QLineEdit();
@@ -1635,7 +1635,7 @@ InpCurveInpS QFilmDialog::GetData(int style,InpCurveInpS data)
 //--------------------------------------
 QRadiateDialog::QRadiateDialog(QWidget *parent)
 {
-    setWindowTitle(tr("辐射"));
+    setWindowTitle(QString::fromUtf8("辐射"));
     QHBoxLayout *Hlayout1 = new QHBoxLayout();
     m_lab = new QLabel(tr("常量:"));
     m_LineValue = new QLineEdit();

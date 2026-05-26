@@ -148,6 +148,20 @@ QPostWigResultOutput::~QPostWigResultOutput()
     m_CutWidgetMap.clear();
     cutIdCnt=0;
 }
+
+QStringList QPostWigResultOutput::activeActorList() const
+{
+    if (!ActorListId_.empty()) return ActorListId_;
+
+    QStringList ids;
+    if (!frdVISObj_ || !frdVISObj_->GetGridIds()) return ids;
+    const vector<int> *gridIds = frdVISObj_->GetGridIds();
+    for (vector<int>::const_iterator it = gridIds->begin(); it != gridIds->end(); ++it) {
+        ids << QString("%1").arg(*it);
+    }
+    return ids;
+}
+
 void QPostWigResultOutput::gridColorBtnSlot()
 {
     QColor color = QColorDialog::getColor(QColor(Qt::green), this);
@@ -294,12 +308,9 @@ void QPostWigResultOutput::BtnSectionAddSlot()
     int id = m_CutWidgetMap.size()+1;
     cutIdCnt++;
     CutParamWidget *TmpTab = new CutParamWidget(id, m_gbBox3);
-	if (ActorListId_.empty()){
-		TmpTab->ActorListId_.clear();
-		TmpTab->ActorListId_<<"1";
-	}else{
-		TmpTab->ActorListId_=ActorListId_;
-	}
+    QStringList activeIds = activeActorList();
+    if (activeIds.empty()) return;
+    TmpTab->ActorListId_ = activeIds;
     m_tabView->show();
 	QString strTableName(tr("内切割"));
 	if(m_InsideOut->isChecked()){
@@ -332,20 +343,20 @@ void QPostWigResultOutput::BtnSectionAddSlot()
 	cb->SetCallback(CutParamWidget::CallBack_ChangeCutUIValues);
 	cb->SetClientData(TmpTab);
 
-	for (int kk=0;kk<ActorListId_.size();kk++)
+	for (int kk=0;kk<activeIds.size();kk++)
 	{
-		frdVISObj_->CreateCutObjects(ActorListId_.at(kk).toInt(),id, m_InsideOut->isChecked(),m_Var,"original");//->isTristate());//,m_Var.split(":").at(0));
-		frdVISObj_->SetCutZoneVisible(ActorListId_.at(kk).toInt(),id,true);//
-		frdVISObj_->SetCutVTKWidgetVisible(ActorListId_.at(kk).toInt(),id,true);//
+		frdVISObj_->CreateCutObjects(activeIds.at(kk).toInt(),id, m_InsideOut->isChecked(),m_Var,"original");//->isTristate());//,m_Var.split(":").at(0));
+		frdVISObj_->SetCutZoneVisible(activeIds.at(kk).toInt(),id,true);//
+		frdVISObj_->SetCutVTKWidgetVisible(activeIds.at(kk).toInt(),id,true);//
 		
 		//add callback begin
 	  
-		frdVISObj_->AddCutCallBack(ActorListId_.at(kk).toInt(),id, cb);
+		frdVISObj_->AddCutCallBack(activeIds.at(kk).toInt(),id, cb);
 		frdVISObj_->Update();
     
 	    double bounds[6],xyz[3];
-		bool f1 = frdVISObj_->GetCutZoneBounds(ActorListId_.at(kk).toInt(),id,bounds);
-		bool f2 = frdVISObj_->GetCutPlanePosition(ActorListId_.at(kk).toInt(),id,xyz);
+		bool f1 = frdVISObj_->GetCutZoneBounds(activeIds.at(kk).toInt(),id,bounds);
+		bool f2 = frdVISObj_->GetCutPlanePosition(activeIds.at(kk).toInt(),id,xyz);
 		if (f1 && f2)
 		{
 			TmpTab->InitBoundsValue(bounds);
@@ -369,9 +380,10 @@ void QPostWigResultOutput::BtnSectionDelSlot()
 	}
     QStringList strListT=m_tabView->tabText(index).split("-");
     int cutId = strListT.at(1).toInt();
-	for (int kk=0;kk<ActorListId_.size();kk++)
+    QStringList activeIds = activeActorList();
+	for (int kk=0;kk<activeIds.size();kk++)
 	{
-		frdVISObj_->DeleteCut(ActorListId_.at(kk).toInt(),cutId);
+		frdVISObj_->DeleteCut(activeIds.at(kk).toInt(),cutId);
 	}
     frdVISObj_->Update();
     m_tabView->removeTab(index);
@@ -387,49 +399,55 @@ void QPostWigResultOutput::upDateScalar(QString scalar)
 }
 void QPostWigResultOutput::SectionNormalXYSlot(int cutId, double x, double y, double z)
 {
-	for (int kk=0;kk<ActorListId_.size();kk++)
+    QStringList activeIds = activeActorList();
+	for (int kk=0;kk<activeIds.size();kk++)
 	{
-		frdVISObj_->SetCutPlaneNormal(ActorListId_.at(kk).toInt(),cutId,x,y,z);
+		frdVISObj_->SetCutPlaneNormal(activeIds.at(kk).toInt(),cutId,x,y,z);
 	}
     frdVISObj_->Update();
 }
 void QPostWigResultOutput::SectionPosSlot(int cutId,double x,double y, double z)
 {
-	for (int kk=0;kk<ActorListId_.size();kk++)
+    QStringList activeIds = activeActorList();
+	for (int kk=0;kk<activeIds.size();kk++)
 	{
-		frdVISObj_->SetCutPlanePosition(ActorListId_.at(kk).toInt(),cutId,x,y,z);
+		frdVISObj_->SetCutPlanePosition(activeIds.at(kk).toInt(),cutId,x,y,z);
 	}
     frdVISObj_->Update();
 }
 void QPostWigResultOutput::SectionOutLineSlot(int cutId,bool bShow)
 {
-	for (int kk=0;kk<ActorListId_.size();kk++)
+    QStringList activeIds = activeActorList();
+	for (int kk=0;kk<activeIds.size();kk++)
 	{
-		frdVISObj_->SetCutVTKWidgetVisible(ActorListId_.at(kk).toInt(),cutId,bShow);
+		frdVISObj_->SetCutVTKWidgetVisible(activeIds.at(kk).toInt(),cutId,bShow);
 	}
     frdVISObj_->Update();
 }
 void QPostWigResultOutput::SectionZoneSlot(int cutId,bool bShow)
 {
-	for (int kk=0;kk<ActorListId_.size();kk++)
+    QStringList activeIds = activeActorList();
+	for (int kk=0;kk<activeIds.size();kk++)
 	{
-		frdVISObj_->SetCutZoneVisible(ActorListId_.at(kk).toInt(),cutId,bShow);
+		frdVISObj_->SetCutZoneVisible(activeIds.at(kk).toInt(),cutId,bShow);
 	}
     frdVISObj_->Update();
 }
 void QPostWigResultOutput::SectionShowSlot(int cutId,bool bShow,int type)
 {
-	for (int kk=0;kk<ActorListId_.size();kk++)
+    QStringList activeIds = activeActorList();
+	for (int kk=0;kk<activeIds.size();kk++)
 	{
-		frdVISObj_->SetCutContourState(ActorListId_.at(kk).toInt(),cutId,bShow,type);
+		frdVISObj_->SetCutContourState(activeIds.at(kk).toInt(),cutId,bShow,type);
 	}
     frdVISObj_->Update();
 }
 void QPostWigResultOutput::SectionLevelSlot(int cutId,int level)
 {
-	for (int kk=0;kk<ActorListId_.size();kk++)
+    QStringList activeIds = activeActorList();
+	for (int kk=0;kk<activeIds.size();kk++)
 	{
-		 frdVISObj_->SetCutContourLevel(ActorListId_.at(kk).toInt(),cutId,level);
+		 frdVISObj_->SetCutContourLevel(activeIds.at(kk).toInt(),cutId,level);
 	}
     frdVISObj_->Update();
 }
@@ -739,5 +757,3 @@ void CutParamWidget::ChangeCutContourLevel(int level)
 {
     emit CutContourLevelChanged(cutId_, level);
 }
-
-

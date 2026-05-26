@@ -2,7 +2,7 @@
 QStatistics::QStatistics(QWidget *parent1)
       : QDialog(parent1)
 {
-  setWindowTitle("数量统计");
+  setWindowTitle(QString::fromUtf8("数量统计"));
   NodeNumber=0;ElentNumber=0;
   listWidget = new QListWidget(this);
   QStringList list;

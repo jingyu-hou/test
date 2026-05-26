@@ -3,7 +3,7 @@
 QHPInitDlg::QHPInitDlg(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle("初始化");
+    setWindowTitle(QString::fromUtf8("初始化"));
     QWidget *Hwid1 = new QWidget(this);
     QHBoxLayout *Hlayout = new QHBoxLayout();
     QHBoxLayout *Hlayout2 = new QHBoxLayout();

@@ -3,6 +3,7 @@
 #include <vtkObjectFactory.h>
 #include <vtkProperty.h>
 #include <vtkUnstructuredGrid.h>
+#include <vtkGeometryFilter.h>
 
 vtkStandardNewMacro(vtkVISUnEdge);
 vtkCxxRevisionMacro(vtkVISUnEdge, "$Revision: 1.0 $");
@@ -21,8 +22,11 @@ void vtkVISUnEdge::CreateEdgeDisplay()
 {
     if (!_source || !_source->unstruGrid) return;
 
+    vtkGeometryFilter* geo = vtkGeometryFilter::New();
+    geo->SetInput(_source->unstruGrid);
+
     vtkFeatureEdges* edges = vtkFeatureEdges::New();
-    edges->SetInput(_source->unstruGrid);
+    edges->SetInputConnection(geo->GetOutputPort());
     edges->BoundaryEdgesOn();
     edges->FeatureEdgesOff();
     edges->NonManifoldEdgesOff();
@@ -43,10 +47,11 @@ void vtkVISUnEdge::CreateEdgeDisplay()
     _unActor = actor;
 
     if (!_vtkObjects) {
-        _vtkObjectsNum = 2;
-        _vtkObjects = new vtkObject*[2];
-        _vtkObjects[0] = edges;
-        _vtkObjects[1] = mapper;
+        _vtkObjectsNum = 3;
+        _vtkObjects = new vtkObject*[3];
+        _vtkObjects[0] = geo;
+        _vtkObjects[1] = edges;
+        _vtkObjects[2] = mapper;
     }
 }
 

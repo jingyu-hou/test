@@ -3,7 +3,7 @@
 DistMeasurement::DistMeasurement(QWidget *parent1)
       : QDialog(parent1)
 {
-	setWindowTitle("距离测量");
+	setWindowTitle(QString::fromUtf8("距离测量"));
 	QHBoxLayout *Hlayout = new QHBoxLayout();
 	QHBoxLayout *Hlayout2 = new QHBoxLayout();
 	FirstPointBtn = new QPushButton(tr("第一个点"));

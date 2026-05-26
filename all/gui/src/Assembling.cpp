@@ -7,7 +7,7 @@ Assembling::Assembling(QWidget *parent1)
 	setFixedWidth(350);*/
 	/*setMinimumHeight(280);
 	setMinimumWidth(350);*/
-  setWindowTitle("装配/缩放");
+  setWindowTitle(QString::fromUtf8("装配/缩放"));
   QLabel *text=new QLabel();
   text->setText("点集合：");
   Nset=new MyCombox(this,0);

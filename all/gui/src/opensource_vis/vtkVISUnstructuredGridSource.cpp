@@ -75,7 +75,9 @@ double* vtkVISUnstructuredGridSource::GetScalarRange(const char* scalarName)
 
 void vtkVISUnstructuredGridSource::CleanUnGridData()
 {
-    if (unstruGrid) { unstruGrid->Delete(); unstruGrid = 0; }
+    // unstruGrid is owned by FrdDataSource::idGridMap_ or InpDataSource::wholeGrid_.
+    // Do not call Delete() here — the owner manages its lifetime.
+    unstruGrid = 0;
 }
 
 vtkDoubleArray* vtkVISUnstructuredGridSource::GetScalarSource(int index)

@@ -13,7 +13,7 @@ QSectionPropDlg::~QSectionPropDlg()
 }
 void QSectionPropDlg::CreatGUI()
 {
-    this->setWindowTitle(tr("创建截面"));
+    this->setWindowTitle(QString::fromUtf8("创建截面"));
     QGroupBox *gBox = new QGroupBox(this);
     QLabel *LName = new QLabel(tr("名称:"),this);
     m_NameEidt = new QLineEdit(this);

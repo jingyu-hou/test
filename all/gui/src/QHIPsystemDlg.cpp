@@ -3,7 +3,7 @@
 QHIPsystemDlg::QHIPsystemDlg(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle("制度");
+    setWindowTitle(QString::fromUtf8("制度"));
     QWidget *Hwid1 = new QWidget(this);
     QHBoxLayout *Hlayout = new QHBoxLayout();
     m_NextHipSysBtn = new QPushButton(tr("下一步"));

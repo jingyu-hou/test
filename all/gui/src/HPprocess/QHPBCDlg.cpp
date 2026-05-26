@@ -3,7 +3,7 @@
 QHPBCDlg::QHPBCDlg(QWidget *parent)
       : QDialog(parent)
 {
-    setWindowTitle("固定边界");
+    setWindowTitle(QString::fromUtf8("固定边界"));
     QWidget *Hwid1 = new QWidget(this);
     QHBoxLayout *Hlayout = new QHBoxLayout();
     QHBoxLayout *Hlayout2 = new QHBoxLayout();
