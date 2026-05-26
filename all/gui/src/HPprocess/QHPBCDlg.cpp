@@ -3,7 +3,7 @@
 QHPBCDlg::QHPBCDlg(QWidget *parent)
       : QDialog(parent)
 {
-    setWindowTitle(QString::fromUtf8("固定边界"));
+    setWindowTitle("Boundary");
     QWidget *Hwid1 = new QWidget(this);
     QHBoxLayout *Hlayout = new QHBoxLayout();
     QHBoxLayout *Hlayout2 = new QHBoxLayout();
@@ -85,6 +85,10 @@ QHPBCDlg::QHPBCDlg(QWidget *parent)
 
 void QHPBCDlg::ShowBC(int styleB)
 {
+    if (styleB == 1) setWindowTitle("Porous Media Boundary");
+    else if (styleB == 2) setWindowTitle("Forging Boundary");
+    else if (styleB == 3) setWindowTitle("Heat Treatment Boundary");
+    else setWindowTitle("Boundary");
     QStringList strList;
     strList.clear();
     strList<<"部件"<<"位移"<<"点集合";

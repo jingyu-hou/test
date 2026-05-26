@@ -638,11 +638,9 @@ void MainWindow::creatRibbon()
 
     QList<bool> sysFlags = AppKey::Instance()->PSystem();
 
-    if (sysFlags.size() > 1 && sysFlags.at(1)) {
-        m_contextCategoryHE = m_ribbon->addContextCategory(tr("热挤压"), Qt::yellow, 2);
-        m_contextCategory_HE_C = m_contextCategoryHE->addCategoryPage(tr("设置"));
-        creatContextHEWindow(m_contextCategory_HE_C);
-    }
+    // Commercial workflow only exposes porous media, heat treatment and forging.
+    m_contextCategoryHE = 0;
+    m_contextCategory_HE_C = 0;
 
     m_contextCategoryHP = m_ribbon->addContextCategory(tr("热处理"), Qt::blue, 3);
     m_contextCategory_HP_C = m_contextCategoryHP->addCategoryPage(tr("设置"));
@@ -652,11 +650,8 @@ void MainWindow::creatRibbon()
     m_contextCategory_Forging_C = m_contextCategoryForging->addCategoryPage(tr("设置"));
     creatContextForgingWindow(m_contextCategory_Forging_C);
 
-    if (sysFlags.size() > 4 && sysFlags.at(4)) {
-        m_contextCategoryCasting= m_ribbon->addContextCategory(tr("铸造"), Qt::yellow, 0);
-        m_contextCategory_Casting_C = m_contextCategoryCasting->addCategoryPage(tr("设置"));
-        creatContextCastingWindow(m_contextCategory_Casting_C);
-    }
+    m_contextCategoryCasting = 0;
+    m_contextCategory_Casting_C = 0;
 
 	
 
@@ -727,10 +722,7 @@ void MainWindow::createCategoryApp(SARibbonCategory* page)
 
 	
 	
-	if(ShowHid.at(4)){
-		btn=pannel->addLargeAction(AppCastingAct_);
-		btn->setFixedSize(78,58);
-	}
+	// Hide casting in the commercial workflow.
 	
 	if(ShowHid.at(0)){
 		m_HIPBtn=pannel->addLargeAction(AppHIPAct_);
@@ -742,11 +734,7 @@ void MainWindow::createCategoryApp(SARibbonCategory* page)
     //pannel->addWidget(m_HIPBtn);
 	//以下几行隐藏热挤压
 	
-	if(ShowHid.at(1)){
-		m_HEBtn=pannel->addLargeAction(AppHotExtrusionAct_);
-		m_HEBtn->setFixedSize(78,58);
-		m_HEBtn->setPopupMode(QToolButton::InstantPopup);
-	}
+	// Hide hot extrusion in the commercial workflow.
 	//以上几行隐藏热挤压
    // m_HEBtn->setCheckable(true);
    
@@ -2658,6 +2646,32 @@ void MainWindow::NowActivateWindowSlot(QMdiSubWindow* SubWind)
         }
     }
 }
+
+void MainWindow::HideProcessDialogs()
+{
+    if (m_HpPartDlg) m_HpPartDlg->hide();
+    if (m_HpBCDlg) m_HpBCDlg->hide();
+    if (m_ForgingContactDlg) m_ForgingContactDlg->hide();
+    if (m_HpInitDlg) m_HpInitDlg->hide();
+    if (m_ThermalBoundaryDlg) m_ThermalBoundaryDlg->hide();
+    if (m_ForgingSystemDlg) m_ForgingSystemDlg->hide();
+    if (m_HpSystemDlg) m_HpSystemDlg->hide();
+    if (m_HIPSystemDlg) m_HIPSystemDlg->hide();
+    if (m_HpSolveSetDlg) m_HpSolveSetDlg->hide();
+    if (m_HpSubmissionDlg) m_HpSubmissionDlg->hide();
+    if (m_ForgingSubmissionDlg) m_ForgingSubmissionDlg->hide();
+    if (m_HipSubmissionDlg) m_HipSubmissionDlg->hide();
+}
+
+void MainWindow::ShowProcessDialog(QDialog *dlg)
+{
+    if (!dlg) return;
+    HideProcessDialogs();
+    dlg->show();
+    dlg->raise();
+    dlg->activateWindow();
+}
+
 //创建集合
 void MainWindow::CreateSetDlgSlot()
 {
@@ -2688,11 +2702,9 @@ void MainWindow::HPpartActSlot()
 {
 	if (viewWindow_){//pre 
 		viewWindow_->TabView(1);
-	}
+    }
     m_HpPartDlg->ShowPartDlgStyle(ENUM_PRO_HP);
-    m_HpPartDlg->show();
-    m_HpPartDlg->raise();////最上层
-    m_HpPartDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpPartDlg);
 }
 //--HPDLG
 void MainWindow::HPBCActSlot()
@@ -2713,9 +2725,7 @@ void MainWindow::HPBCActSlot()
 		m_HpBCDlg->ShowBC(ENUM_PRO_Forging);
         m_ForingBcBtn->setEnabled(true);
     }   
-	m_HpBCDlg->show();
-    m_HpBCDlg->raise();////最上层
-    m_HpBCDlg->activateWindow();//激活
+	ShowProcessDialog(m_HpBCDlg);
 }
 
 void MainWindow::HPBCActSlot02()
@@ -2726,9 +2736,7 @@ void MainWindow::HPBCActSlot02()
 	if (iSetProStyle != ENUM_PRO_Forging){
 		m_HpBCDlg->ShowBC(0);
         m_HIPBcBtn->setEnabled(true);
-		m_HpBCDlg->show();
-        m_HpBCDlg->raise();////最上层
-        m_HpBCDlg->activateWindow();//激活
+		ShowProcessDialog(m_HpBCDlg);
      }else if (iSetProStyle==ENUM_PRO_Forging){
 		ForgingContactActSlot();
     }   	
@@ -2740,9 +2748,7 @@ void MainWindow::HPInitActSlot()
 		viewWindow_->TabView(1);
 	}
 	if(iSetProStyle!=ENUM_PRO_Forging&&iSetProStyle!=ENUM_PRO_Casting){
-	    m_HpInitDlg->show();
-        m_HpInitDlg->raise();////最上层
-        m_HpInitDlg->activateWindow();//激活
+	    ShowProcessDialog(m_HpInitDlg);
         if (iSetProStyle == ENUM_PRO_HIP){
             m_HIPInitBtn->setEnabled(true);
         }else if (iSetProStyle==ENUM_PRO_HP){
@@ -2772,9 +2778,7 @@ void MainWindow::HPInitActSlot02()
 	if (viewWindow_){//pre 
 		viewWindow_->TabView(1);
 	}
-	m_HpInitDlg->show();
-    m_HpInitDlg->raise();////最上层
-    m_HpInitDlg->activateWindow();//激活
+	ShowProcessDialog(m_HpInitDlg);
     m_ForingInitBtn->setEnabled(true);
 }
 void MainWindow::ForgingSystemActSlot0()
@@ -2821,9 +2825,7 @@ void MainWindow::HP_HIPSystemActSlot()
 //热处理制度
 void MainWindow::HPSystemActSlot()
 {
-    m_HpSystemDlg->show();
-    m_HpSystemDlg->raise();////最上层
-    m_HpSystemDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpSystemDlg);
     
     if (iSetProStyle==ENUM_PRO_HIP){
         m_HIPSystemBtn->setEnabled(true);
@@ -2837,9 +2839,7 @@ void MainWindow::HPSystemActSlot()
 void MainWindow::HPSloveSetActSlot()
 {
     m_HpSolveSetDlg->SetOutPutTab(0);
-    m_HpSolveSetDlg->show();
-    m_HpSolveSetDlg->raise();////最上层
-    m_HpSolveSetDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpSolveSetDlg);
     m_HPSolveSetBtn->setEnabled(true);
 }
 //--HPDLG求解器设置2（下一步）
@@ -2847,31 +2847,23 @@ void MainWindow::HPSystemNextBtnSlot(int istep)
 {
     m_HpSolveSetDlg->SetSloveStep(istep);
     m_HpSolveSetDlg->SetOutPutTab(0);
-    m_HpSolveSetDlg->show();
-    m_HpSolveSetDlg->raise();////最上层
-    m_HpSolveSetDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpSolveSetDlg);
     m_HPSolveSetBtn->setEnabled(true);
 }
 //--HPDLG
 void MainWindow::HPSubmissonActSlot()
 { 
-    m_HpSubmissionDlg->show();
-    m_HpSubmissionDlg->raise();////最上层
-    m_HpSubmissionDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpSubmissionDlg);
 }
 void MainWindow::HPSolveNextActSlot()
 {
     if (m_HpSolveSetDlg->m_tabView->currentIndex()==0){
         m_HpSolveSetDlg->SetOutPutTab(1);
-        m_HpSolveSetDlg->show();
-        m_HpSolveSetDlg->raise();////最上层
-        m_HpSolveSetDlg->activateWindow();//激活
+        ShowProcessDialog(m_HpSolveSetDlg);
         //m_HPSolveSetBtn->setEnabled(true);
         return;
     }
-    m_HpSubmissionDlg->show();
-    m_HpSubmissionDlg->raise();////最上层
-    m_HpSubmissionDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpSubmissionDlg);
 }
 //--HipDLG
 //部件对话框
@@ -2882,18 +2874,14 @@ void MainWindow::HIPpartActSlot()
     //m_PartDlg->raise();//最上层
     //m_PartDlg->activateWindow();//激活
     m_HpPartDlg->ShowPartDlgStyle(ENUM_PRO_HIP);
-    m_HpPartDlg->show();
-    m_HpPartDlg->raise();
-    m_HpPartDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpPartDlg);
 }
 //--HipDlg
 //边界对话框
 void MainWindow::HIPBCActSlot()
 {
     m_HpBCDlg->ShowBC(ENUM_PRO_HIP);
-	m_HpBCDlg->show(); 
-    m_HpBCDlg->raise();//最上层
-    m_HpBCDlg->activateWindow();//激活
+	ShowProcessDialog(m_HpBCDlg); 
     m_HIPBcBtn->setEnabled(true);
 }
 //--HipDlg
@@ -2903,16 +2891,14 @@ void MainWindow::HIPInitDlgActSlot()
     //m_InitDlg->show(); 
     //m_InitDlg->raise();//最上层
     //m_InitDlg->activateWindow();//激活
-    m_HpInitDlg->show(); 
-    m_HpInitDlg->raise();//最上层
-    m_HpInitDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpInitDlg); 
     m_HIPInitBtn->setEnabled(true);
 }
 //--HIPDLG
 //热等静压制度
 void MainWindow::HIPSystemDlgActSlot()
 {
-    m_HIPSystemDlg->show(); 
+    ShowProcessDialog(m_HIPSystemDlg); 
     m_HIPSystemDlg->raise();//最上层
     m_HIPSystemDlg->activateWindow();//激活
     m_HIPSystemBtn->setEnabled(true);
@@ -2922,9 +2908,7 @@ void MainWindow::HIPSystemDlgActSlot()
 void MainWindow::HIPResolveDlgActSlot()
 {
     m_HpSolveSetDlg->SetOutPutTab(0);
-    m_HpSolveSetDlg->show(); 
-    m_HpSolveSetDlg->raise();//最上层
-    m_HpSolveSetDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpSolveSetDlg); 
     m_HIPSolveSetBtn->setEnabled(true);
 }
 //--HIPDLG
@@ -2943,9 +2927,7 @@ void MainWindow::HIPSubmissonActSlot()
 	//m_HipSubmissionDlg->raise();////最上层
 	//m_HipSubmissionDlg->activateWindow();//激活
 
-	m_HpSubmissionDlg->show();
-    m_HpSubmissionDlg->raise();////最上层
-    m_HpSubmissionDlg->activateWindow();//激活
+	ShowProcessDialog(m_HpSubmissionDlg);
 }
 
 //--工具1.模型装配
@@ -3136,50 +3118,38 @@ void MainWindow::HIPSolveActKillSlot()
 void MainWindow::ForgingpartActSlot()
 {
 	m_HpPartDlg->ShowPartDlgStyle(ENUM_PRO_Forging);
-    m_HpPartDlg->show();
-    m_HpPartDlg->raise();////最上层
-    m_HpPartDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpPartDlg);
 }
 
 void MainWindow::ForgingBCActSlot()
 {
 	m_HpBCDlg->ShowBC(ENUM_PRO_Forging);
-	m_HpBCDlg->show();
-    m_HpBCDlg->raise();////最上层
-    m_HpBCDlg->activateWindow();//激活
+	ShowProcessDialog(m_HpBCDlg);
 	m_ForingBcBtn->setEnabled(true);
 }
 //接触对话框
 void MainWindow::ForgingContactActSlot()
 {
 	m_ForgingContactDlg->ShowContact(ENUM_PRO_Forging);
-    m_ForgingContactDlg->show(); 
-    m_ForgingContactDlg->raise();//最上层
-    m_ForgingContactDlg->activateWindow();//激活
+    ShowProcessDialog(m_ForgingContactDlg); 
 	m_ForingContactBtn->setEnabled(true);
 }
 //初始化
 void MainWindow::ForgingInitActSlot()
 {
-	m_HpInitDlg->show(); 
-    m_HpInitDlg->raise();//最上层
-    m_HpInitDlg->activateWindow();//激活
+	ShowProcessDialog(m_HpInitDlg); 
 	m_ForingInitBtn->setEnabled(true);
 }
 void MainWindow::ForgingHBSlot()
 {
-	m_ThermalBoundaryDlg->show();
-	m_ThermalBoundaryDlg->raise();//最上层
-    m_ThermalBoundaryDlg->activateWindow();//激活
+	ShowProcessDialog(m_ThermalBoundaryDlg);
 	m_ForingTBBtn->setEnabled(true);
 }
 //锻造制度
 void MainWindow::ForgingSystemActSlot()
 {
 	m_ForgingSystemDlg->ShowFS3(ENUM_PRO_Forging); 
-    m_ForgingSystemDlg->show(); 
-    m_ForgingSystemDlg->raise();//最上层
-    m_ForgingSystemDlg->activateWindow();//激活
+    ShowProcessDialog(m_ForgingSystemDlg); 
 	m_ForingSystemBtn->setEnabled(true);
 }
 
@@ -3209,9 +3179,7 @@ void MainWindow::ForgingSystemNextBtnSlot(int istep)
 {
 	m_HpSolveSetDlg->SetSloveStep(istep);
     m_HpSolveSetDlg->SetOutPutTab(0);
-    m_HpSolveSetDlg->show();
-    m_HpSolveSetDlg->raise();////最上层
-    m_HpSolveSetDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpSolveSetDlg);
     m_HPSolveSetBtn->setEnabled(true);
 }
 
@@ -3219,9 +3187,7 @@ void MainWindow::ForgingSystemNextBtnSlot(int istep)
 void MainWindow::ForgingSloveSetActSlot()
 {
 	//m_HpSolveSetDlg->SetOutPutTab(0);
-    m_HpSolveSetDlg->show(); 
-    m_HpSolveSetDlg->raise();//最上层
-    m_HpSolveSetDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpSolveSetDlg); 
 	m_ForingSolveSetBtn->setEnabled(true);
 }
 
@@ -3231,9 +3197,7 @@ void MainWindow::ForgingSubmissonActSlot()
 	//m_ForgingSubmissionDlg->show();
 	//m_ForgingSubmissionDlg->raise();////最上层
 	//m_ForgingSubmissionDlg->activateWindow();//激活
-	m_HpSubmissionDlg->show();
-    m_HpSubmissionDlg->raise();////最上层
-    m_HpSubmissionDlg->activateWindow();//激活
+	ShowProcessDialog(m_HpSubmissionDlg);
 }
 //凝固流程
 void MainWindow::CastingGravitySlot()

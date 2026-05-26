@@ -1,9 +1,28 @@
 #include "QForgingSystemDlg.h"
 
+static void showDialogInFront(QDialog *dlg)
+{
+	if (!dlg) return;
+	dlg->setWindowModality(Qt::ApplicationModal);
+	dlg->show();
+	dlg->raise();
+	dlg->activateWindow();
+}
+
+static int execDialogInFront(QDialog *dlg)
+{
+	if (!dlg) return QDialog::Rejected;
+	dlg->setWindowModality(Qt::ApplicationModal);
+	dlg->show();
+	dlg->raise();
+	dlg->activateWindow();
+	return dlg->exec();
+}
+
 QFSConst::QFSConst(QWidget *parent1)
       : QDialog(parent1)
 {
-  setWindowTitle(QString::fromUtf8("运动参数"));
+  setWindowTitle("Motion Parameter");
   ConstMotionParameters=new QLineEdit();
   ConstMotionParameters->setText("");
 
@@ -76,7 +95,7 @@ QForgingSystemDlg::QForgingSystemDlg(QWidget *parent)
 	//初始化索引结束
 	FSNumber=0;
 
-	setWindowTitle(QString::fromUtf8("锻造制度"));
+	setWindowTitle("Forging System");
 	QHBoxLayout *Hlayout1= new QHBoxLayout();
     QHBoxLayout *Hlayout2= new QHBoxLayout();
     QVBoxLayout *Vlayout = new QVBoxLayout();
@@ -312,21 +331,21 @@ void QForgingSystemDlg::MotionParameterSlot()
 		if(sign!=1){
 			QFSConst *FSConstShow=new QFSConst(this);
 			m_FSCurveDataListDlg.append(FSConstShow);
-			FSConstShow->show();
+			showDialogInFront(FSConstShow);
 			IndexNumber[2*Row]=m_FSCurveDataListDlg.size()-1;
 			count01[0][Row]=1;
 		}else{
 			int IN,IN1;
 			IN1=2*Row;
 			IN=IndexNumber[IN1];
-			m_FSCurveDataListDlg.at(IN)->exec();
+			execDialogInFront(m_FSCurveDataListDlg.at(IN));
 		}
 	}else if(strIdName=="随时间变化"){
 		int sign=count01[1][Row];
 		if(sign!=2){
 			QCurveDataPlot *tmpCurve = new QCurveDataPlot(this);
 			QString strName;
-			int ret = tmpCurve->exec();   
+			int ret = execDialogInFront(tmpCurve);   
 			if (ret == QDialog::Accepted){//ok
 				strName=tmpCurve->m_HIPCurveNode.strName;
 				if (strName == ""){return;}
@@ -338,7 +357,7 @@ void QForgingSystemDlg::MotionParameterSlot()
 			int IN,IN1;
 			IN1=2*Row+1;
 			IN=IndexNumber[IN1];
-			m_FSCurveDataListDlg02.at(IN)->exec();
+			execDialogInFront(m_FSCurveDataListDlg02.at(IN));
 		}	   
 	}else{
 		return;
@@ -695,7 +714,7 @@ void QForgingSystemDlg::ShowFS3(int styleB)
 	m_TableWiget->setHorizontalHeaderLabels(strList);
 	int NRow=m_TableWiget->rowCount();
 	if (styleB ==0){//凝固;
-		setWindowTitle(QString::fromUtf8("运动边界"));
+		setWindowTitle("Motion Boundary");
 		m_TableWiget->setColumnHidden(0,false);
 		m_TableWiget->setColumnHidden(1,false);
 		m_TableWiget->setColumnHidden(2,false);
@@ -704,7 +723,7 @@ void QForgingSystemDlg::ShowFS3(int styleB)
 		m_TableWiget->setColumnHidden(5,false);
 		m_TableWiget->setColumnHidden(6,true);
 	}else if(styleB==2){//锻造
-		setWindowTitle(QString::fromUtf8("锻造制度"));
+		setWindowTitle("Forging System");
 		m_TableWiget->setColumnHidden(0,false);
 		m_TableWiget->setColumnHidden(1,false);
 		m_TableWiget->setColumnHidden(2,false);

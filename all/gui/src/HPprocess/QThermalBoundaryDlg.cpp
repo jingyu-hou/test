@@ -1,9 +1,28 @@
 #include "QThermalBoundaryDlg.h"
 
+static void showDialogInFront(QDialog *dlg)
+{
+	if (!dlg) return;
+	dlg->setWindowModality(Qt::ApplicationModal);
+	dlg->show();
+	dlg->raise();
+	dlg->activateWindow();
+}
+
+static int execDialogInFront(QDialog *dlg)
+{
+	if (!dlg) return QDialog::Rejected;
+	dlg->setWindowModality(Qt::ApplicationModal);
+	dlg->show();
+	dlg->raise();
+	dlg->activateWindow();
+	return dlg->exec();
+}
+
 QTBConst::QTBConst(QWidget *parent1)
       : QDialog(parent1)
 {
-  setWindowTitle(QString::fromUtf8("常数"));
+  setWindowTitle("Constant");
   ConstMotionParameters=new QLineEdit();
   ConstMotionParameters->setText("");
 
@@ -78,7 +97,7 @@ QTBConst::~QTBConst()
 		 }
 	 }
 	//初始化索引结束
-	 setWindowTitle(QString::fromUtf8("热边界"));
+	 setWindowTitle("Thermal Boundary");
 	 QHBoxLayout *Hlayout = new QHBoxLayout();
      QHBoxLayout *Hlayout2 = new QHBoxLayout();
 
@@ -957,7 +976,7 @@ QTBConst::~QTBConst()
 		 }
 		 if(sign!=1){
 			 QTBConst *FSConstShow=new QTBConst(this);
-			 FSConstShow->show(); 
+			 showDialogInFront(FSConstShow); 
 			 if(Column==2){
 				 count01[0][Row]=1;
 				 m_ATCurveDataListDlgC.append(FSConstShow);
@@ -980,16 +999,16 @@ QTBConst::~QTBConst()
 			 IN1=2*Row;
 			 if(Column==2){
 				 IN=IndexNumber01[IN1];
-				 m_ATCurveDataListDlgC.at(IN)->exec();
+				 execDialogInFront(m_ATCurveDataListDlgC.at(IN));
 			 }else if(Column==4){
 				 IN=IndexNumber02[IN1];
-				 m_CCCurveDataListDlg.at(IN)->exec();
+				 execDialogInFront(m_CCCurveDataListDlg.at(IN));
 			/* }else if(Column==7){
 				 IN=IndexNumber03[IN1];
 				 m_ATCurveDataListDlgR.at(IN)->exec();*/
 			 }else if(Column==6){
 				 IN=IndexNumber04[IN1];
-				 m_RCCurveDataListDlg.at(IN)->exec();
+				 execDialogInFront(m_RCCurveDataListDlg.at(IN));
 			 }
 		 }
 	 }else if(strIdName=="随时间变化"){
@@ -1005,7 +1024,7 @@ QTBConst::~QTBConst()
 		 if(sign!=2){
 			 QCurveDataPlot *tmpCurve = new QCurveDataPlot(this);
 			 QString strName;
-			 int ret = tmpCurve->exec();   
+			 int ret = execDialogInFront(tmpCurve);   
 			 if (ret == QDialog::Accepted){//ok
 				 strName=tmpCurve->m_HIPCurveNode.strName;
 				 if (strName == ""){return;}
@@ -1033,16 +1052,16 @@ QTBConst::~QTBConst()
 
 			 if(Column==2){
 				 IN=IndexNumber01[IN1];
-				 m_ATCurveDataListDlgC02.at(IN)->exec();
+				 execDialogInFront(m_ATCurveDataListDlgC02.at(IN));
 			 }else if(Column==4){
 				 IN=IndexNumber02[IN1];
-				 m_CCCurveDataListDlg02.at(IN)->exec();
+				 execDialogInFront(m_CCCurveDataListDlg02.at(IN));
 			/* }else if(Column==7){
 				 IN=IndexNumber03[IN1];
 				 m_ATCurveDataListDlgR02.at(IN)->exec();*/
 			 }else if(Column==6){
 				 IN=IndexNumber04[IN1];
-				 m_RCCurveDataListDlg02.at(IN)->exec();
+				 execDialogInFront(m_RCCurveDataListDlg02.at(IN));
 			 }  
 		 }	   
 	 }else{

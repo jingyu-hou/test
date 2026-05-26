@@ -3,7 +3,7 @@
 QResolveDlg::QResolveDlg(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle(QString::fromUtf8("求解器设置"));
+    setWindowTitle("Solver Settings");
     QWidget *Hwid1 = new QWidget(this);
     QHBoxLayout *Hlayout = new QHBoxLayout();
     QVBoxLayout *Vlayout = new QVBoxLayout();

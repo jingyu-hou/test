@@ -12,7 +12,7 @@ QHPSubmissionDlg::~QHPSubmissionDlg()
 }
 void QHPSubmissionDlg::CreatGUI()
 {
-    setWindowTitle(QString::fromUtf8("提交计算"));
+    setWindowTitle("Submit Calculation");
 	setMinimumSize(300,150);
 	setMaximumSize(400,150);
     m_Tab1=new QWidget();//(tr("ddd1"));

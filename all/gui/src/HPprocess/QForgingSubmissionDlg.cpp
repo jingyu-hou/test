@@ -12,7 +12,7 @@ QForgingSubmissionDlg::~QForgingSubmissionDlg()
 
 void QForgingSubmissionDlg::CreatGUI()
 {
-    setWindowTitle(QString::fromUtf8("提交计算"));
+    setWindowTitle("Submit Calculation");
 	m_SaveSolveFileBtn = new QPushButton(tr("保存求解文件"));
 	m_SubmissionBtn = new QPushButton(tr("提交计算"));
 	QGridLayout *mainLayout = new QGridLayout();

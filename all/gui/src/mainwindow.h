@@ -405,6 +405,8 @@ private:
 	bool okToContinue();
 
 	void CreatePreProcessPanel();
+	void HideProcessDialogs();
+	void ShowProcessDialog(QDialog *dlg);
 
 	QString strippedName(const QString &fullFileName);
 

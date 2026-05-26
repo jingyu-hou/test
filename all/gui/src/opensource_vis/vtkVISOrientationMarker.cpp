@@ -2,7 +2,7 @@
 #include "vtkVISOrientationMarker.h"
 #include <vtkObjectFactory.h>
 #include <vtkProperty.h>
-#include <vtkRenderWindowInteractor.h>
+#include <vtkRenderer.h>
 
 vtkStandardNewMacro(vtkVISOrientationMarker);
 vtkCxxRevisionMacro(vtkVISOrientationMarker, "$Revision: 1.0 $");
@@ -21,21 +21,18 @@ vtkVISOrientationMarker::~vtkVISOrientationMarker()
 
 bool vtkVISOrientationMarker::IsBoundTo(vtkRenderWindow *renWin, vtkRenderWindowInteractor *interactor) const
 {
-    return marker_ && boundRenWin_ == renWin && boundInteractor_ == interactor;
+    return markerAxes_ && boundRenWin_ == renWin && boundInteractor_ == interactor;
 }
 
 bool vtkVISOrientationMarker::IsReady() const
 {
-    return marker_ && markerAxes_ && boundRenWin_ && boundInteractor_;
+    return markerAxes_ && boundRenWin_ && boundInteractor_;
 }
 
 void vtkVISOrientationMarker::ResetMarker()
 {
-    if (marker_) {
-        marker_->SetEnabled(0);
-        marker_->SetInteractor(0);
-        marker_->Delete();
-        marker_ = 0;
+    if (_renderer && markerAxes_) {
+        _renderer->RemoveActor(markerAxes_);
     }
     boundRenWin_ = 0;
     boundInteractor_ = 0;
@@ -48,7 +45,9 @@ void vtkVISOrientationMarker::CreateOMDisplay()
     if (!interactor) return;
     if (IsBoundTo(_renWin, interactor)) return;
 
-    ResetMarker();
+    if (boundRenWin_ || boundInteractor_) {
+        ResetMarker();
+    }
 
     if (!markerAxes_) {
         markerAxes_ = vtkAxesActor::New();
@@ -57,14 +56,10 @@ void vtkVISOrientationMarker::CreateOMDisplay()
         markerAxes_->SetYAxisLabelText("Y");
         markerAxes_->SetZAxisLabelText("Z");
         markerAxes_->SetTotalLength(1.5, 1.5, 1.5);
+        markerAxes_->SetPosition(0.0, 0.0, 0.0);
     }
 
-    marker_ = vtkOrientationMarkerWidget::New();
-    marker_->SetOrientationMarker(markerAxes_);
-    marker_->SetInteractor(interactor);
-    marker_->SetViewport(0.0, 0.0, 0.2, 0.2);
-    marker_->SetEnabled(1);
-    marker_->InteractiveOff();
+    _renderer->AddActor(markerAxes_);
     boundRenWin_ = _renWin;
     boundInteractor_ = interactor;
 }
@@ -85,9 +80,12 @@ void vtkVISOrientationMarker::ToggleAxesDisplay()
         return;
     }
 
-    if (marker_) {
-        int enabled = marker_->GetEnabled();
-        marker_->SetEnabled(enabled ? 0 : 1);
+    if (markerAxes_ && boundRenWin_ == _renWin && boundInteractor_ == interactor) {
+        if (markerAxes_->GetVisibility()) {
+            markerAxes_->VisibilityOff();
+        } else {
+            markerAxes_->VisibilityOn();
+        }
     } else {
         CreateOMDisplay();
     }

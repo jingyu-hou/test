@@ -3,10 +3,20 @@
 #include <QMessageBox>
 #include <QStandardItemModel>
 
+static int execDialogInFront(QDialog *dlg)
+{
+    if (!dlg) return QDialog::Rejected;
+    dlg->setWindowModality(Qt::ApplicationModal);
+    dlg->show();
+    dlg->raise();
+    dlg->activateWindow();
+    return dlg->exec();
+}
+
 QHPSystemDlg::QHPSystemDlg(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle(QString::fromUtf8("热处理制度"));
+    setWindowTitle("Heat Treatment System");
     QWidget *Hwid1 = new QWidget(this);
     QHBoxLayout *Hlayout = new QHBoxLayout();
     QHBoxLayout *Hlayout2 = new QHBoxLayout();
@@ -893,7 +903,7 @@ void QHPSystemDlg::comboxSlot()
                 if(m_TemperateDlg.find(str)!=m_TemperateDlg.end()){
                     m_TemperateDlg[str]->SetShowStyle(0);
                     QString testStr1=m_TemperateDlg[str]->m_LineValue->text();
-                    if (m_TemperateDlg[str]->exec()){
+                    if (execDialogInFront(m_TemperateDlg[str])){
                         QString newStr="constant--"+m_TemperateDlg[str]->m_LineValue->text();
                        if (testStr1 != newStr){
                            QTemperateDialog *newDlg = new QTemperateDialog(this);
@@ -907,7 +917,7 @@ void QHPSystemDlg::comboxSlot()
                 }else{//new dlg
                     QTemperateDialog *NewDlg = new QTemperateDialog(this);
                     NewDlg->SetShowStyle(0);
-					if (NewDlg->exec()){
+					if (execDialogInFront(NewDlg)){
                        m_TemperateDlg.insert("constant--"+NewDlg->m_LineValue->text(),NewDlg);
 					   m_ComboxTemper[id]->setItemText(0,"constant--"+NewDlg->m_LineValue->text());
 					}
@@ -915,7 +925,7 @@ void QHPSystemDlg::comboxSlot()
             }else if (str=="F(t)"){//函数--NEW F(t)
                 QTemperateDialog *NewDlg = new QTemperateDialog(this);
                 NewDlg->SetShowStyle(1);
-                if (NewDlg->exec()){
+                if (execDialogInFront(NewDlg)){
                     str=NewDlg->m_LineName->text();
                     m_TemperateDlg.insert(str,NewDlg);
                     InpCurveInpS nodeCurveList;
@@ -940,7 +950,7 @@ void QHPSystemDlg::comboxSlot()
             }else{//其他combox成员
                 if(m_TemperateDlg.find(str)!=m_TemperateDlg.end()){
                     m_TemperateDlg[str]->SetShowStyle(1);
-                    if (m_TemperateDlg[str]->exec()){
+                    if (execDialogInFront(m_TemperateDlg[str])){
                         QString strLineName=m_TemperateDlg[str]->m_LineName->text();
                         m_TemperateDlg.insert(strLineName, m_TemperateDlg[str]); 
                         InpCurveInpS nodeCurveList;
@@ -972,7 +982,7 @@ void QHPSystemDlg::comboxSlot()
                 if(m_FilmDlg.find(str)!=m_FilmDlg.end()){
                     m_FilmDlg[str]->SetShowStyle(0);
                     QString testStr1=m_FilmDlg[str]->m_LineValue->text();
-                    if (m_FilmDlg[str]->exec()){
+                    if (execDialogInFront(m_FilmDlg[str])){
                         QString newStr="constant--"+m_FilmDlg[str]->m_LineValue->text();
                         if (testStr1 != newStr){
                             QFilmDialog *newDlg=new QFilmDialog(this);
@@ -987,7 +997,7 @@ void QHPSystemDlg::comboxSlot()
                 }else{//new dlg
                     QFilmDialog *NewDlg = new QFilmDialog(this);
                     NewDlg->SetShowStyle(0);
-					if (NewDlg->exec()){
+					if (execDialogInFront(NewDlg)){
 						m_FilmDlg.insert("constant--"+NewDlg->m_LineValue->text(),NewDlg);
 						m_ComboxFilm[id]->setItemText(1,"constant--"+NewDlg->m_LineValue->text());
 					}      
@@ -995,7 +1005,7 @@ void QHPSystemDlg::comboxSlot()
             }else if (str=="F(t)"){//函数--NEW F(t)
                 QFilmDialog *NewDlg = new QFilmDialog(this);
                 NewDlg->SetShowStyle(1);
-                if (NewDlg->exec()){
+                if (execDialogInFront(NewDlg)){
                     str=NewDlg->m_LineName->text();
                     m_FilmDlg.insert(str,NewDlg);
                     InpCurveInpS nodeCurveList;
@@ -1023,7 +1033,7 @@ void QHPSystemDlg::comboxSlot()
             }else{
                 if(m_FilmDlg.find(str)!=m_FilmDlg.end()){
                     m_FilmDlg[str]->SetShowStyle(1);
-                    if (m_FilmDlg[str]->exec()){
+                    if (execDialogInFront(m_FilmDlg[str])){
                         QString strLineName=m_FilmDlg[str]->m_LineName->text();
                         m_FilmDlg.insert(strLineName,m_FilmDlg[str]);
                         InpCurveInpS nodeCurveList;
@@ -1067,7 +1077,7 @@ void QHPSystemDlg::comboxSlot()
                 if(m_RadiateDlg.find(str)!=m_RadiateDlg.end()){
                     m_RadiateDlg[str]->SetShowStyle(0);
                     QString testStr1=m_RadiateDlg[str]->m_LineValue->text();
-                    if (m_RadiateDlg[str]->exec()){
+                    if (execDialogInFront(m_RadiateDlg[str])){
                         QString newStr="constant--"+m_RadiateDlg[str]->m_LineValue->text();
                         if (testStr1 != newStr){
                             QRadiateDialog *newDlg=new QRadiateDialog(this);
@@ -1082,7 +1092,7 @@ void QHPSystemDlg::comboxSlot()
                 }else{//new dlg
                     QRadiateDialog *NewDlg = new QRadiateDialog(this);
                     NewDlg->SetShowStyle(0);
-					if (NewDlg->exec()){
+					if (execDialogInFront(NewDlg)){
 						m_RadiateDlg.insert("constant--"+NewDlg->m_LineValue->text(),NewDlg);
 						m_ComboxRadiate[id]->setItemText(1,"constant--"+NewDlg->m_LineValue->text());
 					}
@@ -1090,7 +1100,7 @@ void QHPSystemDlg::comboxSlot()
             }else if (str=="F(t)"){//函数--NEW F(t)
                QRadiateDialog *NewDlg = new QRadiateDialog(this);
                 NewDlg->SetShowStyle(1);
-                if (NewDlg->exec()){
+                if (execDialogInFront(NewDlg)){
                     str=NewDlg->m_LineName->text();
                     m_RadiateDlg.insert(str,NewDlg);
                     InpCurveInpS nodeCurveList;
@@ -1118,7 +1128,7 @@ void QHPSystemDlg::comboxSlot()
             }else{
                 if(m_RadiateDlg.find(str)!=m_RadiateDlg.end()){
                     m_RadiateDlg[str]->SetShowStyle(1);
-                    if (m_RadiateDlg[str]->exec()){
+                    if (execDialogInFront(m_RadiateDlg[str])){
                         QString strLineName=m_RadiateDlg[str]->m_LineName->text();
                         m_RadiateDlg.insert(strLineName,m_RadiateDlg[str]);
                         InpCurveInpS nodeCurveList;
@@ -1381,7 +1391,7 @@ void QHPSystemDlg::updateHPCurveDataSlot(QStringList combList,InpCurveInpS Curve
 //--------------------------------------
 QTemperateDialog::QTemperateDialog(QWidget *parent)
 {
-    setWindowTitle(QString::fromUtf8("环境温度"));
+    setWindowTitle("Environment Temperature");
     QHBoxLayout *Hlayout1 = new QHBoxLayout();
     m_lab = new QLabel(tr("常量:"));
     m_LineValue = new QLineEdit(); 
@@ -1508,7 +1518,7 @@ InpCurveInpS QTemperateDialog::GetData(int style,InpCurveInpS data)
 //--------------------------------------
 QFilmDialog::QFilmDialog(QWidget *parent)
 {
-    setWindowTitle(QString::fromUtf8("对流"));
+    setWindowTitle("Convection");
     QHBoxLayout *Hlayout1 = new QHBoxLayout();
     m_lab = new QLabel(tr("常量:"));
     m_LineValue = new QLineEdit();
@@ -1635,7 +1645,7 @@ InpCurveInpS QFilmDialog::GetData(int style,InpCurveInpS data)
 //--------------------------------------
 QRadiateDialog::QRadiateDialog(QWidget *parent)
 {
-    setWindowTitle(QString::fromUtf8("辐射"));
+    setWindowTitle("Radiation");
     QHBoxLayout *Hlayout1 = new QHBoxLayout();
     m_lab = new QLabel(tr("常量:"));
     m_LineValue = new QLineEdit();

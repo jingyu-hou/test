@@ -3,7 +3,7 @@
 QHPPartDlg::QHPPartDlg(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle(tr("AESim-FM"));
+    setWindowTitle("Part");
 	ENumberS=0;
     m_SectionManageDlg = NULL;
     m_MaterManagerDlg  = NULL;
@@ -292,6 +292,10 @@ void QHPPartDlg::SetInpData(ReadInpResultS ReadInpData)
 
 void QHPPartDlg::ShowPartDlgStyle(int style)
 {
+	if (style == 1) setWindowTitle("Porous Media Part");
+	else if (style == 2) setWindowTitle("Forging Part");
+	else if (style == 3) setWindowTitle("Heat Treatment Part");
+	else setWindowTitle("Part");
     QStringList strList;
 	strList.clear();
 	strList<<"部件"<<"部件类型"<<"材料"<<"单元集合"<<"TTT/CCT";

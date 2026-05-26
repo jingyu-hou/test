@@ -1,9 +1,28 @@
 #include "QForgingContactDlg.h"
 
+static void showDialogInFront(QDialog *dlg)
+{
+	if (!dlg) return;
+	dlg->setWindowModality(Qt::ApplicationModal);
+	dlg->show();
+	dlg->raise();
+	dlg->activateWindow();
+}
+
+static int execDialogInFront(QDialog *dlg)
+{
+	if (!dlg) return QDialog::Rejected;
+	dlg->setWindowModality(Qt::ApplicationModal);
+	dlg->show();
+	dlg->raise();
+	dlg->activateWindow();
+	return dlg->exec();
+}
+
 QC_onst::QC_onst(QWidget *parent1)
       : QDialog(parent1)
 {
-  setWindowTitle(QString::fromUtf8("热交换"));
+  setWindowTitle("Heat Exchange");
   HExchangeLE=new QLineEdit();
   HExchangeLE->setText("");
 
@@ -65,7 +84,7 @@ QC_onst::~QC_onst()
 QAdvancedOptions::QAdvancedOptions(QWidget *parent1)
       : QDialog(parent1)
 {
-  setWindowTitle(QString::fromUtf8("高级选项"));
+  setWindowTitle("Advanced Options");
   QWidget *Data = new QWidget(this);
   QWidget *Data1 = new QWidget(this);
   QWidget *Data12 = new QWidget(this);
@@ -165,7 +184,7 @@ QAdvancedOptions::~QAdvancedOptions()
 ContactHelp::ContactHelp(QWidget *parent1)
       : QDialog(parent1)
 {
-  setWindowTitle(QString::fromUtf8("提示"));
+  setWindowTitle("Contact Help");
   QTextEdit *Value1=new QTextEdit();
   Value1->setText("①法向刚度和切向刚度：材料抵抗法向变形和剪切变形的能力,一般情况下不需要设置，"
 	  "求解器会自动给定,当遇到穿透情况可查找关于法向和切向刚度取值说明的相关文件或者查看帮助文档。"
@@ -202,7 +221,7 @@ QForgingContactDlg::QForgingContactDlg(QWidget *parent)
 		}
 	}
 	//初始化索引结束
-    setWindowTitle(QString::fromUtf8("接触关系"));
+    setWindowTitle("Forging Contact");
     QHBoxLayout *Hlayout = new QHBoxLayout();
     QHBoxLayout *Hlayout2 = new QHBoxLayout();
 
@@ -770,21 +789,21 @@ void QForgingContactDlg::contactHeatExChangeSlot()
      if(sign!=1){
        QC_onst *C_constShow=new QC_onst(this);
 	   m_cHEC_CurveDataListDlg02.append(C_constShow);
-	   C_constShow->show();
+	   showDialogInFront(C_constShow);
 	   IndexNumber[4*Row]=m_cHEC_CurveDataListDlg02.size()-1;
 	   count01[0][Row]=1;
 	 }else{
 	   int IN,IN1;
        IN1=4*Row;
 	   IN=IndexNumber[IN1];
-	   m_cHEC_CurveDataListDlg02.at(IN)->exec(); 
+	   execDialogInFront(m_cHEC_CurveDataListDlg02.at(IN)); 
 	 }
   }else if(strIdName == "随压力变化"){
 	 int sign=count01[1][Row];
      if(sign!=2){
 		QCurveDataPlot *tmpCurve = new QCurveDataPlot(this);
         QString strName;
-        int ret = tmpCurve->exec();   
+        int ret = execDialogInFront(tmpCurve);   
 		if (ret == QDialog::Accepted){//ok
             strName=tmpCurve->m_HIPCurveNode.strName;
             if (strName == ""){return;}
@@ -796,14 +815,14 @@ void QForgingContactDlg::contactHeatExChangeSlot()
 	    int IN,IN1;
         IN1=4*Row+1;
 		IN=IndexNumber[IN1];
-		m_cHEC_CurveDataListDlg.at(IN)->exec();
+		execDialogInFront(m_cHEC_CurveDataListDlg.at(IN));
 	 }
   }else if(strIdName == "随温度变化"){
 	  int sign=count01[2][Row];
 	  if(sign!=3){
 		QCurveDataPlot *tmpCurve = new QCurveDataPlot(this);
         QString strName;
-        int ret = tmpCurve->exec();   
+        int ret = execDialogInFront(tmpCurve);   
 		if (ret == QDialog::Accepted){//ok
             strName=tmpCurve->m_HIPCurveNode.strName;
             if (strName == ""){return;}
@@ -815,14 +834,14 @@ void QForgingContactDlg::contactHeatExChangeSlot()
 	    int IN,IN1;
         IN1=4*Row+2;
 		IN=IndexNumber[IN1];
-		m_cHEC_CurveDataListDlg.at(IN)->exec();
+		execDialogInFront(m_cHEC_CurveDataListDlg.at(IN));
 	  }
   }else if(strIdName == "随时间变化"){
 	  int sign=count01[3][Row];
 	  if(sign!=4){
 		QCurveDataPlot *tmpCurve = new QCurveDataPlot(this);
         QString strName;
-        int ret = tmpCurve->exec();   
+        int ret = execDialogInFront(tmpCurve);   
 		if (ret == QDialog::Accepted){//ok
             strName=tmpCurve->m_HIPCurveNode.strName;
             if (strName == ""){return;}
@@ -834,7 +853,7 @@ void QForgingContactDlg::contactHeatExChangeSlot()
 		int IN,IN1;
         IN1=4*Row+4;
         IN=IndexNumber[IN1];
-        m_cHEC_CurveDataListDlg.at(IN)->exec();
+        execDialogInFront(m_cHEC_CurveDataListDlg.at(IN));
 	 }
   }
 }
@@ -853,21 +872,21 @@ void QForgingContactDlg::contacAOSlot()
   if(sign!=1){
     QAdvancedOptions *QAdvancedOptionsShow=new QAdvancedOptions(this);
 	m_QAdvancedOptionsListDlg.append(QAdvancedOptionsShow);
-	QAdvancedOptionsShow->show();
+	showDialogInFront(QAdvancedOptionsShow);
 	IndexNumberAO[Row]=m_QAdvancedOptionsListDlg.size()-1;
 	count02[Row]=1;
    }else{
 	int IN,IN1;
     IN1=Row; 
 	IN=IndexNumberAO[IN1];
-	m_QAdvancedOptionsListDlg.at(IN)->exec();
+	execDialogInFront(m_QAdvancedOptionsListDlg.at(IN));
 	 }
   }
 
 void QForgingContactDlg::HelpShow()
 {
   ContactHelp *ContactHelp01=new ContactHelp(this);
-  ContactHelp01->show();
+  showDialogInFront(ContactHelp01);
 }
 
 void QForgingContactDlg::ComboxSlotHighlight(int comWigId,int index0)
