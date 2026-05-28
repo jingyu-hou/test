@@ -11,15 +11,14 @@ FFMPEG_DIR = $$PWD/../components/open_source/ffmpeg
 
 # Commercial ChartDirector and VIS replaced with open-source implementations.
 # See opensource_replacements.pri for details.
-INCLUDEPATH += $$VTK_DIR/include/vtk-5.4 $$FFMPEG_DIR/include
+INCLUDEPATH += $$VTK_DIR/include/vtk-5.4
 LIBS += -L$$VTK_DIR/lib/vtk-5.4 -lQVTK -lvtkGraphics -lvtkQtChart -lvtkHybrid -lvtkRendering \
 			-lvtkalglib -lvtkImaging -lvtksqlite -lvtkCommon -lvtkInfovis -lvtksys \
 			-lvtkDICOMParser -lvtkIO -lvtktiff -lvtkexoIIc -lvtkjpeg -lvtkverdict -lvtkexpat \
 			-lvtklibxml2 -lvtkViews -lvtkFiltering -lvtkmetaio -lvtkVolumeRendering \
 			-lvtkfreetype -lvtkNetCDF -lvtkWidgets -lvtkftgl -lvtkzlib \
 			-lvtkGenericFiltering -lvtkpng -lvtkGeovis -lvtkproj4 -lvtkParallel
-LIBS += -L$$FFMPEG_DIR/lib -lavcodec -lavdevice -lavfilter -lavformat\
-		   -lavutil -lswresample -lswscale
+LIBS += -L$$FFMPEG_DIR/lib -lswscale -lavutil
 
 DEFINES += SA_RIBBON_BAR_NO_EXPORT
 SARibbonBar_DIR = $$PWD/../components/open_source/saribbon

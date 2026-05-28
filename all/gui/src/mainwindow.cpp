@@ -2663,6 +2663,16 @@ void MainWindow::HideProcessDialogs()
     if (m_HipSubmissionDlg) m_HipSubmissionDlg->hide();
 }
 
+static void RaiseDialogNow(QDialog *dlg)
+{
+    if (!dlg) return;
+    dlg->showNormal();
+    dlg->show();
+    dlg->setFocus(Qt::ActiveWindowFocusReason);
+    dlg->raise();
+    dlg->activateWindow();
+}
+
 void MainWindow::ShowProcessDialog(QDialog *dlg)
 {
     if (!dlg) return;
@@ -2670,12 +2680,16 @@ void MainWindow::ShowProcessDialog(QDialog *dlg)
     if (dlg->parentWidget() != this) {
         dlg->setParent(this, Qt::Dialog);
     }
-    dlg->setWindowFlags(dlg->windowFlags() | Qt::Window | Qt::WindowStaysOnTopHint);
+    Qt::WindowFlags flags = dlg->windowFlags();
+    flags |= Qt::Dialog;
+    flags |= Qt::Window;
+    flags |= Qt::WindowStaysOnTopHint;
+    dlg->setWindowFlags(flags);
     dlg->setWindowModality(Qt::ApplicationModal);
-    dlg->show();
-    dlg->setFocus(Qt::ActiveWindowFocusReason);
-    dlg->raise();
-    dlg->activateWindow();
+    RaiseDialogNow(dlg);
+    QTimer::singleShot(0, dlg, SLOT(raise()));
+    QTimer::singleShot(50, dlg, SLOT(raise()));
+    QTimer::singleShot(100, dlg, SLOT(activateWindow()));
 }
 
 //创建集合
