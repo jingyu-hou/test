@@ -96,7 +96,7 @@ static const uint qt_meta_data_QStepPlayWidget[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-       7,   14, // methods
+       8,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -110,9 +110,10 @@ static const uint qt_meta_data_QStepPlayWidget[] = {
       59,   16,   16,   16, 0x08,
       77,   16,   16,   16, 0x08,
      103,  100,   16,   16, 0x08,
-     126,   16,   16,   16, 0x08,
-     141,   16,   16,   16, 0x08,
-     156,   16,   16,   16, 0x08,
+     126,  100,   16,   16, 0x08,
+     149,   16,   16,   16, 0x08,
+     164,   16,   16,   16, 0x08,
+     179,   16,   16,   16, 0x08,
 
        0        // eod
 };
@@ -121,7 +122,8 @@ static const char qt_meta_stringdata_QStepPlayWidget[] = {
     "QStepPlayWidget\0\0ResultVis\0"
     "emitPlayStepParam(StepPlayVisS)\0"
     "GroupBtnSlot(int)\0ComboxParam01Slot(int)\0"
-    "id\0ComboxParam02Slot(int)\0AutoPlaySlot()\0"
+    "id\0ComboxParam02Slot(int)\0"
+    "ComboxParam03Slot(int)\0AutoPlaySlot()\0"
     "NowOKBtnSlot()\0SetUpBtnSlot()\0"
 };
 
@@ -135,9 +137,10 @@ void QStepPlayWidget::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
         case 1: _t->GroupBtnSlot((*reinterpret_cast< int(*)>(_a[1]))); break;
         case 2: _t->ComboxParam01Slot((*reinterpret_cast< int(*)>(_a[1]))); break;
         case 3: _t->ComboxParam02Slot((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 4: _t->AutoPlaySlot(); break;
-        case 5: _t->NowOKBtnSlot(); break;
-        case 6: _t->SetUpBtnSlot(); break;
+        case 4: _t->ComboxParam03Slot((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 5: _t->AutoPlaySlot(); break;
+        case 6: _t->NowOKBtnSlot(); break;
+        case 7: _t->SetUpBtnSlot(); break;
         default: ;
         }
     }
@@ -175,9 +178,9 @@ int QStepPlayWidget::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 7)
+        if (_id < 8)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 7;
+        _id -= 8;
     }
     return _id;
 }

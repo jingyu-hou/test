@@ -6,6 +6,9 @@
 #include "vtkTextActor.h"
 #include "vtkLODActor.h"
 #include "vtkObjectBase.h"
+#include "vtkAxesActor.h"
+#include "vtkCaptionActor2D.h"
+#include "vtkTextProperty.h"
 
 
 QMyVTK* QMyVTK::instance = 0;
@@ -13,9 +16,10 @@ QMap<int,QMyVTK*> QMyVTK::m_QVTKWidgetObjectMap;
 
 QMyVTK::QMyVTK()
 {
-    m_VTKWidget = new QVTKWidget();
+    m_VTKWidget = new QSafeVTKWidget();
     render_= vtkRenderer::New();
-    m_staticMarker=0;
+    m_axisRenderer=0;
+    m_axisActor=0;
     BackColor();
     //vtkTextActor *m_vtkTextActor= vtkTextActor::New();
     //m_vtkTextActor->SetTextScaleModeToProp();
@@ -39,9 +43,17 @@ QMyVTK::QMyVTK()
 
 QMyVTK::~QMyVTK()
 {
-    if (m_staticMarker) {
-        m_staticMarker->Delete();
-        m_staticMarker = 0;
+    vtkRenderWindow *renWin = m_VTKWidget ? m_VTKWidget->GetRenderWindow() : 0;
+    if (renWin && m_axisRenderer) {
+        renWin->RemoveRenderer(m_axisRenderer);
+    }
+    if (m_axisActor) {
+        m_axisActor->Delete();
+        m_axisActor = 0;
+    }
+    if (m_axisRenderer) {
+        m_axisRenderer->Delete();
+        m_axisRenderer = 0;
     }
     render_->Delete();
     instance = 0;
@@ -72,9 +84,17 @@ QMyVTK* QMyVTK::GetInstance()
 
 void QMyVTK::clear()
 {
-    if (m_staticMarker) {
-        m_staticMarker->Delete();
-        m_staticMarker = 0;
+    vtkRenderWindow *renWin = m_VTKWidget ? m_VTKWidget->GetRenderWindow() : 0;
+    if (renWin && m_axisRenderer) {
+        renWin->RemoveRenderer(m_axisRenderer);
+    }
+    if (m_axisActor) {
+        m_axisActor->Delete();
+        m_axisActor = 0;
+    }
+    if (m_axisRenderer) {
+        m_axisRenderer->Delete();
+        m_axisRenderer = 0;
     }
     render_->Delete();
     instance = 0;
@@ -199,26 +219,54 @@ void QMyVTK::ViewChange(int index)
 */
 void QMyVTK::Orient()
 {
-    vtkRenderer *renderer = GetRenderer();
-    if (!renderer) return;
-    vtkRenderWindow *renWin = renderer->GetRenderWindow();
+    vtkRenderWindow *renWin = m_VTKWidget ? m_VTKWidget->GetRenderWindow() : 0;
     if (!renWin) return;
-    vtkRenderWindowInteractor *interactor = renWin->GetInteractor();
-    if (!interactor) return;
 
-    if (m_staticMarker && !m_staticMarker->IsBoundTo(renWin, interactor)) {
-        m_staticMarker->ResetMarker();
-        m_staticMarker->SetRenderTo(renderer, renWin);
-        m_staticMarker->CreateOMDisplay_FD();
-    } else if (m_staticMarker == 0) {
-        m_staticMarker =vtkVISOrientationMarker::New();
-        (m_staticMarker )->SetRenderTo(renderer,renWin);
-        (m_staticMarker )->CreateOMDisplay_FD();
-    } else if (!m_staticMarker->IsReady()) {
-        (m_staticMarker )->SetRenderTo(renderer,renWin);
-        (m_staticMarker )->CreateOMDisplay_FD();
+    if (m_axisRenderer == 0) {
+        renWin->SetNumberOfLayers(2);
+
+        m_axisRenderer = vtkRenderer::New();
+        m_axisRenderer->SetLayer(1);
+        m_axisRenderer->SetViewport(0.015, 0.015, 0.18, 0.18);
+        m_axisRenderer->InteractiveOff();
+        m_axisRenderer->SetBackground(1.0, 1.0, 1.0);
+        renWin->AddRenderer(m_axisRenderer);
+
+        m_axisActor = vtkAxesActor::New();
+        m_axisActor->SetTotalLength(1.0, 1.0, 1.0);
+        m_axisActor->SetNormalizedShaftLength(0.72, 0.72, 0.72);
+        m_axisActor->SetNormalizedTipLength(0.28, 0.28, 0.28);
+        m_axisActor->SetNormalizedLabelPosition(1.25, 1.25, 1.25);
+        m_axisActor->SetShaftTypeToCylinder();
+        m_axisActor->SetTipTypeToCone();
+        m_axisActor->SetCylinderRadius(0.035);
+        m_axisActor->SetConeRadius(0.12);
+        m_axisActor->SetXAxisLabelText("X");
+        m_axisActor->SetYAxisLabelText("Y");
+        m_axisActor->SetZAxisLabelText("Z");
+
+        m_axisActor->GetXAxisShaftProperty()->SetColor(1.0, 0.0, 0.0);
+        m_axisActor->GetXAxisTipProperty()->SetColor(1.0, 0.0, 0.0);
+        m_axisActor->GetYAxisShaftProperty()->SetColor(0.0, 0.65, 0.0);
+        m_axisActor->GetYAxisTipProperty()->SetColor(0.0, 0.65, 0.0);
+        m_axisActor->GetZAxisShaftProperty()->SetColor(0.0, 0.2, 1.0);
+        m_axisActor->GetZAxisTipProperty()->SetColor(0.0, 0.2, 1.0);
+
+        m_axisActor->GetXAxisCaptionActor2D()->GetCaptionTextProperty()->SetColor(1.0, 0.0, 0.0);
+        m_axisActor->GetYAxisCaptionActor2D()->GetCaptionTextProperty()->SetColor(0.0, 0.65, 0.0);
+        m_axisActor->GetZAxisCaptionActor2D()->GetCaptionTextProperty()->SetColor(0.0, 0.2, 1.0);
+        m_axisActor->GetXAxisCaptionActor2D()->GetCaptionTextProperty()->BoldOn();
+        m_axisActor->GetYAxisCaptionActor2D()->GetCaptionTextProperty()->BoldOn();
+        m_axisActor->GetZAxisCaptionActor2D()->GetCaptionTextProperty()->BoldOn();
+
+        m_axisRenderer->AddActor(m_axisActor);
+        m_axisRenderer->ResetCamera();
     } else {
-        (m_staticMarker )->ToggleAxesDisplay();
+        if (m_axisRenderer->GetDraw()) {
+            m_axisRenderer->DrawOff();
+        } else {
+            m_axisRenderer->DrawOn();
+        }
     }
     renWin->Render();
 }

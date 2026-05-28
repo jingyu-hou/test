@@ -115,14 +115,17 @@ public:
     StepPlayVisS m_StepPlayParam;
     QTimer *m_timer;
 	int TValue_;
+    bool m_ChangingCombos;
     void updataCombox(ResultOutputS);
     void updataParam(StepPlayVisS mParam);
 private:
     void SetPlayParam();
+    int componentMenuIndex(int stepIndex, int variableIndex) const;
 private slots: 
     void GroupBtnSlot(int);
     void ComboxParam01Slot(int);
     void ComboxParam02Slot(int id);
+    void ComboxParam03Slot(int id);
     void AutoPlaySlot();
     void NowOKBtnSlot();
 	void SetUpBtnSlot();

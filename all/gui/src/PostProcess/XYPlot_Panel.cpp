@@ -25,9 +25,7 @@ using namespace std;
 //XYPlot_Panel::XYPlot_Panel(QWidget *parent) : QWidget(parent), frdVISObj_(0), selectedPointId_(-1)
 XYPlot_Panel::XYPlot_Panel(QWidget *parent) : QDialog(parent), frdVISObj_(0), selectedPointId_(-1)
 {
-    m_HisCurveDlg=XYPlot_RenderDialog::GetInstance();
-    connect(m_HisCurveDlg->m_ExprotDataBtn,SIGNAL(clicked()),this,SLOT(SaveDataSlot()));
-    plot_.SetVtkRender(m_HisCurveDlg->GetRenderer());
+    m_HisCurveDlg = 0;
    
     QLabel *lb2 = new QLabel(tr("选点类型："),this);
 
@@ -152,6 +150,15 @@ XYPlot_Panel::~XYPlot_Panel()
     if (pointPickCallback_)  pointPickCallback_->Delete();
     m_SelectedPointS.clear();
 }
+
+void XYPlot_Panel::EnsureRenderDialog()
+{
+    if (m_HisCurveDlg) return;
+    m_HisCurveDlg = XYPlot_RenderDialog::GetInstance();
+    connect(m_HisCurveDlg->m_ExprotDataBtn,SIGNAL(clicked()),this,SLOT(SaveDataSlot()), Qt::UniqueConnection);
+    plot_.SetVtkRender(m_HisCurveDlg->GetRenderer());
+}
+
 void XYPlot_Panel::PointClrBtnSlot()
 {
     QColor color = QColorDialog::getColor(QColor(Qt::green), this);
@@ -445,6 +452,7 @@ void XYPlot_Panel::CreateXYPlot()
 {
 	infNase.clear();
     if (!frdVISObj_&&DatObj_.SetTime.size()==0)  return;
+    EnsureRenderDialog();
     //if (selectedPointId_ < 0)  return;
     if(PickCurveComb_->currentIndex()==0){
         CreateXYTimePlot();

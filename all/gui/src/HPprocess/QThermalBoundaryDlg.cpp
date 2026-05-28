@@ -3,6 +3,7 @@
 static void showDialogInFront(QDialog *dlg)
 {
 	if (!dlg) return;
+	dlg->setWindowFlags(dlg->windowFlags() | Qt::Window | Qt::WindowStaysOnTopHint);
 	dlg->setWindowModality(Qt::ApplicationModal);
 	dlg->show();
 	dlg->raise();
@@ -12,6 +13,7 @@ static void showDialogInFront(QDialog *dlg)
 static int execDialogInFront(QDialog *dlg)
 {
 	if (!dlg) return QDialog::Rejected;
+	dlg->setWindowFlags(dlg->windowFlags() | Qt::Window | Qt::WindowStaysOnTopHint);
 	dlg->setWindowModality(Qt::ApplicationModal);
 	dlg->show();
 	dlg->raise();

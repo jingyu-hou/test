@@ -6,6 +6,7 @@
 static int execDialogInFront(QDialog *dlg)
 {
     if (!dlg) return QDialog::Rejected;
+    dlg->setWindowFlags(dlg->windowFlags() | Qt::Window | Qt::WindowStaysOnTopHint);
     dlg->setWindowModality(Qt::ApplicationModal);
     dlg->show();
     dlg->raise();

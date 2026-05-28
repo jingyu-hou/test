@@ -86,6 +86,8 @@ class FrdDataVIS
         void SetContourOpacity(int gridId, double opacity, const QString &header = "original");
         void SetContourRange(int gridId, double minV, double maxV, const QString &header = "original");
         void SetContourScalarbarVisible(int gridId, bool visible, const QString &header = "original");
+        void HideAllContours();
+        void RaiseVisibleContours(const QString &header, const vector<int> &priorityGridIds);
         //displacement
         void SetDisplacementVisible(int gridId, const QString &header, bool visible);
         void SetDisplacementColor(VTKColorS Color); 
@@ -195,4 +197,3 @@ private:
 };
 
 #endif
-

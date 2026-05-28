@@ -9,6 +9,17 @@
 #include <vtkRenderWindowInteractor.h>
 #include <string.h>
 
+static void BuildContourBandRange(const double scalarRange[2], double &minValue, double &maxValue)
+{
+    minValue = scalarRange[0];
+    maxValue = scalarRange[1];
+    double width = maxValue - minValue;
+    if (width <= 0.0) return;
+    double pad = width * 1.0e-6;
+    minValue -= pad;
+    maxValue += pad;
+}
+
 vtkStandardNewMacro(vtkVISUnContour);
 vtkCxxRevisionMacro(vtkVISUnContour, "$Revision: 1.0 $");
 
@@ -81,7 +92,11 @@ void vtkVISUnContour::CreateContourDisplay(char* scalarName, char* vectorName)
             conFilter_->SetInputConnection(csdVectorWarp_->GetOutputPort());
         else
             conFilter_->SetInputConnection(geo->GetOutputPort());
-        conFilter_->GenerateValues(contourLevel_, scalarRange_[0], scalarRange_[1]);
+        double bandMin = scalarRange_[0];
+        double bandMax = scalarRange_[1];
+        BuildContourBandRange(scalarRange_, bandMin, bandMax);
+        conFilter_->GenerateValues(contourLevel_, bandMin, bandMax);
+        conFilter_->SetScalarModeToValue();
         conFilter_->ClippingOn();
         nObj++;
     } else if (contourType_ == 2) {
@@ -173,7 +188,10 @@ void vtkVISUnContour::ModifyContourDisplay(char* scalarName)
     }
 
     if (conFilter_) {
-        conFilter_->GenerateValues(contourLevel_, scalarRange_[0], scalarRange_[1]);
+        double bandMin = scalarRange_[0];
+        double bandMax = scalarRange_[1];
+        BuildContourBandRange(scalarRange_, bandMin, bandMax);
+        conFilter_->GenerateValues(contourLevel_, bandMin, bandMax);
         conFilter_->Modified();
     }
     if (lineContourFilter_) {
@@ -270,10 +288,18 @@ void vtkVISUnContour::ModifyContourLevel(int level)
     if (level < 2) level = 2;
     contourLevel_ = level;
 
-    if (contourLookupTable_) contourLookupTable_->SetNumberOfColors(level);
+    if (contourLookupTable_) {
+        contourLookupTable_->SetNumberOfColors(level);
+        contourLookupTable_->Build();
+        contourLookupTable_->Modified();
+    }
 
     if (conFilter_) {
-        conFilter_->GenerateValues(level, scalarRange_[0], scalarRange_[1]);
+        double bandMin = scalarRange_[0];
+        double bandMax = scalarRange_[1];
+        BuildContourBandRange(scalarRange_, bandMin, bandMax);
+        conFilter_->GenerateValues(level, bandMin, bandMax);
+        conFilter_->SetScalarModeToValue();
         conFilter_->Modified();
     }
     if (lineContourFilter_) {
@@ -376,7 +402,11 @@ void vtkVISUnContour::ModifyDisplayScalarRange(double min, double max)
     scalarRange_[1] = max;
 
     if (conFilter_) {
-        conFilter_->GenerateValues(contourLevel_, min, max);
+        double bandMin = scalarRange_[0];
+        double bandMax = scalarRange_[1];
+        BuildContourBandRange(scalarRange_, bandMin, bandMax);
+        conFilter_->GenerateValues(contourLevel_, bandMin, bandMax);
+        conFilter_->SetScalarModeToValue();
         conFilter_->Modified();
     }
     if (lineContourFilter_) {
@@ -400,6 +430,7 @@ void vtkVISUnContour::DeleteObjects()
     if (_contourActor) {
         if (_renderer) _renderer->RemoveActor(_contourActor);
         _contourActor->Delete();
+        if (_unActor == _contourActor) _unActor = 0;
         _contourActor = 0;
     }
     if (_unActor) {
@@ -414,4 +445,11 @@ void vtkVISUnContour::DeleteObjects()
         _vtkObjects = 0;
         _vtkObjectsNum = 0;
     }
+}
+
+void vtkVISUnContour::BringContourToFront()
+{
+    if (_renderer == 0 || _contourActor == 0) return;
+    _renderer->RemoveActor(_contourActor);
+    _renderer->AddActor(_contourActor);
 }

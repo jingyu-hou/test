@@ -15,11 +15,21 @@ vtkVISUnstructuredGridManager::vtkVISUnstructuredGridManager()
 vtkVISUnstructuredGridManager::~vtkVISUnstructuredGridManager()
 {
     DeleteObjects();
+    if (_source) {
+        _source->UnRegister(this);
+        _source = 0;
+    }
 }
 
 void vtkVISUnstructuredGridManager::SetDataSource(vtkVISUnstructuredGridSource* object)
 {
+    if (_source == object) return;
+    if (_source) {
+        _source->UnRegister(this);
+        _source = 0;
+    }
     _source = object;
+    if (_source) _source->Register(this);
 }
 
 void vtkVISUnstructuredGridManager::ShowOn()

@@ -50,6 +50,8 @@ QWindowView::QWindowView(QWidget *parent,int index): QWidget(parent)//QDockWidge
     //this->setCentralWidget(tabView_); //
     index=tabView_->addTab(viewPostVTK_,QIcon(":/images/NewIcon.png"),tr("后处理"));
     tabView_->addTab(viewPreVTK_,QIcon(":/images/NewIcon.png"),tr("前处理"));
+    tabView_->setTabEnabled(0,true);
+    tabView_->setTabEnabled(1,true);
     tabView_->setTabWhatsThis(index, "VTK");
 	//tabView_->setStyleSheet("QTabBar::tab:disable{width:0;color:transparent}");
     //tabView_->setCurrentIndex(0);
@@ -92,31 +94,44 @@ void QWindowView::closeEvent(QCloseEvent *event)
 }
 void QWindowView::TabViewSlot()
 {
+    tabView_->setTabEnabled(0,true);
+    tabView_->setTabEnabled(1,true);
 	int index=tabView_->currentIndex();
-
+    QVTKWidget *widget = 0;
+    if (index == 0) {
+        widget = viewPostVTK_;
+    } else if (index == 1) {
+        widget = viewPreVTK_;
+    }
+    if (widget && widget->GetRenderWindow()) {
+        widget->GetRenderWindow()->Render();
+    }
 }
 //--center window change tab hide/shown
 void QWindowView::TabView(int index)
 {
+    tabView_->setTabEnabled(0,true);
+    tabView_->setTabEnabled(1,true);
 	switch (index)
 	{
 		case 0:{
 			tabView_->setCurrentIndex(0);//post process
-			tabView_->setTabEnabled(0,true);
-			tabView_->setTabEnabled(1,false);
 		}break;
 		case 1:{
 			tabView_->setCurrentIndex(1);//pre process
-			tabView_->setTabEnabled(1,true);
-			tabView_->setTabEnabled(0,false);
 		}break;
 		default:	break;
 	}
+    tabView_->setTabEnabled(0,true);
+    tabView_->setTabEnabled(1,true);
+    TabViewSlot();
 }
 
 //--Inp File Mesh Show
 void QWindowView::ShowCurPreData(ReadInpResultS InpData)
 {
+    tabView_->setTabEnabled(0,true);
+    tabView_->setTabEnabled(1,true);
     inpVIS_.InitRenderer(QMyVTK::GetInstance(1)->GetRenderer());
     inpVIS_.LoadInpData(&InpData);
     VTKColorS m_ClrInit;

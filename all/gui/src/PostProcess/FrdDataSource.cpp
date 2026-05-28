@@ -1,5 +1,6 @@
 #include <QSet>
 #include <QtAlgorithms>
+#include <cmath>
 #include <vtkObjectFactory.h>
 #include <vtkDoubleArray.h>
 #include <vtkPoints.h>
@@ -14,6 +15,7 @@
 #include <vtkQuad.h>//9
 #include <vtkQuadraticQuad.h>//10
 #include <vtkUnstructuredGrid.h>
+#include <vtkIdList.h>
 #include <vtkVISUnstructuredGridSource.h>
 #include "../QFrdDataPro.h"
 #include "FrdDataSource.h"
@@ -60,6 +62,7 @@ FrdDataSource::~FrdDataSource()
     varHeaderScalarMap_.clear();
     headerTimeStepMap_.clear();
     StepTimeIncMap_.clear();
+    scalarValidPointMap_.clear();
     varHeaderList_.clear();
 
     for (map<QString, map<int, vtkUnstructuredGrid*> >::iterator it = dispGridsMap_.begin(); it != dispGridsMap_.end(); ++it)
@@ -187,6 +190,11 @@ bool FrdDataSource::Step3_InitResults(_RESULT_STEP_S_ *rStruct)
         vtkDoubleArray *darry = vtkDoubleArray::New();
         darry->SetName(scalar_name.toLatin1().data());
         darry->SetNumberOfValues(pointIdMap_.size());//(pointNum);
+        for (int j = 0; j < pointIdMap_.size(); ++j)
+        {
+            darry->SetValue(j, 0.0);
+        }
+        QSet<int> validPoints;
         if (scalar.compare("all", Qt::CaseInsensitive) != 0)
         {
             for (int j = 0; j < pointNum; ++j)
@@ -194,7 +202,8 @@ bool FrdDataSource::Step3_InitResults(_RESULT_STEP_S_ *rStruct)
                 int id = rStruct->nodeResultBlock.dataIndex.at(j);
                 vtkIdType first1=pointIdMap_[id];
                 double second=rStruct->nodeResultBlock.strDataRecord.at(j)[i];       
-                darry->SetValue(first1, second);                 
+                darry->SetValue(first1, second);
+                validPoints.insert(first1);
             }
         }
         else
@@ -207,9 +216,14 @@ bool FrdDataSource::Step3_InitResults(_RESULT_STEP_S_ *rStruct)
             for (int j = 0; j < pointNum; ++j)
             {
                 int id = pointIdMap_[rStruct->nodeResultBlock.dataIndex.at(j)];
-                darry->SetValue(id, darry1->GetValue(id)+darry2->GetValue(id)+darry3->GetValue(id));
+                double d1 = darry1->GetValue(id);
+                double d2 = darry2->GetValue(id);
+                double d3 = darry3->GetValue(id);
+                darry->SetValue(id, sqrt(d1*d1 + d2*d2 + d3*d3));
+                validPoints.insert(id);
             }
         }
+        scalarValidPointMap_[scalar_name] = validPoints;
         resultVec_.push_back(darry);
     }
     return true;
@@ -229,7 +243,26 @@ bool FrdDataSource::Step4_SetupFrd()
         this->scalarName_[i] = scalarVec_.at(i);
         pointResults_[i] = resultVec_.at(i);
         this->scalarRange_[i] = new double[2];
-        pointResults_[i]->GetRange(this->scalarRange_[i]);
+        QString scalarKey(this->scalarName_[i]);
+        if (scalarValidPointMap_.find(scalarKey) != scalarValidPointMap_.end() &&
+            !scalarValidPointMap_[scalarKey].isEmpty())
+        {
+            QSet<int>::const_iterator it = scalarValidPointMap_[scalarKey].begin();
+            double minValue = pointResults_[i]->GetValue(*it);
+            double maxValue = minValue;
+            for (; it != scalarValidPointMap_[scalarKey].end(); ++it)
+            {
+                double value = pointResults_[i]->GetValue(*it);
+                if (value < minValue)  minValue = value;
+                if (value > maxValue)  maxValue = value;
+            }
+            this->scalarRange_[i][0] = minValue;
+            this->scalarRange_[i][1] = maxValue;
+        }
+        else
+        {
+            pointResults_[i]->GetRange(this->scalarRange_[i]);
+        }
     }
     gSource_->SetScalarNumber(this->scalarNumber_);
     gSource_->SetScalarsName(this->scalarName_);
@@ -311,6 +344,48 @@ vtkCell* FrdDataSource::NewVTKCell(int frdCellType)
 vtkVISUnstructuredGridSource* FrdDataSource::GetSourceGrid()
 {
     return gSource_;
+}
+
+vtkVISUnstructuredGridSource* FrdDataSource::CreateSourceGrid(int gridId, const QString &header)
+{
+    vtkUnstructuredGrid *grid = 0;
+    if (header.isEmpty())
+    {
+        if (idGridMap_.find(gridId) == idGridMap_.end()) return 0;
+        grid = idGridMap_[gridId];
+    }
+    else
+    {
+        int exist = 1;
+        if (dispGridsMap_.find(header) == dispGridsMap_.end())
+        {
+            exist = 0;
+        }
+        else if (dispGridsMap_[header].find(gridId) == dispGridsMap_[header].end())
+        {
+            exist = -1;
+        }
+        if (exist != 1)
+        {
+            vtkUnstructuredGrid *g = BuildDisplacementGrid(gridId, header);
+            if (g == 0) return 0;
+            if (exist == 0)
+            {
+                map<int, vtkUnstructuredGrid*> obj;
+                dispGridsMap_[header] = obj;
+            }
+            dispGridsMap_[header][gridId] = g;
+        }
+        grid = dispGridsMap_[header][gridId];
+    }
+
+    vtkVISUnstructuredGridSource *source = vtkVISUnstructuredGridSource::New();
+    source->SetScalarNumber(this->scalarNumber_);
+    source->SetScalarsName(this->scalarName_);
+    source->SetScalarsSource(pointResults_);
+    source->SetScalarsRange(this->scalarRange_);
+    source->SetSourceGrid(grid);
+    return source;
 }
 
 bool FrdDataSource::SetFrdDataSource(int gridId, const QString &header)
@@ -415,6 +490,31 @@ bool FrdDataSource::IsScalarValuesDiff(const QString &scalar)
     return true;
 }
 
+bool FrdDataSource::GridHasScalarData(int gridId, const QString &scalar)
+{
+    if (idGridMap_.find(gridId) == idGridMap_.end())  return false;
+    if (scalarValidPointMap_.find(scalar) == scalarValidPointMap_.end())  return false;
+    const QSet<int> &validPoints = scalarValidPointMap_[scalar];
+    if (validPoints.isEmpty())  return false;
+
+    vtkUnstructuredGrid *grid = idGridMap_[gridId];
+    if (grid == 0)  return false;
+    vtkIdType cellCount = grid->GetNumberOfCells();
+    for (vtkIdType i = 0; i < cellCount; ++i)
+    {
+        vtkCell *cell = grid->GetCell(i);
+        if (cell == 0)  continue;
+        vtkIdList *ids = cell->GetPointIds();
+        if (ids == 0)  continue;
+        vtkIdType pointCount = ids->GetNumberOfIds();
+        for (vtkIdType j = 0; j < pointCount; ++j)
+        {
+            if (validPoints.contains(ids->GetId(j)))  return true;
+        }
+    }
+    return false;
+}
+
 map<double, double> FrdDataSource::GetPointScalar_TimeValueMap(int pointId, const QString &scalarName)
 {
     map<double, double> resultMap;
@@ -515,4 +615,3 @@ int FrdDataSource::GetPointID(QString strLabel,double x,double y,double z)
 
    return id;
 }
-

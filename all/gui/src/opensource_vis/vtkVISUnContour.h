@@ -75,6 +75,7 @@ public:
 
     void ModifyDisplayScalarRange(double min, double max);
     void DeleteObjects();
+    void BringContourToFront();
 
 protected:
     vtkLookupTable* contourLookupTable_;

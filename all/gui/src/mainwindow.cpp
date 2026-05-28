@@ -1426,7 +1426,7 @@ void MainWindow::createDockWindows()
     m_MdiArea->setViewMode(QMdiArea::TabbedView);
     m_MdiArea->setTabsClosable(false);
     m_MdiArea->setTabsMovable(true);
-    m_MdiArea->setWindowFlags(Qt::WindowStaysOnTopHint|Qt::FramelessWindowHint);
+    m_MdiArea->setWindowFlags(Qt::Widget);
     //m_MdiArea->setDocumentMode(true);
     //m_MdiArea->setContextMenuPolicy(Qt::NoContextMenu);
     //m_MdiArea->setFocusPolicy(Qt::NoFocus);
@@ -2107,7 +2107,7 @@ void MainWindow::OpenSlot()
        Information_Widget::GetInstance()->ShowInformation(QString(filename+" Open Succeed!"));
     }else if(fileFormat=="frd"){// 
         if (viewWindow_){
-            viewWindow_->TabView(1);//tabView_->setCurrentIndex(0);
+            viewWindow_->TabView(0);//post process
         }
         if(PostPro_->m_PosWigFile->readOpenFrd(filename)){
             Information_Widget::GetInstance()->ShowInformation(QString(filename+" Open Succeed!"));
@@ -2667,7 +2667,13 @@ void MainWindow::ShowProcessDialog(QDialog *dlg)
 {
     if (!dlg) return;
     HideProcessDialogs();
+    if (dlg->parentWidget() != this) {
+        dlg->setParent(this, Qt::Dialog);
+    }
+    dlg->setWindowFlags(dlg->windowFlags() | Qt::Window | Qt::WindowStaysOnTopHint);
+    dlg->setWindowModality(Qt::ApplicationModal);
     dlg->show();
+    dlg->setFocus(Qt::ActiveWindowFocusReason);
     dlg->raise();
     dlg->activateWindow();
 }

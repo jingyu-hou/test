@@ -52,6 +52,7 @@ public:
     VTKColorS m_pointColor;//拾取点颜色；
    
 private:
+    void EnsureRenderDialog();
     void UpdataSelectedPoint(vtkActor *actor,QString str,int pointId, double x, double y, double z);
     void RemoveSelectedPoint(vtkActor *actor,int pointId, double x, double y, double z);
     bool clearAllDisp();
@@ -103,4 +104,3 @@ private:
     QString m_varPositionComb,m_varCombParam;
 };
 #endif
-

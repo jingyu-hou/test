@@ -158,10 +158,12 @@ QStepPlayWidget::QStepPlayWidget(QWidget *parent)
     connect(m_ComBoParam01,SIGNAL(currentIndexChanged(int)),this,SLOT(ComboxParam01Slot(int)));
     connect(m_ComBoParam02,SIGNAL(currentIndexChanged(int)),this,SLOT(ComboxParam02Slot(int)));
 
-    m_timer = new QTimer(this);
+	m_timer = new QTimer(this);
     connect(m_timer,SIGNAL(timeout()),this,SLOT(AutoPlaySlot()));
 
 	TValue_ =1000;//初始化时间为1000ms；
+    m_ChangingCombos = false;
+    connect(m_ComBoParam03,SIGNAL(currentIndexChanged(int)),this,SLOT(ComboxParam03Slot(int)));
 }
 
 QStepPlayWidget::~QStepPlayWidget()
@@ -246,15 +248,17 @@ void QStepPlayWidget::GroupBtnSlot(int index)
 void QStepPlayWidget::updataCombox(ResultOutputS ResultO)
 {
     m_ResultO = ResultO;
+    m_ChangingCombos = true;
     m_ComBoParam01 ->clear();
-    //m_ComBoParam01->clear();
-    //m_ComBoParam01->clear();
-    int iMenuNum=ResultO.m_Menu.m_MenuName.size();
-    QStringList strList=ResultO.m_Menu.m_MenuName;
+    m_ComBoParam02 ->clear();
+    m_ComBoParam03 ->clear();
     m_ComBoParam01->insertItems(0,ResultO.m_Menu.m_MenuName); 
+    m_ChangingCombos = false;
+    ComboxParam01Slot(m_ComBoParam01->currentIndex());
 }
 void QStepPlayWidget::ComboxParam01Slot(int id)
 {
+    if (m_ChangingCombos) return;
     id= m_ComBoParam01->currentIndex();
     QString strT=m_ComBoParam02->currentText();
     if (id>-1 && id<m_ResultO.m_Menu.m_subMenuName.size()){
@@ -265,31 +269,51 @@ void QStepPlayWidget::ComboxParam01Slot(int id)
         }
         QString tmpComb=combList.join(",");
         int ret=tmpMenu.compare(tmpComb,Qt::CaseInsensitive);
-        if (ret==0){return;}
+        if (ret==0){
+            ComboxParam02Slot(m_ComBoParam02->currentIndex());
+            return;
+        }
+        m_ChangingCombos = true;
         m_ComBoParam02->clear();
         m_ComBoParam02->addItems(m_ResultO.m_Menu.m_subMenuName.at(id));
-        /*int ind=m_ComBoParam02->findText(strT);
-        if (ind!=-1)m_ComBoParam02->setCurrentIndex(ind) ;*/
+        int ind=m_ComBoParam02->findText(strT);
+        if (ind!=-1)m_ComBoParam02->setCurrentIndex(ind);
+        m_ChangingCombos = false;
+        ComboxParam02Slot(m_ComBoParam02->currentIndex());
     }
 }
 void QStepPlayWidget::ComboxParam02Slot(int id)
 {
+    if (m_ChangingCombos) return;
     id = m_ComBoParam02->currentIndex();
     QString strT=m_ComBoParam03->currentText();
-    int ind=m_ComBoParam03->findText(strT);
-    if (id>-1 && id<m_ResultO.m_Menu.m_sub2MenuName.size()){
-        QString tmpMenu=m_ResultO.m_Menu.m_sub2MenuName.at(id).join(",");
+    int compIndex = componentMenuIndex(m_ComBoParam01->currentIndex(), id);
+    if (compIndex>-1 && compIndex<m_ResultO.m_Menu.m_sub2MenuName.size()){
+        QString tmpMenu=m_ResultO.m_Menu.m_sub2MenuName.at(compIndex).join(",");
         QStringList combList;combList.clear();
         for (int kk=0;kk<m_ComBoParam03->count();kk++){
             combList<<m_ComBoParam03->itemText(kk);
         }
         QString tmpComb=combList.join(",");
         int ret=tmpMenu.compare(tmpComb,Qt::CaseInsensitive);
-        if (ret==0){return;}
+        if (ret==0){
+            SetPlayParam();
+            return;
+        }
+        m_ChangingCombos = true;
         m_ComBoParam03->clear();
-        m_ComBoParam03->addItems(m_ResultO.m_Menu.m_sub2MenuName.at(id));
+        m_ComBoParam03->addItems(m_ResultO.m_Menu.m_sub2MenuName.at(compIndex));
+        int ind=m_ComBoParam03->findText(strT);
+        if (ind!=-1)m_ComBoParam03->setCurrentIndex(ind);
+        m_ChangingCombos = false;
+        SetPlayParam();
     } 
-    //if (ind!=-1)m_ComBoParam03->setCurrentIndex(ind) ;
+}
+void QStepPlayWidget::ComboxParam03Slot(int id)
+{
+    Q_UNUSED(id);
+    if (m_ChangingCombos) return;
+    SetPlayParam();
 }
 //--COMBOXUPDATA
 void  QStepPlayWidget::updataParam(StepPlayVisS mParam)
@@ -354,11 +378,28 @@ void QStepPlayWidget::AutoPlaySlot()
 }
 void QStepPlayWidget::SetPlayParam()
 {
+    if (m_ComBoParam01->currentIndex()<0 ||
+        m_ComBoParam02->currentIndex()<0 ||
+        m_ComBoParam03->currentIndex()<0) {
+        return;
+    }
     QString strName = m_ComBoParam01->currentText()+"-"+
         m_ComBoParam02->currentText()+":"+
         m_ComBoParam03->currentText();
     m_StepPlayParam.strName=strName;
     emitPlayStepParam(m_StepPlayParam);
+}
+int QStepPlayWidget::componentMenuIndex(int stepIndex, int variableIndex) const
+{
+    if (stepIndex<0 || variableIndex<0 ||
+        stepIndex>=m_ResultO.m_Menu.m_subMenuName.size()) {
+        return -1;
+    }
+    int index = variableIndex;
+    for (int i=0; i<stepIndex; ++i) {
+        index += m_ResultO.m_Menu.m_subMenuName.at(i).size();
+    }
+    return index;
 }
 //--setup time
 void QStepPlayWidget::SetUpBtnSlot()

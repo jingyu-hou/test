@@ -1,5 +1,21 @@
 #include "./PostProcess/XYPlot_Panel.h"
 #include "QPostPrc.h"
+#include "Information_Widget.h"
+
+static void ShowPostDialogInFront(QDialog *dlg, QWidget *owner)
+{
+    if (!dlg) return;
+    QWidget *parent = owner ? owner->window() : 0;
+    if (parent && dlg->parentWidget() != parent) {
+        dlg->setParent(parent, Qt::Dialog);
+    }
+    dlg->setWindowFlags(dlg->windowFlags() | Qt::Window | Qt::WindowStaysOnTopHint);
+    dlg->setWindowModality(Qt::ApplicationModal);
+    dlg->show();
+    dlg->setFocus(Qt::ActiveWindowFocusReason);
+    dlg->raise();
+    dlg->activateWindow();
+}
 
 
 QPostPrc::QPostPrc(QWidget *parent)
@@ -107,9 +123,7 @@ void QPostPrc::ChangeModelIndexSlot( const QModelIndex & index )
     QString type = index.data(Qt::UserRole+3).toString();
     if (type == "PlotOpt")
     {
-        m_PostWidPlotOptDlg->show(); 
-        m_PostWidPlotOptDlg->raise();//最上层
-        m_PostWidPlotOptDlg->activateWindow();//激活
+        ShowPostDialogInFront(m_PostWidPlotOptDlg, this);
     }
     else if (type == "DatafrdOpt")//
     {
@@ -119,9 +133,7 @@ void QPostPrc::ChangeModelIndexSlot( const QModelIndex & index )
 	{
 		//m_StackedWidget->setCurrentWidget(m_PosWigReadResults);
 	 
-	   m_PosWigReadResultDlg->show(); 
-	   m_PosWigReadResultDlg->raise();//最上层
-	   m_PosWigReadResultDlg->activateWindow();//激活
+	   ShowPostDialogInFront(m_PosWigReadResultDlg, this);
 	}
 	else if (type == "PlotRest")
 	{
@@ -337,6 +349,15 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
     if (scalar == ""){
         return;//没有加载文件
     }
+    QString strOrigCurrentName = scalar.left(scalar.indexOf(":"));
+    QString strComponent = scalar.section(":", 1, 1);
+    const map<QString, QStringList> *scalarInfo = m_PosWigFile->frdVIS_.GetScalarInfo();
+    if (scalarInfo == 0 ||
+        scalarInfo->find(strOrigCurrentName) == scalarInfo->end() ||
+        scalarInfo->find(strOrigCurrentName)->second.indexOf(strComponent) == -1) {
+        Information_Widget::GetInstance()->ShowInformation("Selected FRD result is not available: " + scalar);
+        return;
+    }
     if (m_ActorListData.empty() && !m_WholeActorData.empty()) {
         m_ActorListData = m_WholeActorData;
     }
@@ -346,7 +367,6 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
     xyplotPanel_->UpDataComb(iOrigCurrent,scalar);
     m_PostWigResultOut->upDateScalar(scalar);
     m_FileScalarName=scalar;
-    QString strOrigCurrentName = scalar.left(scalar.indexOf(":"));
     QString strNumLabel=strOrigCurrentName.left(strOrigCurrentName.indexOf("-")).remove("L",Qt::CaseInsensitive);
     //
     //关闭原始网格显示----
@@ -359,6 +379,7 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
          m_PosWigFile->frdVIS_.SetAllEdgeMeshVisible((*it),false,m_WHColor);
          m_PosWigFile->frdVIS_.SetContourVisible(*it,scalar,false);
      }
+    m_PosWigFile->frdVIS_.HideAllContours();
     static QString strOldName = strOrigCurrentName;
     if (ResultVis.bContour){//云图 //显示变形后云图---
         if (strOldName == strOrigCurrentName){//不需要更新
@@ -511,6 +532,9 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
             m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+strOrigCurrentName.left(strOrigCurrentName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//
          }
         oldDispName=strOrigCurrentName;
+    }
+    if (ResultVis.bContour) {
+        m_PosWigFile->frdVIS_.RaiseVisibleContours("L"+strNumLabel+"-DISP", m_ActorListData);
     }
     m_PosWigFile->frdVIS_.Update();
     //--获取frdVis中数据，进行frdText显示

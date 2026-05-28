@@ -242,10 +242,12 @@ void FrdDataVIS::EndAVI()
 vtkVISUnShadeMesh* FrdDataVIS::CreateShadeMeshObject(int gridId, int type)
 {
     if (frdSource_ == 0)  return 0;
-    if (frdSource_->SetFrdDataSource(gridId) == false)  return 0;
+    vtkVISUnstructuredGridSource *source = frdSource_->CreateSourceGrid(gridId);
+    if (source == 0) return 0;
     vtkVISUnShadeMesh *visObj = vtkVISUnShadeMesh::New();
     visObj->SetRenderTo(renderer_, renWin_);
-    visObj->SetDataSource(frdSource_->GetSourceGrid());
+    visObj->SetDataSource(source);
+    source->Delete();
     if (type == 0)       visObj->CreateShadeMeshSurfaceDisplay(0);  //mesh
     else if (type == 1)  visObj->CreateShadeMeshSurfaceDisplay(1);  //shade
     else if (type == 2)  visObj->CreateShadeMeshDisplay(0);  //all edges
@@ -309,11 +311,13 @@ void FrdDataVIS::SetOutlineVisible(int gridId, bool visible, VTKColorS tmpClr)
 vtkVISUnEdge* FrdDataVIS::CreateOutlineObject(int gridId)
 {
     if (frdSource_ == 0)  return 0;
-    if (frdSource_->SetFrdDataSource(gridId) == false)  return 0;
+    vtkVISUnstructuredGridSource *source = frdSource_->CreateSourceGrid(gridId);
+    if (source == 0) return 0;
     //createActor();
     vtkVISUnEdge *visObj = vtkVISUnEdge::New();
     visObj->SetRenderTo(renderer_, renWin_);
-    visObj->SetDataSource(frdSource_->GetSourceGrid());
+    visObj->SetDataSource(source);
+    source->Delete();
     visObj->CreateEdgeDisplay();
     return visObj;
 }
@@ -383,21 +387,47 @@ void FrdDataVIS::SetContourVisible(int gridId, const QString &scalar, bool visib
     }
 }
 
+void FrdDataVIS::HideAllContours()
+{
+    for (map<QString, map<int, vtkVISUnContour*> >::iterator it = headerContoursMap_.begin();
+         it != headerContoursMap_.end(); ++it)
+    {
+        for (map<int, vtkVISUnContour*>::iterator it2 = it->second.begin();
+             it2 != it->second.end(); ++it2)
+        {
+            if (it2->second == 0)  continue;
+            it2->second->ShowOff();
+            it2->second->ShowOffScalarBar();
+        }
+    }
+}
+
+void FrdDataVIS::RaiseVisibleContours(const QString &header, const vector<int> &priorityGridIds)
+{
+    if (headerContoursMap_.find(header) == headerContoursMap_.end()) return;
+
+    for (vector<int>::const_reverse_iterator it = priorityGridIds.rbegin();
+         it != priorityGridIds.rend(); ++it)
+    {
+        map<int, vtkVISUnContour*>::iterator contourIt = headerContoursMap_[header].find(*it);
+        if (contourIt == headerContoursMap_[header].end()) continue;
+        if (contourIt->second == 0) continue;
+        contourIt->second->BringContourToFront();
+    }
+}
+
 vtkVISUnContour* FrdDataVIS::CreateContourObject(int gridId, const QString &scalar, const QString &header)
 {
     if (!scalarResultLoaded_)  return 0;
     if (frdSource_->IsScalarNameValid(scalar) == false)  return 0;
-    if (header == "original")
-    {
-        if (frdSource_->SetFrdDataSource(gridId) == false)  return 0;
-    }
-    else
-    {
-        if (frdSource_->SetFrdDataSource(gridId, header) == false)  return 0;
-    }
+    if (frdSource_->GridHasScalarData(gridId, scalar) == false)  return 0;
+    QString sourceHeader = (header == "original") ? QString() : header;
+    vtkVISUnstructuredGridSource *source = frdSource_->CreateSourceGrid(gridId, sourceHeader);
+    if (source == 0) return 0;
     vtkVISUnContour *visObj = vtkVISUnContour::New();
     visObj->SetRenderTo(renderer_, renWin_);
-    visObj->SetDataSource(frdSource_->GetSourceGrid());
+    visObj->SetDataSource(source);
+    source->Delete();
     visObj->SetContourType(0);  //banded contour, can change level.
     visObj->CreateContourDisplay(scalar.toAscii().data());
     visObj->ClippingOffContourDisplay();
@@ -528,10 +558,12 @@ void FrdDataVIS::SetDisplacementVisible(int gridId, const QString &header, bool 
             map<int, vtkVISUnShadeMesh*> obj;
             headerDisplacementsMap_[header] = obj;
         }
-        if (frdSource_->SetFrdDataSource(gridId, header) == false)  return;
+        vtkVISUnstructuredGridSource *source = frdSource_->CreateSourceGrid(gridId, header);
+        if (source == 0) return;
         vtkVISUnShadeMesh *visObj = vtkVISUnShadeMesh::New();
         visObj->SetRenderTo(renderer_, renWin_);
-        visObj->SetDataSource(frdSource_->GetSourceGrid());
+        visObj->SetDataSource(source);
+        source->Delete();
         visObj->CreateShadeMeshDisplay(0);
         headerDisplacementsMap_[header][gridId] = visObj;
     }
@@ -957,11 +989,9 @@ void FrdDataVIS::CreateCutObjects(int gridId,int cutId, bool bInsideOut,QString 
     if (scalar.isEmpty()) return;
 	if (!scalarResultLoaded_)  return;
 	if (frdSource_->IsScalarNameValid(scalar) == false)  return;
-	if (header == "original"){
-		if (frdSource_->SetFrdDataSource(gridId) == false)  return;
-	}else{
-		if (frdSource_->SetFrdDataSource(gridId, header) == false)  return;
-	}
+    QString sourceHeader = (header == "original") ? QString() : header;
+    vtkVISUnstructuredGridSource *source = frdSource_->CreateSourceGrid(gridId, sourceHeader);
+    if (source == 0) return;
 
 	//const vector<int>* idS=GetGridIds();
 	//vector<int>::const_iterator it1=idS->begin();//IdList
@@ -980,7 +1010,8 @@ void FrdDataVIS::CreateCutObjects(int gridId,int cutId, bool bInsideOut,QString 
 	//vtkVISUnSlice *obj2 = vtkVISUnSlice::New();
 	QVTKUnClip *obj2=QVTKUnClip::New();//new QVTKUnClip();
 	obj2->SetRenderTo(renderer_, renWin_);
-	obj2->SetDataSource(frdSource_->GetSourceGrid());
+	obj2->SetDataSource(source);
+    source->Delete();
 	obj2->SetSliceSource_FD(scalar.toAscii().data(), 0,bInsideOut);
 	obj2->CreateSliceWidget_FD();
 

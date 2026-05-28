@@ -10,9 +10,11 @@
 #include <QRadioButton>
 #include <QDialogButtonBox>
 #include <QLabel>
+#include <QMouseEvent>
 
 #include "QVTKWidget.h"
 #include "vtkActor.h"
+#include "vtkAxesActor.h"
 #include "vtkRenderer.h"
 #include "vtkRenderWindow.h"
 #include "vtkRenderWindowInteractor.h"
@@ -28,6 +30,22 @@
 //#include "vtkInteractorStyleTrackballCamera.h"
 //#include "vtkVISPointPicker.h"
 
+class QSafeVTKWidget : public QVTKWidget
+{
+public:
+    explicit QSafeVTKWidget(QWidget *parent = 0) : QVTKWidget(parent) {}
+
+protected:
+    void mouseMoveEvent(QMouseEvent *event)
+    {
+        if (event && event->buttons() == Qt::NoButton) {
+            event->ignore();
+            return;
+        }
+        QVTKWidget::mouseMoveEvent(event);
+    }
+};
+
 
 
 #include "vtkQuad.h"
@@ -42,7 +60,6 @@
 #include "vtkQuadraticTriangle.h"//6节点三角形
 #include "vtkQuadraticQuad.h"//8节点四边形
 #include "vtkCamera.h"
-#include <vtkVISOrientationMarker.h>//xyz坐标图形显示
 
 enum ELEMENT_STYLE_ENUM{
 	ENUM_NO_ELEM_STYLE = 0,
@@ -77,7 +94,6 @@ public:
     void BackColor();
 public:
     static  QMap<int,QMyVTK*>  m_QVTKWidgetObjectMap;
-    vtkVISOrientationMarker *m_staticMarker;
     void ViewChange(int index);
     //QVTKWidget  *m_VTKWidget;
 private:
@@ -93,6 +109,8 @@ private:
     QVTKWidget  *m_VTKWidget;
     vtkUnstructuredGrid *m_unGrid_;
     vtkRenderer *render_;
+    vtkRenderer *m_axisRenderer;
+    vtkAxesActor *m_axisActor;
 };
 
 class Dialog_BG : public QDialog
