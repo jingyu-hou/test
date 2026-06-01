@@ -122,6 +122,7 @@ class FrdDataVIS
         bool IsReady() const;
         bool IsLoading() const;
         void SetLoading(bool loading);
+        void Swap(FrdDataVIS &other);
         //--pickerPoind ID
         //--get pointId
         int GetPointId(QString s,double x, double y, double z);

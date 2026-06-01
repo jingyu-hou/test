@@ -72,6 +72,21 @@ void FrdDataVIS::SetLoading(bool loading)
     loading_ = loading;
 }
 
+void FrdDataVIS::Swap(FrdDataVIS &other)
+{
+    FrdDataSource *tmpSrc = frdSource_;
+    frdSource_ = other.frdSource_;
+    other.frdSource_ = tmpSrc;
+
+    bool tmpLoaded = scalarResultLoaded_;
+    scalarResultLoaded_ = other.scalarResultLoaded_;
+    other.scalarResultLoaded_ = tmpLoaded;
+
+    bool tmpLoading = loading_;
+    loading_ = other.loading_;
+    other.loading_ = tmpLoading;
+}
+
 void FrdDataVIS::Clean()
 {
     if (frdSource_)

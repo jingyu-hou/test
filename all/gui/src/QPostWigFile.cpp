@@ -147,16 +147,36 @@ bool QPostWigFile::readOpenFrd(QString fileName)
     }
     QFrdDataPro	m_FrdDataPro;
     resultFrdS m_resultFrd;
-    bool ret=m_FrdDataPro.ReadFileData(frdVIS_, fileName, m_resultFrd);
-    if (!ret) {
-        frdVIS_.Reset();
-        Information_Widget::GetInstance()->ShowInformation("FRD file read failed.");
-        return false;
-    }
-    if (!frdVIS_.Step4_SetupFrd()) {
-        frdVIS_.Reset();
-        Information_Widget::GetInstance()->ShowInformation("FRD data setup failed.");
-        return false;
+
+    bool hadPreviousData = frdVIS_.IsReady();
+
+    if (hadPreviousData) {
+        FrdDataVIS tmpVIS;
+        tmpVIS.InitRenderer(frdVIS_.GetBindedRenderer());
+        tmpVIS.SetLoading(true);
+
+        bool ret = m_FrdDataPro.ReadFileData(tmpVIS, fileName, m_resultFrd);
+        if (!ret) {
+            Information_Widget::GetInstance()->ShowInformation("FRD file read failed.");
+            return false;
+        }
+        if (!tmpVIS.Step4_SetupFrd()) {
+            Information_Widget::GetInstance()->ShowInformation("FRD data setup failed.");
+            return false;
+        }
+        frdVIS_.Swap(tmpVIS);
+    } else {
+        bool ret = m_FrdDataPro.ReadFileData(frdVIS_, fileName, m_resultFrd);
+        if (!ret) {
+            frdVIS_.Reset();
+            Information_Widget::GetInstance()->ShowInformation("FRD file read failed.");
+            return false;
+        }
+        if (!frdVIS_.Step4_SetupFrd()) {
+            frdVIS_.Reset();
+            Information_Widget::GetInstance()->ShowInformation("FRD data setup failed.");
+            return false;
+        }
     }
     const map<QString, QStringList>* scaler=frdVIS_.GetScalarInfo();
     if (scaler!=NULL)

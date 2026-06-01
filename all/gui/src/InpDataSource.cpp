@@ -420,7 +420,7 @@ vtkUnstructuredGrid* InpDataSource::ELDisplacementGrid(const QString &header)
     for(int i = 0; i < nCell; ++i){
         vtkCell *cell = NULL;
 
-		int m_iCelltype0;
+		int m_iCelltype0 = 0;
 		QStringList DataType=tmpStrList.at(i).split(",");
 		int NodeNumber=DataType.size()-1;
 		if(n2D3D==2){
@@ -574,7 +574,7 @@ bool InpDataSource::GetNCellData(QStringList *CellListData, QString header)
             }
         }
     }
-    return true;
+    return false;
 }
 /*
 //--单元集合中，数据转换
@@ -607,7 +607,7 @@ bool InpDataSource::GetElCellData(QStringList *CellListData,QString header)
         }
         //return false;
     }
-    return true;
+    return false;
 }
 /*
 //--表面集合中，数据转换
@@ -639,7 +639,7 @@ bool InpDataSource:: GetSurfCellData(QVector<QStringList> *CellListData,QStringL
     }
     //QStringList tmpStrList;
     //bool b=GetElCellData(&tmpStrList,header);
-    return true;
+    return false;
 }
 //--表面集合中获取当前面的点;
 bool InpDataSource::GetChooseData(QStringList *strRowData,QString strFName)
@@ -649,7 +649,7 @@ bool InpDataSource::GetChooseData(QStringList *strRowData,QString strFName)
     for (int i=0;i<StrL.size();i++)
 	{
         QString strTmp="";
-		int m_iCelltype0;
+		int m_iCelltype0 = 0;
 		QStringList DataType=StrL.at(i).split(",");
 		int NodeNumber=DataType.size()-1;
 		if(n2D3D==2){
@@ -986,7 +986,7 @@ bool InpDataSource::InpRowDataToSurf(ReadInpResultS *Inp)
             case 3:{cell = vtkTriangle::New();}break;//ok vtkTetra::New();}break;
             case 4:{cell = vtkQuadraticQuad::New();}break;//(wait data for test) vtkQuadraticHexahedron::New();}break; 
             case 5:{
-                    if ((SnData.size()-3)==8) cell = vtkQuadraticQuad::New();//(wait data for test)
+                    if ((SnData.size()-3)==4) cell = vtkQuadraticQuad::New();//(wait data for test)
                     else cell = vtkQuadraticTriangle::New();//(wait data for test)
               }break;//vtkQuadraticWedge::New();}break; 
             case 6:{cell = vtkQuadraticTriangle::New();}break;//(wait data for test)vtkQuadraticTetra::New();}break; 
@@ -1014,6 +1014,7 @@ bool InpDataSource::InpRowDataToSurf(ReadInpResultS *Inp)
             int np = cell->GetNumberOfPoints();
             vtkIdList *idList = cell->GetPointIds();
             //QStringList tmpStrList = SnData.at//cellPointsList.at(i).split(",");
+            if (SnData.size() < np + 3) { cell->Delete(); continue; }
             for (int j = 0; j < np; ++j){
                // idList->SetId(j, SnData.at(j+2).toInt()-1);
 				idList->SetId(j, InpPointIdMap_[SnData.at(j+3).toInt()]);//SnData.at(j+2).toInt()-1);
@@ -1057,7 +1058,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 sortD.clear();
                 sortD<<tmpStrList.at(5).toInt();
                 sortD<<tmpStrList.at(8).toInt();
-                sortD<<tmpStrList.at(7).toInt();
+                sortD<<tmpStrList.at(3).toInt();
                 sortD<<tmpStrList.at(6).toInt();
                 qSort(sortD.begin(),sortD.end());
                 strSortD=QString("%1").arg(sortD.at(0));
@@ -1067,7 +1068,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 noSorD =tmpStrList.at(0)+",2,"+QString("%1,").arg(iType)+
                     tmpStrList.at(5)+","+
                     tmpStrList.at(8)+","+
-                    tmpStrList.at(7)+","+
+                    tmpStrList.at(3)+","+
                     tmpStrList.at(6);
                 if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
                     m_ElementSurfmap.insert(strSortD,noSorD);
@@ -1099,7 +1100,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 sortD.clear();
                 sortD<<tmpStrList.at(2).toInt();
                 sortD<<tmpStrList.at(6).toInt();
-                sortD<<tmpStrList.at(7).toInt();
+                sortD<<tmpStrList.at(3).toInt();
                 sortD<<tmpStrList.at(3).toInt();
                 qSort(sortD.begin(),sortD.end());
                 strSortD=QString("%1").arg(sortD.at(0));
@@ -1109,7 +1110,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 noSorD =tmpStrList.at(0)+",4,"+QString("%1,").arg(iType)+
                     tmpStrList.at(2)+","+
                     tmpStrList.at(6)+","+
-                    tmpStrList.at(7)+","+
+                    tmpStrList.at(3)+","+
                     tmpStrList.at(3);
                 if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
                     m_ElementSurfmap.insert(strSortD,noSorD);
@@ -1119,7 +1120,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
 
                 sortD.clear();
                 sortD<<tmpStrList.at(3).toInt();
-                sortD<<tmpStrList.at(7).toInt();
+                sortD<<tmpStrList.at(3).toInt();
                 sortD<<tmpStrList.at(8).toInt();
                 sortD<<tmpStrList.at(4).toInt();
                 qSort(sortD.begin(),sortD.end());
@@ -1129,7 +1130,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 }
                 noSorD = tmpStrList.at(0)+",5,"+QString("%1,").arg(iType)+
                     tmpStrList.at(3)+","+
-                    tmpStrList.at(7)+","+
+                    tmpStrList.at(3)+","+
                     tmpStrList.at(8)+","+
                     tmpStrList.at(4);
                 if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
@@ -1347,11 +1348,11 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
             sortD<<tmpStrList.at(1).toInt();
             sortD<<tmpStrList.at(9).toInt();
             sortD<<tmpStrList.at(2).toInt();
-            sortD<<tmpStrList.at(10).toInt();
+            sortD<<tmpStrList.at(6).toInt();
             sortD<<tmpStrList.at(3).toInt();
-            sortD<<tmpStrList.at(11).toInt();
+            sortD<<tmpStrList.at(7).toInt();
             sortD<<tmpStrList.at(4).toInt();
-            sortD<<tmpStrList.at(12).toInt();
+            sortD<<tmpStrList.at(8).toInt();
             qSort(sortD.begin(),sortD.end());
             QString strSortD=QString("%1").arg(sortD.at(0));
             for (int kk=1;kk<sortD.count();kk++){
@@ -1362,9 +1363,9 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 tmpStrList.at(1)+","+
                 tmpStrList.at(9)+","+
                 tmpStrList.at(2)+","+
-                tmpStrList.at(10)+","+
+                tmpStrList.at(6)+","+
                 tmpStrList.at(3)+","+
-                tmpStrList.at(11)+","+
+                tmpStrList.at(7)+","+
                 tmpStrList.at(4)+","+
                 tmpStrList.at(12);
             if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
@@ -1377,7 +1378,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
             sortD.clear();
             sortD<<tmpStrList.at(5).toInt();
             sortD<<tmpStrList.at(8).toInt();
-            sortD<<tmpStrList.at(7).toInt();
+            sortD<<tmpStrList.at(3).toInt();
             sortD<<tmpStrList.at(6).toInt();
             qSort(sortD.begin(),sortD.end());
             strSortD=QString("%1").arg(sortD.at(0));
@@ -1387,7 +1388,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
             noSorD =tmpStrList.at(0)+",2,"+
                 tmpStrList.at(5)+","+
                 tmpStrList.at(8)+","+
-                tmpStrList.at(7)+","+
+                tmpStrList.at(3)+","+
                 tmpStrList.at(6);
             if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
                 m_ElementSurfmap.insert(strSortD,noSorD);
@@ -1419,7 +1420,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
             sortD.clear();
             sortD<<tmpStrList.at(2).toInt();
             sortD<<tmpStrList.at(6).toInt();
-            sortD<<tmpStrList.at(7).toInt();
+            sortD<<tmpStrList.at(3).toInt();
             sortD<<tmpStrList.at(3).toInt();
             qSort(sortD.begin(),sortD.end());
             strSortD=QString("%1").arg(sortD.at(0));
@@ -1429,7 +1430,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
             noSorD =tmpStrList.at(0)+",4,"+
                 tmpStrList.at(2)+","+
                 tmpStrList.at(6)+","+
-                tmpStrList.at(7)+","+
+                tmpStrList.at(3)+","+
                 tmpStrList.at(3);
             if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
                 m_ElementSurfmap.insert(strSortD,noSorD);
@@ -1439,7 +1440,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
 
             sortD.clear();
             sortD<<tmpStrList.at(3).toInt();
-            sortD<<tmpStrList.at(7).toInt();
+            sortD<<tmpStrList.at(3).toInt();
             sortD<<tmpStrList.at(8).toInt();
             sortD<<tmpStrList.at(4).toInt();
             qSort(sortD.begin(),sortD.end());
@@ -1449,7 +1450,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
             }
             noSorD = tmpStrList.at(0)+",5,"+
                 tmpStrList.at(3)+","+
-                tmpStrList.at(7)+","+
+                tmpStrList.at(3)+","+
                 tmpStrList.at(8)+","+
                 tmpStrList.at(4);
             if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
@@ -1486,7 +1487,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
 				sortD<<tmpStrList.at(2).toInt();
 				sortD<<tmpStrList.at(6).toInt();
 				sortD<<tmpStrList.at(3).toInt();
-			    sortD<<tmpStrList.at(7).toInt();
+			    sortD<<tmpStrList.at(3).toInt();
 				qSort(sortD.begin(), sortD.end());
 				QString strSortD=QString("%1").arg(sortD.at(0));
 				for (int kk=1;kk<sortD.count();kk++){
@@ -1536,7 +1537,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
 				sortD<<tmpStrList.at(2).toInt();
 				sortD<<tmpStrList.at(9).toInt();
 				sortD<<tmpStrList.at(4).toInt();
-				sortD<<tmpStrList.at(10).toInt();
+				sortD<<tmpStrList.at(6).toInt();
 				sortD<<tmpStrList.at(3).toInt();
 				sortD<<tmpStrList.at(6).toInt();
 				qSort(sortD.begin(),sortD.end());
@@ -1548,7 +1549,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
 					tmpStrList.at(2)+","+
 					tmpStrList.at(9)+","+
 					tmpStrList.at(4)+","+
-					tmpStrList.at(10)+","+
+					tmpStrList.at(6)+","+
 					tmpStrList.at(3)+","+
 					tmpStrList.at(6);
 				if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
@@ -1559,11 +1560,11 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
 
 				sortD.clear();
 				sortD<<tmpStrList.at(3).toInt();
-				sortD<<tmpStrList.at(10).toInt();
+				sortD<<tmpStrList.at(6).toInt();
 				sortD<<tmpStrList.at(4).toInt();
 				sortD<<tmpStrList.at(8).toInt();
 				sortD<<tmpStrList.at(1).toInt();
-				sortD<<tmpStrList.at(7).toInt();
+				sortD<<tmpStrList.at(3).toInt();
 				qSort(sortD.begin(),sortD.end());
 				strSortD=QString("%1").arg(sortD.at(0));
 				for (int kk=1;kk<sortD.count();kk++){
@@ -1571,7 +1572,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
 				}
 				noSorD = tmpStrList.at(0)+",4,"+QString("%1,").arg(iType)+
 					tmpStrList.at(3)+","+
-					tmpStrList.at(10)+","+
+					tmpStrList.at(6)+","+
 					tmpStrList.at(4)+","+
 					tmpStrList.at(8)+","+
 					tmpStrList.at(1)+","+
@@ -1639,7 +1640,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
         case 8:{//(CPS6/CPE6/CAX6)
                 QList<int> sortD;
                 sortD<<tmpStrList.at(1).toInt();
-                sortD<<tmpStrList.at(7).toInt();
+                sortD<<tmpStrList.at(3).toInt();
                 sortD<<tmpStrList.at(2).toInt();
                 qSort(sortD.begin(), sortD.end());
                 QString strSortD=QString("%1").arg(sortD.at(0));
@@ -1649,7 +1650,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 QString noSorD;
                 noSorD =tmpStrList.at(0)+",1,"+QString("%1,").arg(iType)+
                     tmpStrList.at(1)+","+
-                    tmpStrList.at(7)+","+
+                    tmpStrList.at(3)+","+
                     tmpStrList.at(2);
                 if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
                     m_ElementSurfmap.insert(strSortD,noSorD);
@@ -1790,7 +1791,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
 
                 sortD.clear();
                 sortD<<tmpStrList.at(2).toInt();
-                sortD<<tmpStrList.at(10).toInt();
+                sortD<<tmpStrList.at(6).toInt();
                 sortD<<tmpStrList.at(3).toInt();
                 qSort(sortD.begin(),sortD.end());
                 strSortD=QString("%1").arg(sortD.at(0));
@@ -1799,7 +1800,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 }
                 noSorD = tmpStrList.at(0)+",2,"+QString("%1,").arg(iType)+
                     tmpStrList.at(2)+","+
-                    tmpStrList.at(10)+","+
+                    tmpStrList.at(6)+","+
                     tmpStrList.at(3);
                 if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
                     m_ElementSurfmap.insert(strSortD,noSorD);
@@ -1810,7 +1811,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
 
                 sortD.clear();
                 sortD<<tmpStrList.at(3).toInt();
-                sortD<<tmpStrList.at(11).toInt();
+                sortD<<tmpStrList.at(7).toInt();
                 sortD<<tmpStrList.at(4).toInt();
                 qSort(sortD.begin(),sortD.end());
                 strSortD=QString("%1").arg(sortD.at(0));
@@ -1819,7 +1820,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 }
                 noSorD = tmpStrList.at(0)+",3,"+QString("%1,").arg(iType)+
                     tmpStrList.at(3)+","+
-                    tmpStrList.at(11)+","+
+                    tmpStrList.at(7)+","+
                     tmpStrList.at(4);
                 if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
                     m_ElementSurfmap.insert(strSortD,noSorD);
@@ -1829,7 +1830,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
 
                 sortD.clear();
                 sortD<<tmpStrList.at(4).toInt();
-                sortD<<tmpStrList.at(12).toInt();
+                sortD<<tmpStrList.at(8).toInt();
                 sortD<<tmpStrList.at(1).toInt();
                 qSort(sortD.begin(),sortD.end());
                 strSortD=QString("%1").arg(sortD.at(0));
@@ -1838,7 +1839,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 }
                 noSorD = tmpStrList.at(0)+",4,"+QString("%1,").arg(iType)+
                     tmpStrList.at(4)+","+
-                    tmpStrList.at(12)+","+
+                    tmpStrList.at(8)+","+
                     tmpStrList.at(1);
                 if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
                     m_ElementSurfmap.insert(strSortD, noSorD);

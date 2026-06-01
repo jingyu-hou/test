@@ -104,6 +104,7 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
             //DataFrdShow.nodalPoint.nFormat=strList.at(2).toInt();
         }else{
             infoW->ShowInformation("Invalid FRD file: malformed 2C node header.");
+			delete tmpNodePoint;
             return false;
         }
 
@@ -123,7 +124,10 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
             readNextPrcDataLine(line,strId,strList,strFormat);
         }
         //infoW->ShowInformation("Find Nodal Point...");
-        FrdVis.Step1_LoadFrdPoints(tmpNodePoint);
+        if (!FrdVis.Step1_LoadFrdPoints(tmpNodePoint)) {
+        	delete tmpNodePoint;
+        	return false;
+        }
         delete tmpNodePoint;
 
 
@@ -135,6 +139,7 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
         {
             if (strList.size() < 3) {
                 infoW->ShowInformation("Invalid FRD file: malformed 3C element header.");
+				delete tmpElement;
                 return false;
             }
             tmpElement->nNum=strList.at(1).toInt();
@@ -149,6 +154,7 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
             {
                 if (strList.size() < 5) {
                     infoW->ShowInformation("Invalid FRD file: malformed element header record.");
+					delete tmpElement;
                     return false;
                 }
                 //DataFrdShow.elemBlock.DataElem1PointId<<strList.at(1).toInt();
@@ -167,6 +173,7 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
             {
                 if (tmpElement->DataElem1PointStyle.isEmpty()) {
                     infoW->ShowInformation("Invalid FRD file: missing element header before connectivity.");
+					delete tmpElement;
                     return false;
                 }
                 if (tmpElement->DataElem1PointStyle[0]==4||tmpElement->DataElem1PointStyle[0]==5)//超过10个节点为两行
@@ -198,7 +205,10 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
                 readNextLine(line,strId,strList);
             }
         }
-        FrdVis.Step2_LoadFrdCells(tmpElement);
+        if (!FrdVis.Step2_LoadFrdCells(tmpElement)) {
+        	delete tmpElement;
+        	return false;
+        }
         delete tmpElement;
         //qDeleteAll(DataFrdShow.elemBlock.DataElem2);
         //DataFrdShow.elemBlock.DataElem2.clear();
@@ -304,7 +314,7 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
                         //return true;
                     }
 
-					if(Striii=="STRESS"){
+					if(Striii=="STRESS" && strId == "-1"){
 						for(int i=0;i<5;i++){
 						QStringList strList12;
 						QString strList1;
@@ -318,13 +328,17 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
 						//strList=strList12.split;
 						tmpStepFrd.nodeResultBlock.strComptHeaderName<<strList12.at(1);
 						}
-					}else if(Striii=="TOSTRAIN"){
+					}else if(Striii=="TOSTRAIN" && strId == "-1"){
 					    QStringList strList12;
 						QString strList1;
 						strList1="-5 VMStrain 1 4 1 3";
                         strList1.replace(QString(" "),QString(","));
 					    strList12=strList1.split(",");
 						tmpStepFrd.nodeResultBlock.strComptHeaderName<<strList12.at(1);
+					}
+					if (tmpStepFrd.nodeResultBlock.strAttrNum > tmpStepFrd.nodeResultBlock.strComptHeaderName.size()) {
+						infoW->ShowInformation("Invalid FRD file: attribute count mismatch.");
+						return false;
 					}
                     while(strId != "-3"){
 						QString S1,S0;
@@ -335,8 +349,12 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
                             readNextPrcDataLine(line,strId,strList,1);
 
 							int Numb=strList.size();
-							if(Striii=="STRESS"){
+							if(Striii=="STRESS" && strId == "-1"){
 								double equ[11],equ0[11],p3;
+								if (Numb < 7) {
+									infoW->ShowInformation("Invalid FRD file: insufficient stress components.");
+									return false;
+								}
 								for(int jj=0;jj<Numb-1;jj++){
                                     equ[jj]=strList.at(jj+1).toDouble();
 									equ0[jj]=strTmpList.at(jj+1).toDouble();
@@ -366,8 +384,12 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
 								strTmpList.append(S0);
 								strList.append(S1);
 								}
-							}else if(Striii=="TOSTRAIN"){
+							}else if(Striii=="TOSTRAIN" && strId == "-1"){
 								double equ[7],equ0[7];
+								if (Numb < 7) {
+									infoW->ShowInformation("Invalid FRD file: insufficient strain components.");
+									return false;
+								}
 								for(int jj=0;jj<Numb-1;jj++){
                                    equ[jj]=strList.at(jj+1).toDouble();
 								   equ0[jj]=strTmpList.at(jj+1).toDouble();
@@ -447,13 +469,15 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
                                 m_sendDataMap.insert(strHeaderParam,tmpStepFrd);*/
                             //DataFrdShow.paraHeader.insert(DataFrdShow.paraHeader.size(),tmpParaHeader);
                             //DataFrdShow.nodalRultBlocks.insert(DataFrdShow.nodalRultBlocks.size(),tmpNodalResult);
-                                FrdVis.Step3_LoadFrdResults(&tmpStepFrd);
+                                if (!FrdVis.Step3_LoadFrdResults(&tmpStepFrd))
+                                	return false;
                                 break;
                             }
                         } 
                         if (strId == "-3")
                         {
-                            FrdVis.Step3_LoadFrdResults(&tmpStepFrd);
+                            if (!FrdVis.Step3_LoadFrdResults(&tmpStepFrd))
+                            	return false;
                             line=inText.readLine().simplified();
                             readNextLine(line,strId,strList);
                             break;
