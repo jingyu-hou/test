@@ -1,6 +1,7 @@
 #include <QProcess>
 #include <QString>
 #include "Information_Widget.h"
+#include "AppLog.h"
 
 Information_Widget* Information_Widget::instance = 0;
 
@@ -32,6 +33,7 @@ Information_Widget* Information_Widget::GetInstance()
 */
 void Information_Widget::ShowInformation(const QString &info)
 {
+    AppLog::Write("INFO", info);
     this->append(info);
     this->moveCursor(QTextCursor::End);
 }

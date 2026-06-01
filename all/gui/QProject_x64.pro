@@ -36,6 +36,7 @@ SOURCES += $$PWD/src/*.cpp \
            $$PWD/src/Language/*.cpp
 
 LIBS += -L$$SARibbonBar_DIR/lib -lSARibbonBar
+unix:LIBS += -lX11
 QMAKE_LFLAGS += -Wl,-rpath,$$PWD/../components/open_source/saribbon/lib
 QMAKE_LFLAGS += -Wl,-rpath,$$FFMPEG_DIR/lib -Wl,-rpath-link,$$FFMPEG_DIR/lib
 

@@ -5,9 +5,17 @@
 #include <QDesktopWidget>
 #include "QMyVTK.h"
 #include "SARibbonApplicationButton.h"
+#include "AppLog.h"
+#ifdef Q_WS_X11
+#include <QX11Info>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/Xutil.h>
+#endif
 
 static void ImportTrace(const QString &msg)
 {
+    AppLog::Write("IMPORT", msg);
     QFile f("/mnt/d/ZZKK/import_trace.log");
     if (f.open(QIODevice::Append | QIODevice::Text)) {
         f.write(msg.toUtf8());
@@ -16,8 +24,42 @@ static void ImportTrace(const QString &msg)
     }
 }
 
+static void SetUtf8WindowTitleForWm(QWidget *widget)
+{
+#ifdef Q_WS_X11
+    if (!widget) return;
+    Display *display = QX11Info::display();
+    if (!display) return;
+    const Window window = widget->winId();
+    const QString title = widget->windowTitle();
+
+    // _NET_WM_NAME: always UTF-8 per EWMH spec
+    const QByteArray titleUtf8 = title.toUtf8();
+    const Atom netWmName = XInternAtom(display, "_NET_WM_NAME", False);
+    const Atom utf8String = XInternAtom(display, "UTF8_STRING", False);
+    if (netWmName && utf8String) {
+        XChangeProperty(display, window, netWmName, utf8String, 8, PropModeReplace,
+                        reinterpret_cast<const unsigned char *>(titleUtf8.constData()),
+                        titleUtf8.size());
+    }
+
+    // WM_NAME: for WSLg on Chinese Windows, the Windows title bar renders
+    // using the system locale (GBK). Encode as GBK so Windows shows correct text.
+    static QTextCodec *gbk = QTextCodec::codecForName("GBK");
+    const QByteArray titleGbk = gbk ? gbk->fromUnicode(title) : title.toLocal8Bit();
+    XChangeProperty(display, window, XA_WM_NAME, XA_STRING, 8, PropModeReplace,
+                    reinterpret_cast<const unsigned char *>(titleGbk.constData()),
+                    titleGbk.size());
+    XFlush(display);
+#else
+    Q_UNUSED(widget);
+#endif
+}
+
 static QString SafeGetOpenFileName(QWidget *parent, const QString &caption, const QString &dir, const QString &filter)
 {
+    AppLog::File(QString("open dialog caption='%1' dir='%2' filter='%3'")
+                 .arg(caption).arg(dir).arg(filter));
     static QFileDialog *dlg = NULL;
     if (!dlg) {
         dlg = new QFileDialog(parent);
@@ -37,12 +79,15 @@ static QString SafeGetOpenFileName(QWidget *parent, const QString &caption, cons
     dlg->raise();
     dlg->activateWindow();
     if (dlg->exec() != QDialog::Accepted) {
+        AppLog::File(QString("open dialog canceled caption='%1'").arg(caption));
         return QString();
     }
     QStringList files = dlg->selectedFiles();
     if (files.isEmpty()) {
+        AppLog::File(QString("open dialog accepted without file caption='%1'").arg(caption));
         return QString();
     }
+    AppLog::File(QString("open dialog selected file='%1'").arg(files.first()));
     return files.first();
 }
 
@@ -206,6 +251,7 @@ MainWindow::~MainWindow()
 }
 void MainWindow::ForceShowMainWindow()
 {
+    AppLog::Write("WINDOW", "force show main window");
     QRect screen = QApplication::desktop()->availableGeometry();
     QRect geom;
     if (screen.width() < 400 || screen.height() < 300) {
@@ -1361,6 +1407,27 @@ void MainWindow::createActions()
 	connect(CastingSystemAct_,SIGNAL(triggered()),this,SLOT(CastingSystemActSlot()));
 	connect(CastingSloveAct_,SIGNAL(triggered()),this,SLOT(CastingSloveSetActSlot()));
     connect(CastingSubmissonAct_,SIGNAL(triggered()),this,SLOT(CastingSubmissonActSlot()));
+    ConnectActionLogging();
+}
+
+void MainWindow::ConnectActionLogging()
+{
+    QList<QAction *> actions = findChildren<QAction *>();
+    for (int i = 0; i < actions.size(); ++i) {
+        connect(actions.at(i), SIGNAL(triggered()), this, SLOT(LogActionTriggered()));
+    }
+}
+
+void MainWindow::LogActionTriggered()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    if (!action) {
+        return;
+    }
+    AppLog::Action(QString("triggered text='%1' object='%2' checked=%3")
+                   .arg(action->text())
+                   .arg(action->objectName())
+                   .arg(action->isChecked() ? "true" : "false"));
 }
 
 void MainWindow::createDockWindows()
@@ -1917,7 +1984,10 @@ void MainWindow::MergeSlot()
 	CRWManage CRWObject02;
 	int ret=CRWObject02.ReadSectionInpFile02(&file,NodeNumber,ElementNumber,filename);
     file.close();
-    if (!ret)return;
+    if (!ret) {
+        Information_Widget::GetInstance()->ShowInformation(QString(filename + " Merge Failed: invalid INP format!"));
+        return;
+    }
 	//节点信息
 	CRWObject.m_ReadInpResult.TmpNodeInpS.strData.append(CRWObject02.m_ReadInpResult.TmpNodeInpS.strData);
 	//单元信息
@@ -2041,7 +2111,10 @@ void MainWindow::OpenSlot()
         int ret=CRWObject.ReadSectionInpFile(&file,filename);
         ImportTrace("OpenSlot: after ReadSectionInpFile");
         file.close();
-        if (!ret)return;
+        if (!ret) {
+            Information_Widget::GetInstance()->ShowInformation(QString(filename + " Open Failed: invalid INP format!"));
+            return;
+        }
 		ReadInpResultS m_Data = CRWObject.m_ReadInpResult;
         //写入数据到各个界面中
         //--写入到HIP界面数据
@@ -2339,9 +2412,11 @@ void MainWindow::ClearSlot()
 
 void MainWindow::closeEvent(QCloseEvent *ev)
 {
+    AppLog::Write("APP", "close requested");
     QMessageBox::StandardButton bt = QMessageBox::question(this, "Close", "Exit WeICME?", QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
     if (bt == QMessageBox::Yes) 
     {
+        AppLog::Write("APP", "close accepted");
         if (GmshProcess!=NULL)
         {
             GmshProcess->close();
@@ -2370,6 +2445,7 @@ void MainWindow::closeEvent(QCloseEvent *ev)
         
         ev->accept();
     }else{
+        AppLog::Write("APP", "close canceled");
         ev->ignore();
     }
 }
@@ -2694,6 +2770,7 @@ static void RaiseDialogNow(QDialog *dlg)
     if (!dlg) return;
     dlg->showNormal();
     dlg->show();
+    SetUtf8WindowTitleForWm(dlg);
     dlg->setFocus(Qt::ActiveWindowFocusReason);
     dlg->raise();
     dlg->activateWindow();
@@ -2702,6 +2779,10 @@ static void RaiseDialogNow(QDialog *dlg)
 void MainWindow::ShowProcessDialog(QDialog *dlg)
 {
     if (!dlg) return;
+    AppLog::Dialog(QString("show class='%1' title='%2' ptr=0x%3")
+                   .arg(dlg->metaObject()->className())
+                   .arg(dlg->windowTitle())
+                   .arg((qulonglong)dlg, 0, 16));
     HideProcessDialogs();
     if (dlg->parentWidget() != this) {
         dlg->setParent(this, Qt::Dialog);
@@ -3075,6 +3156,8 @@ void MainWindow::HIPSolveActOpenSlot()
                     ImportTrace("OpenSlot: after ShowCurPreData");
             }
             Information_Widget::GetInstance()->ShowInformation(QString("Loaded INP data: ") + filename);
+        } else {
+            Information_Widget::GetInstance()->ShowInformation(QString(filename + " Open Failed: invalid INP format!"));
         }
     }
 

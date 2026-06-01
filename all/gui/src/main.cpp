@@ -8,9 +8,12 @@
 #include <QPalette>
 #include <QDesktopWidget>
 #include <QTimer>
+#include "AppLog.h"
 int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
+    qInstallMsgHandler(AppLog::QtMessage);
+    AppLog::Init();
 	//ff1 w;
 	//w.show();
     QTextCodec *codec = QTextCodec::codecForName("UTF-8");

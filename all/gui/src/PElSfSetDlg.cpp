@@ -17,6 +17,7 @@ vtkStandardNewMacro(PointInteractorStyle);
 PElSfSetDlg::PElSfSetDlg(QWidget *parent)
     : QDialog(parent)
 {
+    setWindowTitle(QString::fromUtf8("创建集合"));
     m_gpbox1=new QGroupBox(tr("创建类型"));
     m_PSetBtn = new QRadioButton(tr("点集合"),m_gpbox1);
     m_ElSetBtn = new QRadioButton(tr("单元集合"),m_gpbox1);
@@ -87,8 +88,6 @@ PElSfSetDlg::PElSfSetDlg(QWidget *parent)
     m_gbWigElsetH1->addWidget(m_ElSetOkBtn);
     m_gbWigElsetH1->addStretch();
     m_pickElSetBtn->setIcon(QIcon(":/images/arrow.png"));
-    m_gbWigElsetMainLayout->addLayout(m_gbWigElsetH1);
-
     m_lab2_1=new QLabel(tr("单元集合列表："),m_gbWigElset);
     m_ElSetComb=new MyCombox(m_gbWigElset);
     m_gbWigElsetH2->addWidget(m_lab2_1);
@@ -103,9 +102,9 @@ PElSfSetDlg::PElSfSetDlg(QWidget *parent)
 
     m_gbWigSfset = new QGroupBox(tr("表面集合"));
     QVBoxLayout *m_gbWigSurfsetMainLayout = new QVBoxLayout(m_gbWigSfset);
-    QHBoxLayout *m_gbWigSfsetH0 = new QHBoxLayout(m_gbWigSfset);
-    QHBoxLayout *m_gbWigSfsetH1 = new QHBoxLayout(m_gbWigSfset);
-    QHBoxLayout *m_gbWigSfsetH2 = new QHBoxLayout(m_gbWigSfset);
+    QHBoxLayout *m_gbWigSfsetH0 = new QHBoxLayout();
+    QHBoxLayout *m_gbWigSfsetH1 = new QHBoxLayout();
+    QHBoxLayout *m_gbWigSfsetH2 = new QHBoxLayout();
 
     m_SurfPickerRBtn= new QRadioButton(tr("拾取"),m_gbWigSfset);
     m_SurfSelectRBtn = new QRadioButton(tr("框选"),m_gbWigSfset);

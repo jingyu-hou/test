@@ -2517,6 +2517,11 @@ bool CRWManage::ReadSectionInpFile(QFile *file,QString FileName)
      date = QDateTime::currentDateTime();
      strTime=date.toString("hh:mm:ss yy.MM.dd");
      infoW->ShowInformation("End Time: "+strTime);
+
+    if (TmpNodeInpS.strData.isEmpty() || TmpElInpS.strData.isEmpty()) {
+        infoW->ShowInformation("Read inp file Failed: missing required node/element data.");
+        return false;
+    }
     return true;
 }
 //------------------------------------------------------------
@@ -2885,6 +2890,10 @@ bool CRWManage::ReadSectionInpFile02(QFile *file,int NodeNumber,int ElementNumbe
         m_ReadInpResult.TmpNsetInps=TmpNsetInps;
         m_ReadInpResult.TmpElSetInps=TmpElSetInps;
         m_ReadInpResult.TmpSurfaceInps=TmpSurfaceInps;
+    }
+
+    if (TmpNodeInpS.strData.isEmpty() || TmpElInpS.strData.isEmpty()) {
+        return false;
     }
     return true;
 }

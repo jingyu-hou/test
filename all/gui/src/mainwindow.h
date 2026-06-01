@@ -407,6 +407,7 @@ private:
 	void CreatePreProcessPanel();
 	void HideProcessDialogs();
 	void ShowProcessDialog(QDialog *dlg);
+    void ConnectActionLogging();
 
 	QString strippedName(const QString &fullFileName);
 
@@ -416,6 +417,7 @@ private:
 	//  void SetWindowTitle();
 public slots:
 	 void ForceShowMainWindow();
+     void LogActionTriggered();
 	 void ViewDirectionChangedSlot(QString direction);
      void ViewSizeChangedSlot(int factor);
      void ViewChangedSlot(int factor);

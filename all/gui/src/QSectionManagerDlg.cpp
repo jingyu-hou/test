@@ -26,7 +26,7 @@ QSectionManagerDlg* QSectionManagerDlg::GetInstance()
 //--管理截面界面
 void QSectionManagerDlg::CreatGUI()
 {
-    this->setWindowTitle(tr("Section Manager"));
+    this->setWindowTitle(QString::fromUtf8("截面管理"));
 
     QGroupBox *m_group = new QGroupBox(tr("截面"),this);
     m_group->setStyleSheet(QString::fromUtf8("::title{color:blue}"));
