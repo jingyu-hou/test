@@ -11,10 +11,17 @@ static QString SafeGetOpenFileName(QWidget *parent, const QString &caption, cons
         dlg->setFileMode(QFileDialog::ExistingFile);
         dlg->setAcceptMode(QFileDialog::AcceptOpen);
     }
+    if (parent && dlg->parentWidget() != parent) {
+        dlg->setParent(parent, Qt::Dialog);
+    }
+    dlg->setWindowModality(Qt::ApplicationModal);
     dlg->setWindowTitle(caption);
     dlg->setDirectory(dir);
     dlg->setNameFilter(filter);
     dlg->selectFile(QString());
+    dlg->show();
+    dlg->raise();
+    dlg->activateWindow();
     if (dlg->exec() != QDialog::Accepted) {
         return QString();
     }

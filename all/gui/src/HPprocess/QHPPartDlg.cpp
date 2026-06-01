@@ -1,9 +1,26 @@
 #include "QHPPartDlg.h"
 
+static void SetPartCellText(QTableWidget *table, int row, int column, const QString &text)
+{
+    if (!table || row < 0 || column < 0) return;
+    if (table->rowCount() <= row) {
+        table->setRowCount(row + 1);
+    }
+    if (table->columnCount() <= column) {
+        table->setColumnCount(column + 1);
+    }
+    QTableWidgetItem *item = table->item(row, column);
+    if (!item) {
+        item = new QTableWidgetItem();
+        table->setItem(row, column, item);
+    }
+    item->setText(text);
+}
+
 QHPPartDlg::QHPPartDlg(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle("Part");
+    setWindowTitle(QString::fromUtf8("部件"));
 	ENumberS=0;
     m_SectionManageDlg = NULL;
     m_MaterManagerDlg  = NULL;
@@ -49,7 +66,7 @@ QHPPartDlg::QHPPartDlg(QWidget *parent)
 	//connect(Default0,SIGNAL(clicked(bool)),this,SLOT(AMOptions(bool)));
 
     //--部件列表
-    int iniRowCnt=0;//
+    int iniRowCnt=3;//
     QStringList strList;
     //strList<<"部件"<<"材料"<<"单元集合"<<"TTT/CCT";
 	strList<<"部件"<<"部件类型"<<"材料"<<"单元集合"<<"TTT/CCT";
@@ -180,8 +197,8 @@ void QHPPartDlg::SetInpData(ReadInpResultS ReadInpData)
 			MyCombox *tmpComboxTTT=new MyCombox(this,i);
             m_TableWiget->setCellWidget(i,2,tmpComboxMateial);
             m_TableWiget->setCellWidget(i,3,tmpCombox);
-            m_comboxMaterial.insert(nRow,tmpComboxMateial);
-            m_comboxElset.insert(nRow,tmpCombox);
+            m_comboxMaterial.insert(i,tmpComboxMateial);
+            m_comboxElset.insert(i,tmpCombox);
 
 			tmpComboxTTT->addItem(tr("TTT"));
 			tmpComboxTTT->addItem(tr("CCT"));
@@ -201,6 +218,7 @@ void QHPPartDlg::SetInpData(ReadInpResultS ReadInpData)
 
     for (int i=0;i<nRow;i++){
         MyCombox *tmpComboxM = (MyCombox*)m_TableWiget->cellWidget(i,ENUM_PART_Material);
+        if (!tmpComboxM) continue;
         tmpComboxM->clear();
         tmpComboxM->addItems(materList);
         tmpComboxM->addItem("新建");
@@ -292,10 +310,7 @@ void QHPPartDlg::SetInpData(ReadInpResultS ReadInpData)
 
 void QHPPartDlg::ShowPartDlgStyle(int style)
 {
-	if (style == 1) setWindowTitle("Porous Media Part");
-	else if (style == 2) setWindowTitle("Forging Part");
-	else if (style == 3) setWindowTitle("Heat Treatment Part");
-	else setWindowTitle("Part");
+	setWindowTitle(QString::fromUtf8("部件"));
     QStringList strList;
 	strList.clear();
 	strList<<"部件"<<"部件类型"<<"材料"<<"单元集合"<<"TTT/CCT";
@@ -309,13 +324,17 @@ void QHPPartDlg::ShowPartDlgStyle(int style)
 		m_TableWiget->setColumnHidden(3,false);
 		m_TableWiget->setColumnHidden(4,true);
 		if (nRow == 1){
-			m_TableWiget->item(0,0)->setText(tr("Part1"));
+			SetPartCellText(m_TableWiget, 0, 0, tr("Part1"));
 			m_TableWiget->setRowHidden(0,false);
 		}else if (nRow ==2){
-			m_TableWiget->item(0,0)->setText(tr("Part1"));
-			m_TableWiget->item(1,0)->setText(tr("Part2"));
+			SetPartCellText(m_TableWiget, 0, 0, tr("Part1"));
+			SetPartCellText(m_TableWiget, 1, 0, tr("Part2"));
 			m_TableWiget->setRowHidden(0,false);
 			m_TableWiget->setRowHidden(1,false);
+		}else{
+			for (int i=0; i<nRow; i++){
+				m_TableWiget->setRowHidden(i,false);
+			}
 		}
 	}else if (style == 1){//热等静压 ;
 		m_TableWiget->setColumnHidden(1,true);
@@ -323,41 +342,59 @@ void QHPPartDlg::ShowPartDlgStyle(int style)
 		m_TableWiget->setColumnHidden(3,false);
 		m_TableWiget->setColumnHidden(4,true);
 		if (nRow == 1){
-			m_TableWiget->item(0,0)->setText(tr("包套"));
+			SetPartCellText(m_TableWiget, 0, 0, tr("包套"));
 			m_TableWiget->setRowHidden(0,false);
 		}else if (nRow ==2){
-			m_TableWiget->item(0,0)->setText(tr("包套"));
-			m_TableWiget->item(1,0)->setText(tr("金属粉末"));
+			SetPartCellText(m_TableWiget, 0, 0, tr("包套"));
+			SetPartCellText(m_TableWiget, 1, 0, tr("金属粉末"));
 			m_TableWiget->setRowHidden(0,false);
 			m_TableWiget->setRowHidden(1,false);
 		} else if (nRow ==3){
-			m_TableWiget->item(0,0)->setText(tr("包套"));
-			m_TableWiget->item(1,0)->setText(tr("金属粉末"));
+			SetPartCellText(m_TableWiget, 0, 0, tr("包套"));
+			SetPartCellText(m_TableWiget, 1, 0, tr("金属粉末"));
 			m_TableWiget->setRowHidden(0,false);
 			m_TableWiget->setRowHidden(1,false);
 			m_TableWiget->setRowHidden(2,true);
 			m_TableWiget->removeRow(2);
-		} 
+		}else{
+			SetPartCellText(m_TableWiget, 0, 0, tr("包套"));
+			SetPartCellText(m_TableWiget, 1, 0, tr("金属粉末"));
+			m_TableWiget->setRowHidden(0,false);
+			m_TableWiget->setRowHidden(1,false);
+			for (int i=2; i<nRow; i++){
+				m_TableWiget->setRowHidden(i,true);
+			}
+		}
 	}else if(style == 2){//锻造
 		m_TableWiget->setColumnHidden(1,false);
 		m_TableWiget->setColumnHidden(2,false);
 		m_TableWiget->setColumnHidden(3,false);
 		m_TableWiget->setColumnHidden(4,true);
 		if (nRow == 1){
-			m_TableWiget->item(0,0)->setText(tr("模具1"));
+			SetPartCellText(m_TableWiget, 0, 0, tr("模具1"));
 			m_TableWiget->setRowHidden(0,false);
 		}else if (nRow ==2){
-			m_TableWiget->item(0,0)->setText(tr("模具1"));
-			m_TableWiget->item(1,0)->setText(tr("锻造件"));
+			SetPartCellText(m_TableWiget, 0, 0, tr("模具1"));
+			SetPartCellText(m_TableWiget, 1, 0, tr("锻造件"));
 			m_TableWiget->setRowHidden(0,false);
 			m_TableWiget->setRowHidden(1,false);
 		}else if (nRow ==3){
-			m_TableWiget->item(0,0)->setText(tr("模具1"));
-			m_TableWiget->item(1,0)->setText(tr("锻造件"));
-			m_TableWiget->item(2,0)->setText(tr("模具2"));
+			SetPartCellText(m_TableWiget, 0, 0, tr("模具1"));
+			SetPartCellText(m_TableWiget, 1, 0, tr("锻造件"));
+			SetPartCellText(m_TableWiget, 2, 0, tr("模具2"));
 			m_TableWiget->setRowHidden(0,false);
 			m_TableWiget->setRowHidden(1,false);
 			m_TableWiget->setRowHidden(2,false);
+		}else{
+			SetPartCellText(m_TableWiget, 0, 0, tr("模具1"));
+			SetPartCellText(m_TableWiget, 1, 0, tr("锻造件"));
+			SetPartCellText(m_TableWiget, 2, 0, tr("模具2"));
+			m_TableWiget->setRowHidden(0,false);
+			m_TableWiget->setRowHidden(1,false);
+			m_TableWiget->setRowHidden(2,false);
+			for (int i=3; i<nRow; i++){
+				m_TableWiget->setRowHidden(i,true);
+			}
 		}
 	}else if(style == 3){//热处理
 		m_TableWiget->setColumnHidden(1,true);
@@ -365,20 +402,29 @@ void QHPPartDlg::ShowPartDlgStyle(int style)
 		m_TableWiget->setColumnHidden(3,false);
 		m_TableWiget->setColumnHidden(4,true);
 		if (nRow == 1){
-			m_TableWiget->item(0,0)->setText(tr("Part1"));
+			SetPartCellText(m_TableWiget, 0, 0, tr("Part1"));
 			m_TableWiget->setRowHidden(0,false);
 		}else if (nRow ==2){
-			m_TableWiget->item(0,0)->setText(tr("Part1"));
+			SetPartCellText(m_TableWiget, 0, 0, tr("Part1"));
 			m_TableWiget->setRowHidden(0,false);
 			m_TableWiget->setRowHidden(1,true);
 			m_TableWiget->removeRow(1);
 		}else if (nRow ==3){
-			m_TableWiget->item(0,0)->setText(tr("Part1"));
+			SetPartCellText(m_TableWiget, 0, 0, tr("Part1"));
 			m_TableWiget->setRowHidden(0,false);
 			m_TableWiget->setRowHidden(1,true);
 			m_TableWiget->setRowHidden(2,true);
 			m_TableWiget->removeRow(2);
 			m_TableWiget->removeRow(1);
+		}else{
+			SetPartCellText(m_TableWiget, 0, 0, tr("Part1"));
+			m_TableWiget->setRowHidden(0,false);
+			for (int i=1; i<nRow; i++){
+				m_TableWiget->setRowHidden(i,true);
+			}
+			for (int i=nRow-1; i>=1; i--){
+				m_TableWiget->removeRow(i);
+			}
 		}
 	}
 }

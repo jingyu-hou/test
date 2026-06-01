@@ -8,6 +8,8 @@
 #include "FrdDataVIS.h"
 #include "Information_Widget.h"
 #include <vtkCallbackCommand.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderer.h>
 
 FrdDataVIS::FrdDataVIS()
 {
@@ -29,8 +31,13 @@ FrdDataVIS::~FrdDataVIS()
 void FrdDataVIS::InitRenderer(vtkRenderer *renderer)
 {
     renderer_ = renderer;
-    if (renderer_)  renWin_ = renderer_->GetRenderWindow();
-    else renWin_ = 0;
+    if (renderer_) {
+        renderer_->SetGradientBackground(0);
+        renderer_->SetBackground(1.0, 1.0, 1.0);
+        renWin_ = renderer_->GetRenderWindow();
+    } else {
+        renWin_ = 0;
+    }
 }
 
 vtkRenderer* FrdDataVIS::GetBindedRenderer()

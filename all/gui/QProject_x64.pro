@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = WeICME
-QT += opengl xml widgets
+QT += opengl xml widgets sql
 TMPDIR = tmp
 OBJECTS_DIR = $$TMPDIR
 MOC_DIR = $$TMPDIR
@@ -18,7 +18,7 @@ LIBS += -L$$VTK_DIR/lib/vtk-5.4 -lQVTK -lvtkGraphics -lvtkQtChart -lvtkHybrid -l
 			-lvtklibxml2 -lvtkViews -lvtkFiltering -lvtkmetaio -lvtkVolumeRendering \
 			-lvtkfreetype -lvtkNetCDF -lvtkWidgets -lvtkftgl -lvtkzlib \
 			-lvtkGenericFiltering -lvtkpng -lvtkGeovis -lvtkproj4 -lvtkParallel
-LIBS += -L$$FFMPEG_DIR/lib -lswscale -lavutil
+LIBS += -L$$FFMPEG_DIR/lib -lavformat -lavcodec -lswscale -lavutil
 
 DEFINES += SA_RIBBON_BAR_NO_EXPORT
 SARibbonBar_DIR = $$PWD/../components/open_source/saribbon
@@ -37,6 +37,7 @@ SOURCES += $$PWD/src/*.cpp \
 
 LIBS += -L$$SARibbonBar_DIR/lib -lSARibbonBar
 QMAKE_LFLAGS += -Wl,-rpath,$$PWD/../components/open_source/saribbon/lib
+QMAKE_LFLAGS += -Wl,-rpath,$$FFMPEG_DIR/lib -Wl,-rpath-link,$$FFMPEG_DIR/lib
 
 RESOURCES += welcme.qrc
 

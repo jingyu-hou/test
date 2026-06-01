@@ -23,7 +23,13 @@ InpDataVIS::~InpDataVIS()
 void InpDataVIS::InitRenderer(vtkRenderer *renderer)
 {
     renderer_ = renderer;
-    renWin_ = renderer_->GetRenderWindow();
+    if (renderer_) {
+        renderer_->SetGradientBackground(0);
+        renderer_->SetBackground(1.0, 1.0, 1.0);
+        renWin_ = renderer_->GetRenderWindow();
+    } else {
+        renWin_ = 0;
+    }
 }
 
 void InpDataVIS::Update()

@@ -25,10 +25,17 @@ static QString SafeGetOpenFileName(QWidget *parent, const QString &caption, cons
         dlg->setFileMode(QFileDialog::ExistingFile);
         dlg->setAcceptMode(QFileDialog::AcceptOpen);
     }
+    if (parent && dlg->parentWidget() != parent) {
+        dlg->setParent(parent, Qt::Dialog);
+    }
+    dlg->setWindowModality(Qt::ApplicationModal);
     dlg->setWindowTitle(caption);
     dlg->setDirectory(dir);
     dlg->setNameFilter(filter);
     dlg->selectFile(QString());
+    dlg->show();
+    dlg->raise();
+    dlg->activateWindow();
     if (dlg->exec() != QDialog::Accepted) {
         return QString();
     }
@@ -699,9 +706,10 @@ void MainWindow::createCategoryApp(SARibbonCategory* page)
 {
     SARibbonToolButton * btn;
     SARibbonMenu* gmshMenu = new SARibbonMenu(this);
-	AppKey *aadf=new AppKey(this);
-	QList<bool> ShowHid;
-    ShowHid<<aadf->PSystem();
+	QList<bool> ShowHid = AppKey::Instance()->PSystem();
+    while (ShowHid.size() < 5) {
+        ShowHid << false;
+    }
 	
     gmshMenu->addAction(GridDivAct_);//(QIcon(":/images/folder.png"),tr("menu"));
     gmshMenu->addAction(GridDivActClose_);//QStringLiteral("1"));
@@ -1280,6 +1288,8 @@ void MainWindow::createActions()
     HIPRunAct_= new QAction(QIcon(":/images/updatacalc.png"), tr("运行"), this);
 
 
+    connect(gravity_,SIGNAL(triggered()),this,SLOT(GravitySlot()));
+    connect(quantitystatistics_,SIGNAL(triggered()),this,SLOT(QStatisticsSlot()));
     connect(HIPpartAct_,SIGNAL(triggered()),this,SLOT(HIPpartActSlot()));
     connect(HIPBCAct_,SIGNAL(triggered()),this,SLOT(HIPBCActSlot()));
     connect(HIPInitAct_,SIGNAL(triggered()),this,SLOT(HIPInitDlgActSlot()));
@@ -1768,13 +1778,12 @@ void MainWindow::UpDataRibbonLanguage(int iLanguage)
 void MainWindow::AppStartDlgSlot()
 {
     m_AppStartDlg=new QAppStartDlg(this);
-    m_AppStartDlg->show();
-    m_AppStartDlg->raise();//最上层
-    m_AppStartDlg->activateWindow();//激活
+    ShowProcessDialog(m_AppStartDlg);
    
 }
 void MainWindow::AddInNewMenuHIPSlot(bool on)
 {
+    iSetProStyle = ENUM_PRO_HIP;
     //--树状图显示
         iSetProStyle = ENUM_PRO_HIP;
         tabifyDockWidget(DockPostPrc_, DockPreHIPPrc_);//放置順序
@@ -2330,7 +2339,7 @@ void MainWindow::ClearSlot()
 
 void MainWindow::closeEvent(QCloseEvent *ev)
 {
-    QMessageBox::StandardButton bt = QMessageBox::question(this, tr("关闭"), tr("你想退出吗？"), QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
+    QMessageBox::StandardButton bt = QMessageBox::question(this, "Close", "Exit WeICME?", QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
     if (bt == QMessageBox::Yes) 
     {
         if (GmshProcess!=NULL)
@@ -2649,18 +2658,35 @@ void MainWindow::NowActivateWindowSlot(QMdiSubWindow* SubWind)
 
 void MainWindow::HideProcessDialogs()
 {
-    if (m_HpPartDlg) m_HpPartDlg->hide();
-    if (m_HpBCDlg) m_HpBCDlg->hide();
-    if (m_ForgingContactDlg) m_ForgingContactDlg->hide();
-    if (m_HpInitDlg) m_HpInitDlg->hide();
-    if (m_ThermalBoundaryDlg) m_ThermalBoundaryDlg->hide();
-    if (m_ForgingSystemDlg) m_ForgingSystemDlg->hide();
-    if (m_HpSystemDlg) m_HpSystemDlg->hide();
-    if (m_HIPSystemDlg) m_HIPSystemDlg->hide();
-    if (m_HpSolveSetDlg) m_HpSolveSetDlg->hide();
-    if (m_HpSubmissionDlg) m_HpSubmissionDlg->hide();
-    if (m_ForgingSubmissionDlg) m_ForgingSubmissionDlg->hide();
-    if (m_HipSubmissionDlg) m_HipSubmissionDlg->hide();
+    QDialog *dialogs[] = {
+        m_PElSfSetDlg,
+        m_HpPartDlg,
+        m_HpBCDlg,
+        m_ForgingContactDlg,
+        m_HpInitDlg,
+        m_ThermalBoundaryDlg,
+        m_ForgingSystemDlg,
+        m_HpSystemDlg,
+        m_HIPSystemDlg,
+        m_HpSolveSetDlg,
+        m_HpSubmissionDlg,
+        m_ForgingSubmissionDlg,
+        m_HipSubmissionDlg,
+        m_CastingGravityDlg,
+        m_VariableOutputDlg,
+        m_AssemblingAct_,
+        m_WidgetInpElsetDlg,
+        m_DistMeasurementAct_,
+        m_GravityAct_,
+        m_QStatisticsDlg,
+        PostPro_ ? PostPro_->xyplotPanel_ : 0,
+        PostPro_ ? PostPro_->m_PostWidPlotOptDlg : 0
+    };
+    const int count = sizeof(dialogs) / sizeof(dialogs[0]);
+    for (int i = 0; i < count; ++i) {
+        if (!dialogs[i]) continue;
+        dialogs[i]->hide();
+    }
 }
 
 static void RaiseDialogNow(QDialog *dlg)
@@ -2680,11 +2706,6 @@ void MainWindow::ShowProcessDialog(QDialog *dlg)
     if (dlg->parentWidget() != this) {
         dlg->setParent(this, Qt::Dialog);
     }
-    Qt::WindowFlags flags = dlg->windowFlags();
-    flags |= Qt::Dialog;
-    flags |= Qt::Window;
-    flags |= Qt::WindowStaysOnTopHint;
-    dlg->setWindowFlags(flags);
     dlg->setWindowModality(Qt::ApplicationModal);
     RaiseDialogNow(dlg);
     QTimer::singleShot(0, dlg, SLOT(raise()));
@@ -2698,9 +2719,7 @@ void MainWindow::CreateSetDlgSlot()
 	if (viewWindow_){//pre 
 		viewWindow_->TabView(1);
 	}
-    m_PElSfSetDlg->show();
-    m_PElSfSetDlg->raise();
-    m_PElSfSetDlg->activateWindow();
+    ShowProcessDialog(m_PElSfSetDlg);
 }
 //--HPDLG
 void MainWindow::HP_HIPPartActSlot()
@@ -2919,8 +2938,6 @@ void MainWindow::HIPInitDlgActSlot()
 void MainWindow::HIPSystemDlgActSlot()
 {
     ShowProcessDialog(m_HIPSystemDlg); 
-    m_HIPSystemDlg->raise();//最上层
-    m_HIPSystemDlg->activateWindow();//激活
     m_HIPSystemBtn->setEnabled(true);
 }
 //--HIPDLG
@@ -2935,9 +2952,7 @@ void MainWindow::HIPResolveDlgActSlot()
 //变量输出对话框
 void MainWindow::HIPVariableOutPutDlgSlot()
 {   
-    m_VariableOutputDlg->show(); 
-    m_VariableOutputDlg->raise();//最上层
-    m_VariableOutputDlg->activateWindow();//激活
+    ShowProcessDialog(m_VariableOutputDlg);
 }
 //--HIPDLG
 //-提交运算
@@ -2953,53 +2968,39 @@ void MainWindow::HIPSubmissonActSlot()
 //--工具1.模型装配
 void MainWindow::AssembleDlgSlot()
 {
-	m_AssemblingAct_->show();
-	m_AssemblingAct_->raise();
-	m_AssemblingAct_->activateWindow();
+	ShowProcessDialog(m_AssemblingAct_);
 }
 //--工具2.历程曲线
 void MainWindow::courseCurveDlgSlot()
 {
-    PostPro_->xyplotPanel_->show();
-    PostPro_->xyplotPanel_->raise();//最上层
-    PostPro_->xyplotPanel_->activateWindow();//激活
+    ShowProcessDialog(PostPro_->xyplotPanel_);
 } 
 //--工具3.后处理属性
 void MainWindow::postPropDlgSlot()
 {
-    PostPro_->m_PostWidPlotOptDlg->show(); 
-    PostPro_->m_PostWidPlotOptDlg->raise();//最上层
-    PostPro_->m_PostWidPlotOptDlg->activateWindow();//激活
+    ShowProcessDialog(PostPro_->m_PostWidPlotOptDlg);
 }
 //--工具4.部件显示隐藏
 void MainWindow::partElSetHideDlgSlot()
 {
-	m_WidgetInpElsetDlg->show();
-	m_WidgetInpElsetDlg->raise();
-	m_WidgetInpElsetDlg->activateWindow();
+	ShowProcessDialog(m_WidgetInpElsetDlg);
 }
 
 //--工具5.距离测量
 void MainWindow::DistanceMeasurementSlot()
 {
-	m_DistMeasurementAct_->show();
-	m_DistMeasurementAct_->raise();
-	m_DistMeasurementAct_->activateWindow();
+	ShowProcessDialog(m_DistMeasurementAct_);
 }
 
 void MainWindow::GravitySlot()
 {
 	m_GravityAct_->ShowHideSlot(0);
-	m_GravityAct_->show();
-	m_GravityAct_->raise();
-	m_GravityAct_->activateWindow();
+	ShowProcessDialog(m_GravityAct_);
 }
 void MainWindow::QStatisticsSlot()
 {
-	m_QStatisticsDlg->show();
 	m_QStatisticsDlg->move(600,300);
-	m_QStatisticsDlg->raise();
-	m_QStatisticsDlg->activateWindow();
+	ShowProcessDialog(m_QStatisticsDlg);
 }
 
 
@@ -3223,64 +3224,48 @@ void MainWindow::ForgingSubmissonActSlot()
 void MainWindow::CastingGravitySlot()
 {
 	m_CastingGravityDlg->ShowHideSlot(1);
-    m_CastingGravityDlg->show(); 
-    m_CastingGravityDlg->raise();//最上层
-    m_CastingGravityDlg->activateWindow();//激活
+    ShowProcessDialog(m_CastingGravityDlg);
 	m_CastingGravityDlg->setEnabled(true);
 }
 void MainWindow::CastingpartActSlot()
 {
 	m_HpPartDlg->ShowPartDlgStyle(0);
-    m_HpPartDlg->show();
-    m_HpPartDlg->raise();////最上层
-    m_HpPartDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpPartDlg);
 	m_CastingPartBtn->setEnabled(true);
 }
 
 void MainWindow::CastingBCActSlot()
 {
 	m_HpBCDlg->ShowBC(2);
-	m_HpBCDlg->show();
-    m_HpBCDlg->raise();////最上层
-    m_HpBCDlg->activateWindow();//激活
+	ShowProcessDialog(m_HpBCDlg);
 	m_CastingBcBtn->setEnabled(true);
 }
 void MainWindow::CastingContactActSlot()
 {
 	m_ForgingContactDlg->ShowContact(ENUM_PRO_Casting);
-	m_ForgingContactDlg->show(); 
-	m_ForgingContactDlg->raise();//最上层
-	m_ForgingContactDlg->activateWindow();//激活
+	ShowProcessDialog(m_ForgingContactDlg);
 	m_CastingContactBtn->setEnabled(true);
 }
 void MainWindow::CastingInitActSlot()
 {
-	m_HpInitDlg->show();
-    m_HpInitDlg->raise();//最上层
-    m_HpInitDlg->activateWindow();//激活
+	ShowProcessDialog(m_HpInitDlg);
 	m_CastingInitBtn->setEnabled(true);
 }
 void MainWindow::CastingHBSlot()
 {
-	m_ThermalBoundaryDlg->show();
-	m_ThermalBoundaryDlg->raise();//最上层
-    m_ThermalBoundaryDlg->activateWindow();//激活
+	ShowProcessDialog(m_ThermalBoundaryDlg);
 	m_CastingTBBtn->setEnabled(true);
 }
 void MainWindow::CastingMotionBoundarySlot()
 {
 	m_ForgingSystemDlg->ShowFS3(ENUM_PRO_Casting);
-	m_ForgingSystemDlg->show(); 
-    m_ForgingSystemDlg->raise();//最上层
-    m_ForgingSystemDlg->activateWindow();//激活
+	ShowProcessDialog(m_ForgingSystemDlg);
 	m_CastingMotionBtn->setEnabled(true);
 }
 void MainWindow::CastingSystemActSlot()
 {
 	m_ForgingSystemDlg->ShowFS3(ENUM_PRO_Casting);
-	m_ForgingSystemDlg->show(); 
-    m_ForgingSystemDlg->raise();//最上层
-    m_ForgingSystemDlg->activateWindow();//激活
+	ShowProcessDialog(m_ForgingSystemDlg);
 	m_CastingMotionBtn->setEnabled(true);
 	//m_CastingSystemBtn->setEnabled(true);
     
@@ -3289,23 +3274,17 @@ void MainWindow::CastingSystemNextBtnSlot(int istep)
 {
 	m_HpSolveSetDlg->SetSloveStep(istep);
     m_HpSolveSetDlg->SetOutPutTab(0);
-    m_HpSolveSetDlg->show();
-    m_HpSolveSetDlg->raise();////最上层
-    m_HpSolveSetDlg->activateWindow();//激活
+    ShowProcessDialog(m_HpSolveSetDlg);
     m_HPSolveSetBtn->setEnabled(true);
 }
 void MainWindow::CastingSloveSetActSlot()
 {
-	m_HpSolveSetDlg->show(); 
-    m_HpSolveSetDlg->raise();//最上层
-    m_HpSolveSetDlg->activateWindow();//激活
+	ShowProcessDialog(m_HpSolveSetDlg);
 	m_CastingSolveSetBtn->setEnabled(true);
 }
 void MainWindow::CastingSubmissonActSlot()
 {
-	m_HpSubmissionDlg->show();
-    m_HpSubmissionDlg->raise();////最上层
-    m_HpSubmissionDlg->activateWindow();//激活
+	ShowProcessDialog(m_HpSubmissionDlg);
 }
 
 //--临时添加
@@ -3328,7 +3307,6 @@ void MainWindow::updataStepPlayParam(ResultVisS visParam)
 {
     if (viewWindow_){
         viewWindow_->TabView(0);//tabView_->setCurrentIndex(0);
-        DockPostPrc_->raise();  
     }
     StepPlayVisS stepParam;
     stepParam.strName = visParam.strName;
@@ -3356,7 +3334,6 @@ void MainWindow::PlayStepPlay(StepPlayVisS stepParam)
 {
     if (viewWindow_){
         viewWindow_->TabView(0);//tabView_->setCurrentIndex(0);
-        DockPostPrc_->raise();  
     }
     ResultVisS visParam;
     visParam.strName = stepParam.strName;

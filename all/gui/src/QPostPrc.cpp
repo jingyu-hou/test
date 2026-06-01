@@ -1,6 +1,7 @@
 #include "./PostProcess/XYPlot_Panel.h"
 #include "QPostPrc.h"
 #include "Information_Widget.h"
+#include <QTimer>
 
 static void ShowPostDialogInFront(QDialog *dlg, QWidget *owner)
 {
@@ -9,12 +10,14 @@ static void ShowPostDialogInFront(QDialog *dlg, QWidget *owner)
     if (parent && dlg->parentWidget() != parent) {
         dlg->setParent(parent, Qt::Dialog);
     }
-    dlg->setWindowFlags(dlg->windowFlags() | Qt::Window | Qt::WindowStaysOnTopHint);
     dlg->setWindowModality(Qt::ApplicationModal);
     dlg->show();
     dlg->setFocus(Qt::ActiveWindowFocusReason);
     dlg->raise();
     dlg->activateWindow();
+    QTimer::singleShot(0, dlg, SLOT(raise()));
+    QTimer::singleShot(50, dlg, SLOT(raise()));
+    QTimer::singleShot(100, dlg, SLOT(activateWindow()));
 }
 
 

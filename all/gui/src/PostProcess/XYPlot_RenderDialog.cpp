@@ -10,6 +10,7 @@
 #include <vtkRenderLargeImage.h>
 #include <vtkPNGWriter.h>
 #include <QFileDialog>
+#include <QTimer>
 #include "XYPlot_RenderDialog.h"
 
 XYPlot_RenderDialog* XYPlot_RenderDialog::instance = 0;
@@ -89,7 +90,12 @@ void XYPlot_RenderDialog::SavePicture()
 
 void XYPlot_RenderDialog::Show()
 {
+    setWindowModality(Qt::ApplicationModal);
+    showNormal();
     this->show();
-    this-> raise();//最上层
+    this->raise();//最上层
     this->activateWindow();//激活
+    QTimer::singleShot(0, this, SLOT(raise()));
+    QTimer::singleShot(50, this, SLOT(raise()));
+    QTimer::singleShot(100, this, SLOT(activateWindow()));
 }

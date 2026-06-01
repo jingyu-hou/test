@@ -319,6 +319,7 @@ void QStepPlayWidget::ComboxParam03Slot(int id)
 void  QStepPlayWidget::updataParam(StepPlayVisS mParam)
 {
     m_StepPlayParam = mParam;
+    m_ChangingCombos = true;
 
     //--updatacurrentCOMBOX
     QString str1,str2,str3;
@@ -340,6 +341,7 @@ void  QStepPlayWidget::updataParam(StepPlayVisS mParam)
     if(index!=-1){
         m_ComBoParam03->setCurrentIndex(index);
     }
+    m_ChangingCombos = false;
 
 }
 void QStepPlayWidget::AutoPlaySlot()
