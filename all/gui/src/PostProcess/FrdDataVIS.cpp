@@ -17,6 +17,7 @@ FrdDataVIS::FrdDataVIS()
     renWin_ = 0;
     frdSource_ = 0;
     scalarResultLoaded_ = false;
+    loading_ = false;
     m_OutLineS.clear();
 	vtkWriter_=0;
 	ImageFilter_=0;
@@ -48,6 +49,27 @@ vtkRenderer* FrdDataVIS::GetBindedRenderer()
 void FrdDataVIS::Update()
 {
     if (renderer_ && renWin_)  renWin_->Render();
+}
+
+void FrdDataVIS::Reset()
+{
+    Clean();
+    loading_ = false;
+}
+
+bool FrdDataVIS::IsReady() const
+{
+    return !loading_ && scalarResultLoaded_;
+}
+
+bool FrdDataVIS::IsLoading() const
+{
+    return loading_;
+}
+
+void FrdDataVIS::SetLoading(bool loading)
+{
+    loading_ = loading;
 }
 
 void FrdDataVIS::Clean()
@@ -151,10 +173,14 @@ bool FrdDataVIS::Step4_SetupFrd()   //run 1 time
 
 void FrdDataVIS::ShallowCopyFrdData(FrdDataVIS *source)
 {
+    // WARNING: shares frdSource_ pointer — source and this must not be independently deleted.
+    // Both will hold the same pointer; deleting one makes the other dangling.
+    if (!source || source == this) return;
     this->frdSource_ = source->frdSource_;
 }
 void FrdDataVIS::SetShadeVisible(int gridId, bool visible, VTKColorS tmpClr)
 {
+    if (loading_ || frdSource_ == 0) return;
     if (shadeMap_.find(gridId) == shadeMap_.end())
     {
         vtkVISUnShadeMesh *shade = CreateShadeMeshObject(gridId, 1);
@@ -263,6 +289,7 @@ vtkVISUnShadeMesh* FrdDataVIS::CreateShadeMeshObject(int gridId, int type)
 
 void FrdDataVIS::SetMeshVisible(int gridId, bool visible, VTKColorS tmpClr)
 {
+    if (loading_ || frdSource_ == 0) return;
     if (meshMap_.find(gridId) == meshMap_.end())
     {
         vtkVISUnShadeMesh *mesh = CreateShadeMeshObject(gridId, 0);

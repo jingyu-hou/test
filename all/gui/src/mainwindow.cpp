@@ -1,11 +1,13 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include <QTextCodec>
 #include <QFile>
+#include <QFileInfo>
 #include <QTimer>
 #include <QDesktopWidget>
 #include "QMyVTK.h"
 #include "SARibbonApplicationButton.h"
 #include "AppLog.h"
+#include "FileValidation.h"
 #ifdef Q_WS_X11
 #include <QX11Info>
 #include <X11/Xlib.h>
@@ -91,6 +93,28 @@ static QString SafeGetOpenFileName(QWidget *parent, const QString &caption, cons
     return files.first();
 }
 
+class ImportOperationGuard {
+public:
+    ImportOperationGuard(MainWindow *w, const QString &message)
+        : window_(w), active_(false)
+    {
+        if (window_ && !window_->IsImporting()) {
+            window_->BeginImportOperation(message);
+            active_ = true;
+        }
+    }
+    ~ImportOperationGuard()
+    {
+        if (active_ && window_) {
+            window_->EndImportOperation();
+        }
+    }
+    bool active() const { return active_; }
+private:
+    MainWindow *window_;
+    bool active_;
+};
+
 //MainWindow::MainWindow(QWidget *parent,Qt::WFlags flags)
 //   : QMainWindow(parent,flags)
 MainWindow::MainWindow(QWidget *par):SARibbonMainWindow(par)
@@ -104,6 +128,7 @@ MainWindow::MainWindow(QWidget *par):SARibbonMainWindow(par)
     m_contextCategory_Casting_C = 0;
     m_contextCategoryHE = 0;
     m_contextCategory_HE_C = 0;
+    m_isImporting = false;
 
     InitDlg();
     createActions();
@@ -2076,11 +2101,74 @@ void MainWindow::MergeSlot()
 	}
    Information_Widget::GetInstance()->ShowInformation(QString(filename+" Open Succeed!"));
 }
+void MainWindow::BeginImportOperation(const QString &message)
+{
+    m_isImporting = true;
+    statusBar()->showMessage(message);
+    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+    if (m_ribbon) m_ribbon->setEnabled(false);
+    if (PreHIPPro_) PreHIPPro_->setEnabled(false);
+    if (PostPro_) PostPro_->setEnabled(false);
+    if (m_MdiArea) m_MdiArea->setEnabled(false);
+    if (viewWindow_) viewWindow_->setEnabled(false);
+}
+
+void MainWindow::EndImportOperation()
+{
+    if (viewWindow_) viewWindow_->setEnabled(true);
+    if (m_MdiArea) m_MdiArea->setEnabled(true);
+    if (PostPro_) PostPro_->setEnabled(true);
+    if (PreHIPPro_) PreHIPPro_->setEnabled(true);
+    if (m_ribbon) m_ribbon->setEnabled(true);
+    QApplication::restoreOverrideCursor();
+    statusBar()->showMessage(tr("Ready"));
+    m_isImporting = false;
+}
+
+bool MainWindow::IsImporting() const
+{
+    return m_isImporting;
+}
+
+void MainWindow::ApplyInpDataToUi(const ReadInpResultS &data)
+{
+    ImportTrace("ApplyInpDataToUi: begin");
+    m_HIPSystemDlg->SetInpData(data);
+    m_VariableOutputDlg->SetInpData(data);
+    m_QStatisticsDlg->SetInpData(data);
+    m_HpPartDlg->SetInpData(data);
+    m_HpBCDlg->SetInpData(data);
+    m_ForgingContactDlg->SetInpData(data);
+    m_ThermalBoundaryDlg->SetInpDataHB(data);
+    m_ForgingSystemDlg->SetInpData(data);
+    m_HpInitDlg->SetInpData(data);
+    m_GravityAct_->SetInpData(data);
+    m_HpSystemDlg->SetInpData(data);
+    m_HpSolveSetDlg->SetInpData(data);
+    m_AssemblingAct_->SetInpData(data);
+    m_WidgetInpElsetDlg->SetInpData(data.TmpElSetInps);
+    PreHIPPro_->m_TreeModel->setInpData(data);
+    ImportTrace("ApplyInpDataToUi: dialogs updated");
+    if (viewWindow_) {
+        viewWindow_->TabView(1);
+        for (int i = 0; i < m_MdiArea->subWindowList().size(); i++) {
+            QMdiSubWindow *TmpWindow = m_MdiArea->subWindowList().at(i);
+            if (TmpWindow == TmpWindow) {
+                viewWindow_->ShowCurPreData(data);
+                break;
+            }
+        }
+    }
+    ImportTrace("ApplyInpDataToUi: done");
+}
+
 void MainWindow::OpenSlot()
 {
     // QLabel *qlabel = new QLabel("Hello Qt");
     //qlabel->show();
-    statusBar()->showMessage(tr("打开..."));
+    ImportOperationGuard importGuard(this, tr("Importing file..."));
+    if (!importGuard.active()) return;
+
 	QString workPath=QDir::currentPath();
 	//QString workPath=workPath2;
     //workPath = workPath.left(workPath.lastIndexOf("/"));
@@ -2095,7 +2183,24 @@ void MainWindow::OpenSlot()
     if (filename.size()==0){
        return;
     }
-   
+
+    QString fileFormat = QFileInfo(filename).suffix().toLower();
+    if (fileFormat=="inp") {
+        FileValidationResult v = validateInpFile(filename);
+        if (!v.valid) {
+            Information_Widget::GetInstance()->ShowInformation(v.errorMessage);
+            QMessageBox::warning(this, tr("Import File"), v.errorMessage, QMessageBox::Ok);
+            return;
+        }
+    } else if (fileFormat=="frd") {
+        FileValidationResult v = validateFrdFile(filename);
+        if (!v.valid) {
+            Information_Widget::GetInstance()->ShowInformation(v.errorMessage);
+            QMessageBox::warning(this, tr("Import File"), v.errorMessage, QMessageBox::Ok);
+            return;
+        }
+    }
+
     QFile file(filename);
     if(!file.exists()){
         return ;
@@ -2103,91 +2208,21 @@ void MainWindow::OpenSlot()
     if (!file.open(QIODevice::ReadOnly)){
         return ;
     }
-    QStringList lists = filename.split(".");
-    QString fileFormat = lists.back().toLower();//frd文件
     if (fileFormat=="inp") {
-       // CRWManage CRWObject;
-        ImportTrace("OpenSlot: before ReadSectionInpFile");
-        int ret=CRWObject.ReadSectionInpFile(&file,filename);
+        ImportTrace("OpenSlot: before ReadSectionInpFile (local parser)");
+        CRWManage parser;
+        int ret = parser.ReadSectionInpFile(&file, filename);
         ImportTrace("OpenSlot: after ReadSectionInpFile");
         file.close();
         if (!ret) {
             Information_Widget::GetInstance()->ShowInformation(QString(filename + " Open Failed: invalid INP format!"));
             return;
         }
-		ReadInpResultS m_Data = CRWObject.m_ReadInpResult;
-        //写入数据到各个界面中
-        //--写入到HIP界面数据
-        //m_PartDlg->SetInpData(m_Data);
-        //m_BCDlg->SetInpData(m_Data);
-        //m_InitDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: before HIPSystem");
-        m_HIPSystemDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after HIPSystem");
-        //m_ResolveDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: before VariableOutput");
-        m_VariableOutputDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after VariableOutput");
-		ImportTrace("OpenSlot: before Statistics");
-		m_QStatisticsDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after Statistics");
-        //--写入到HP界面数据
-        ImportTrace("OpenSlot: before HpPart");
-        m_HpPartDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after HpPart");
-        ImportTrace("OpenSlot: before HpBC");
-        m_HpBCDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after HpBC");
-		ImportTrace("OpenSlot: before ForgingContact");
-		m_ForgingContactDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after ForgingContact");
-		ImportTrace("OpenSlot: before ThermalBoundary");
-		m_ThermalBoundaryDlg->SetInpDataHB(m_Data);
-        ImportTrace("OpenSlot: after ThermalBoundary");
-		ImportTrace("OpenSlot: before ForgingSystem");
-		m_ForgingSystemDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after ForgingSystem");
-        ImportTrace("OpenSlot: before HpInit");
-        m_HpInitDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after HpInit");
-		ImportTrace("OpenSlot: before Gravity");
-		m_GravityAct_->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after Gravity");
-        ImportTrace("OpenSlot: before HpSystem");
-        m_HpSystemDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after HpSystem");
-        ImportTrace("OpenSlot: before HpSolveSet");
-        m_HpSolveSetDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after HpSolveSet");
-		//写入到装配界面
-		ImportTrace("OpenSlot: before Assembling");
-		m_AssemblingAct_->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after Assembling");
-		//工具->部件显示隐藏界面
-		ImportTrace("OpenSlot: before WidgetInpElset");
-		m_WidgetInpElsetDlg->SetInpData(m_Data.TmpElSetInps);
-        ImportTrace("OpenSlot: after WidgetInpElset");
-        //--写入到Tree
-        ImportTrace("OpenSlot: before TreeModel");
-        PreHIPPro_->m_TreeModel->setInpData(m_Data);
-        ImportTrace("OpenSlot: after TreeModel");
-		 //--写入到view显示区域
-		
-		if (viewWindow_){
-			viewWindow_->TabView(1);//tabView_->setCurrentIndex(1);
-			QMdiSubWindow *CurWindow=m_MdiArea->currentSubWindow();
-			for (int i=0;i<m_MdiArea->subWindowList().size();i++){
-				QMdiSubWindow *TmpWindow=m_MdiArea->subWindowList().at(i);
-				if (TmpWindow == TmpWindow){
-					ImportTrace("OpenSlot: before ShowCurPreData");
-					viewWindow_->ShowCurPreData(m_Data); 
-                    ImportTrace("OpenSlot: after ShowCurPreData"); 
-					break;
-				}
-			}
-		}
-       Information_Widget::GetInstance()->ShowInformation(QString(filename+" Open Succeed!"));
-    }else if(fileFormat=="frd"){// 
+        ReadInpResultS data = parser.m_ReadInpResult;
+        CRWObject.m_ReadInpResult = data;
+        ApplyInpDataToUi(data);
+        Information_Widget::GetInstance()->ShowInformation(QString(filename+" Open Succeed!"));
+    }else if(fileFormat=="frd"){//
         if (viewWindow_){
             viewWindow_->TabView(0);//post process
         }
@@ -3092,6 +3127,9 @@ void MainWindow::QStatisticsSlot()
 
 void MainWindow::HIPSolveActOpenSlot()
 {
+    ImportOperationGuard importGuard(this, tr("Importing HIP file..."));
+    if (!importGuard.active()) return;
+
     QString workPath = QDir::currentPath();
     QString filename = SafeGetOpenFileName(this, "Read Inp file...", workPath, "Inp Files (*.inp);;");
     if (filename.size() == 0) {
@@ -3100,61 +3138,13 @@ void MainWindow::HIPSolveActOpenSlot()
 
     QFile parseFile(filename);
     if (parseFile.exists() && parseFile.open(QIODevice::ReadOnly)) {
-        int parseRet = CRWObject.ReadSectionInpFile(&parseFile, filename);
+        CRWManage parser;
+        int parseRet = parser.ReadSectionInpFile(&parseFile, filename);
         parseFile.close();
         if (parseRet) {
-            ReadInpResultS m_Data = CRWObject.m_ReadInpResult;
-            ImportTrace("OpenSlot: before HIPSystem");
-        m_HIPSystemDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after HIPSystem");
-            ImportTrace("OpenSlot: before VariableOutput");
-        m_VariableOutputDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after VariableOutput");
-            ImportTrace("OpenSlot: before Statistics");
-		m_QStatisticsDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after Statistics");
-            ImportTrace("OpenSlot: before HpPart");
-        m_HpPartDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after HpPart");
-            ImportTrace("OpenSlot: before HpBC");
-        m_HpBCDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after HpBC");
-            ImportTrace("OpenSlot: before ForgingContact");
-		m_ForgingContactDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after ForgingContact");
-            ImportTrace("OpenSlot: before ThermalBoundary");
-		m_ThermalBoundaryDlg->SetInpDataHB(m_Data);
-        ImportTrace("OpenSlot: after ThermalBoundary");
-            ImportTrace("OpenSlot: before ForgingSystem");
-		m_ForgingSystemDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after ForgingSystem");
-            ImportTrace("OpenSlot: before HpInit");
-        m_HpInitDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after HpInit");
-            ImportTrace("OpenSlot: before Gravity");
-		m_GravityAct_->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after Gravity");
-            ImportTrace("OpenSlot: before HpSystem");
-        m_HpSystemDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after HpSystem");
-            ImportTrace("OpenSlot: before HpSolveSet");
-        m_HpSolveSetDlg->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after HpSolveSet");
-            ImportTrace("OpenSlot: before Assembling");
-		m_AssemblingAct_->SetInpData(m_Data);
-        ImportTrace("OpenSlot: after Assembling");
-            ImportTrace("OpenSlot: before WidgetInpElset");
-		m_WidgetInpElsetDlg->SetInpData(m_Data.TmpElSetInps);
-        ImportTrace("OpenSlot: after WidgetInpElset");
-            ImportTrace("OpenSlot: before TreeModel");
-        PreHIPPro_->m_TreeModel->setInpData(m_Data);
-        ImportTrace("OpenSlot: after TreeModel");
-            if (viewWindow_) {
-                viewWindow_->TabView(1);
-                ImportTrace("OpenSlot: before ShowCurPreData");
-					viewWindow_->ShowCurPreData(m_Data); 
-                    ImportTrace("OpenSlot: after ShowCurPreData");
-            }
+            ReadInpResultS data = parser.m_ReadInpResult;
+            CRWObject.m_ReadInpResult = data;
+            ApplyInpDataToUi(data);
             Information_Widget::GetInstance()->ShowInformation(QString("Loaded INP data: ") + filename);
         } else {
             Information_Widget::GetInstance()->ShowInformation(QString(filename + " Open Failed: invalid INP format!"));

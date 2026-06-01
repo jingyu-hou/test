@@ -1,4 +1,4 @@
-#ifndef QPOSTWIGFILE_H
+﻿#ifndef QPOSTWIGFILE_H
 #define QPOSTWIGFILE_H
 #include <QWidget>
 #include <QObject>
@@ -36,6 +36,7 @@ private:
 	QLineEdit   *m_ReadEdit;
 	QFrdDataPro *m_FrdDataPro;
     int m_WigFrdNum;
+    bool m_isReadingFrd;
     static int m_WigFrdNumOld;
     VTKColorS m_ClrInit;
  

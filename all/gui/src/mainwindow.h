@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #ifdef _MSC_VER
 #include <windows.h>
@@ -373,6 +373,7 @@ private slots:
 	void GridDivActPrcOpen();
 	void HIPSolveActKillSlot();
 private:
+	bool m_isImporting;
 	void InitDlg();
 	void createActions();
 	void createDockWindows();
@@ -382,6 +383,7 @@ private:
 	void ToolApp();//luo
     void InitProcess();
     void InitTree();
+    void ApplyInpDataToUi(const ReadInpResultS &data);
 
     //--ribbon
     void creatRibbon();
@@ -515,6 +517,9 @@ public slots:
 	 void changeS(bool f);
 public:
 	CRWManage CRWObject;
+	bool IsImporting() const;
+	void BeginImportOperation(const QString &message);
+	void EndImportOperation();
 	void ViewAss( ReadInpResultS m_Data);
 	
 };

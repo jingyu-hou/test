@@ -115,6 +115,7 @@ bool InpDataSource::InitGridFromFrd(ReadInpResultS *Inp)
     QStringList firstCell = cellPointsList.at(0).split(",", QString::SkipEmptyParts);
     CellBaseId_ = firstCell.size() > 0 ? firstCell.at(0).simplified().toInt() - 1 : 0;
 
+    int insertedCells = 0;
     for (int i = 0; i < nCell; ++i) {
         QStringList cellData = cellPointsList.at(i).split(",", QString::SkipEmptyParts);
         int nodeNumber = cellData.size() - 1;
@@ -181,11 +182,20 @@ bool InpDataSource::InitGridFromFrd(ReadInpResultS *Inp)
             idList->SetId(9, idList->GetId(12)); idList->SetId(10, idList->GetId(13)); idList->SetId(11, idList->GetId(14));
             idList->SetId(12, t9); idList->SetId(13, t10); idList->SetId(14, t11);
         }
-        if (validCell) wholeGrid_->InsertNextCell(cellTypeVtk, idList);
+        if (validCell) {
+            wholeGrid_->InsertNextCell(cellTypeVtk, idList);
+            ++insertedCells;
+        }
         cell->Delete();
     }
     wholeGrid_->SetPoints(points);
     points->Delete();
+
+    if (insertedCells == 0 || wholeGrid_->GetNumberOfCells() <= 0) {
+        wholeGrid_->Delete();
+        wholeGrid_ = 0;
+        return false;
+    }
     return true;
 }
 vtkVISUnstructuredGridSource* InpDataSource::GetSourceGrid()

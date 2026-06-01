@@ -80,14 +80,19 @@ bool FrdDataSource::Step1_InitGridPoints(_PointXYZ_S *pStruct)
 {
     if (pStruct == 0)  return false;
     int nPoint = pStruct->PointId.size();
+    if (nPoint <= 0)  return false;
+    if (pStruct->x.size() < nPoint || pStruct->y.size() < nPoint || pStruct->z.size() < nPoint)
+        return false;
     frdPoints_ = vtkPoints::New();
     frdPoints_->SetNumberOfPoints(nPoint);
     for (int i = 0; i < nPoint; ++i)
     {
         frdPoints_->SetPoint(i, pStruct->x.at(i), pStruct->y.at(i), pStruct->z.at(i));
         int id = pStruct->PointId.at(i);
+        if (id <= 0)  continue;
         pointIdMap_[id] = i;
     }
+    if (pointIdMap_.size() == 0)  return false;
     return true;
 }
 
@@ -110,6 +115,9 @@ bool FrdDataSource::Step2_InitGridCells(_RESULT_ELEM_S *cStruct)
     frdPoints_ = 0;
 
     int nCell = cStruct->nNum;
+    if (cStruct->DataElem1PointStyle.size() < nCell || cStruct->DataElem2.size() < nCell)
+        return false;
+    int validCellCount = 0;
     for (int i = 0; i < nCell; ++i)
     {
         int frdCellType = cStruct->DataElem1PointStyle.at(i);
@@ -119,10 +127,20 @@ bool FrdDataSource::Step2_InitGridCells(_RESULT_ELEM_S *cStruct)
             int cellType_vtk = cell->GetCellType();
             int np = cell->GetNumberOfPoints();
             vtkIdList *idList = cell->GetPointIds();
+            bool cellValid = true;
             for (int j = 0; j < np; ++j)
             {
                 int id = cStruct->DataElem2.at(i)[j];
-                idList->SetId(j, pointIdMap_[id]);
+                map<int, int>::iterator it = pointIdMap_.find(id);
+                if (it == pointIdMap_.end()) {
+                    cellValid = false;
+                    break;
+                }
+                idList->SetId(j, it->second);
+            }
+            if (!cellValid) {
+                cell->Delete();
+                continue;
             }
             if (cellType_vtk == VTK_QUADRATIC_HEXAHEDRON)
             {
@@ -153,9 +171,11 @@ bool FrdDataSource::Step2_InitGridCells(_RESULT_ELEM_S *cStruct)
             }
             int gridId = cStruct->DataElem1PointMats.at(i);
             idGridMap_[gridId]->InsertNextCell(cellType_vtk, idList);
+            ++validCellCount;
             cell->Delete();
         }
     }
+    if (validCellCount == 0)  return false;
     return true;
 }
 
@@ -178,6 +198,10 @@ bool FrdDataSource::Step3_InitResults(_RESULT_STEP_S_ *rStruct)
     StepTimeIncMap_[key].dataInc = QString::number(rStruct->paraHeader.strInc);
     int pointNum = rStruct->nodeResultBlock.strNum;
     int varCount = rStruct->nodeResultBlock.strAttrNum;
+    if (pointNum <= 0 || varCount <= 0)  return false;
+    if (rStruct->nodeResultBlock.strComptHeaderName.size() < varCount)  return false;
+    if (rStruct->nodeResultBlock.dataIndex.size() < pointNum)  return false;
+    if (rStruct->nodeResultBlock.strDataRecord.size() < pointNum)  return false;
     for (int i = 0; i < varCount; ++i)
     {
         QString scalar(rStruct->nodeResultBlock.strComptHeaderName.at(i));
@@ -200,8 +224,10 @@ bool FrdDataSource::Step3_InitResults(_RESULT_STEP_S_ *rStruct)
             for (int j = 0; j < pointNum; ++j)
             {
                 int id = rStruct->nodeResultBlock.dataIndex.at(j);
-                vtkIdType first1=pointIdMap_[id];
-                double second=rStruct->nodeResultBlock.strDataRecord.at(j)[i];       
+                map<int, int>::iterator it = pointIdMap_.find(id);
+                if (it == pointIdMap_.end())  continue;
+                vtkIdType first1 = it->second;
+                double second=rStruct->nodeResultBlock.strDataRecord.at(j)[i];
                 darry->SetValue(first1, second);
                 validPoints.insert(first1);
             }
@@ -215,7 +241,9 @@ bool FrdDataSource::Step3_InitResults(_RESULT_STEP_S_ *rStruct)
             vtkDoubleArray *darry3 = resultVec_[s-1];
             for (int j = 0; j < pointNum; ++j)
             {
-                int id = pointIdMap_[rStruct->nodeResultBlock.dataIndex.at(j)];
+                map<int, int>::iterator it = pointIdMap_.find(rStruct->nodeResultBlock.dataIndex.at(j));
+                if (it == pointIdMap_.end())  continue;
+                int id = it->second;
                 double d1 = darry1->GetValue(id);
                 double d2 = darry2->GetValue(id);
                 double d3 = darry3->GetValue(id);
@@ -233,6 +261,11 @@ bool FrdDataSource::Step4_SetupFrd()
 {
     pointIdMap_.clear();  //clean unused data.
     if (idGridMap_.size() == 0)  return false;
+    for (map<int, vtkUnstructuredGrid*>::iterator it = idGridMap_.begin(); it != idGridMap_.end(); ++it)
+    {
+        if (it->second->GetNumberOfPoints() <= 0 || it->second->GetNumberOfCells() <= 0)
+            return false;
+    }
     this->scalarNumber_ = scalarVec_.size();
     if (this->scalarNumber_ < 1)  return false;
     this->scalarName_ = new const char*[this->scalarNumber_];

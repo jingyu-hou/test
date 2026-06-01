@@ -98,18 +98,23 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
         
         line.replace(QString(" "),QString(","));
         strList=line.split(",");
-        if (strList.size()>=2){
+        if (strList.size()>=3){
             //DataFrdShow.nodalPoint.nNum=strList.at(1).toInt();
             strFormat = strList.at(2).toInt();
             //DataFrdShow.nodalPoint.nFormat=strList.at(2).toInt();
         }else{
-            infoW->ShowInformation("Only Read 2C ,no others...");
+            infoW->ShowInformation("Invalid FRD file: malformed 2C node header.");
+            return false;
         }
 
         line=inText.readLine();
         readNextPrcDataLine(line,strId,strList,strFormat);
         while ((strId != "-3") && (strId == "-1"))
         {
+            if (strList.size() < 4) {
+                infoW->ShowInformation("Invalid FRD file: malformed node record.");
+                return false;
+            }
             tmpNodePoint->PointId<<strList.at(0).toInt();
             tmpNodePoint->x<<strList.at(1).toDouble();
             tmpNodePoint->y<<strList.at(2).toDouble();
@@ -128,6 +133,10 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
         readNextLine(line,strId,strList);
         if (strId=="3C")
         {
+            if (strList.size() < 3) {
+                infoW->ShowInformation("Invalid FRD file: malformed 3C element header.");
+                return false;
+            }
             tmpElement->nNum=strList.at(1).toInt();
             tmpElement->nFormat=strList.at(2).toInt();
         }
@@ -138,6 +147,10 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
         {
             if (strId == "-1")
             {
+                if (strList.size() < 5) {
+                    infoW->ShowInformation("Invalid FRD file: malformed element header record.");
+                    return false;
+                }
                 //DataFrdShow.elemBlock.DataElem1PointId<<strList.at(1).toInt();
                 //DataFrdShow.elemBlock.DataElem1PointStyle<<strList.at(2).toInt();
                 //DataFrdShow.elemBlock.DataElem1PointGrps<<strList.at(3).toInt();
@@ -152,6 +165,10 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
             
             if (strId == "-2")
             {
+                if (tmpElement->DataElem1PointStyle.isEmpty()) {
+                    infoW->ShowInformation("Invalid FRD file: missing element header before connectivity.");
+                    return false;
+                }
                 if (tmpElement->DataElem1PointStyle[0]==4||tmpElement->DataElem1PointStyle[0]==5)//超过10个节点为两行
                 {
                     line=inText.readLine().simplified();
@@ -199,12 +216,16 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
             readNextLine(line,strId,strList);
         }*/
         while(line != "9999"&& !inText.atEnd()){//999
-            QCoreApplication::processEvents();
+            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
             if (strId == "1P"){//1P
                 resultStepFrdS tmpStepFrd;    
                 //m_resultFrdsID.userHeader.strName <<strTmp.mid(0,indexStr);
                 //tmpStepFrd.paraHeader.strName<<line.mid(2,line.indexOf(" ")-1);//STEP
                 //tmpStepFrd.paraHeader.strHeadpId<<strList;//strList.at(1);//.toLocal8Bit().constData();
+                if (strList.size() < 4) {
+                    infoW->ShowInformation("Invalid FRD file: malformed 1P header.");
+                    return false;
+                }
                 tmpStepFrd.paraHeader.strInc=strList.at(2).toInt();
                 tmpStepFrd.paraHeader.strStep=strList.at(3).toInt();
                 line=inText.readLine().simplified();
@@ -213,6 +234,10 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
                 strList=line.split(",");
 
                 if (strId == "100C"){//100C
+                    if (strList.size() < 7) {
+                        infoW->ShowInformation("Invalid FRD file: malformed 100C header.");
+                        return false;
+                    }
                     strTmp=strList.at(0);
                     strTmp=strTmp.remove("100C")+strList.at(1);//.;line.mid(4,line.indexOf(",")).remove(",");//L101
                     strHeaderParam = strTmp;
@@ -244,6 +269,10 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
 
 					QString Striii="";
 					if (strId =="-4"){//-4
+						if (strList.size() < 3) {
+							infoW->ShowInformation("Invalid FRD file: malformed -4 attribute header.");
+							return false;
+						}
 						int St;
 						 tmpStepFrd.nodeResultBlock.strAttrHeaderName=strList.at(1);//.toLocal8Bit().constData();
 						 strHeaderParam+="-"+strList.at(1);
@@ -264,6 +293,10 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
 					}
 
                     while(strId =="-5"){//-5
+                        if (strList.size() < 2) {
+                            infoW->ShowInformation("Invalid FRD file: malformed -5 component header.");
+                            return false;
+                        }
                         tmpStepFrd.nodeResultBlock.strComptHeaderName<<strList.at(1);
                         line =inText.readLine();
                         strlineTmp=line.simplified();//-5
@@ -351,6 +384,10 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
 
                             if (strId == "-1"){
                                 nNum1=strTmpList.size();
+                                if (nNum1 < 1) {
+                                    infoW->ShowInformation("Invalid FRD file: empty result data record.");
+                                    return false;
+                                }
                                 double *d = new double[nNum1-1];
                                 for (int kk=1;kk<nNum1;kk++){
                                     d[kk-1]=strTmpList.at(kk).toDouble();
@@ -359,6 +396,10 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
                                 tmpStepFrd.nodeResultBlock.strDataRecord<<d;
 
                                 nNum2=strList.size();
+                                if (nNum2 < 1) {
+                                    infoW->ShowInformation("Invalid FRD file: empty result data record.");
+                                    return false;
+                                }
                                 double *d1 = new double[nNum2-1];
                                 for (int kk=1;kk<nNum2;kk++){
                                     d1[kk-1]=strList.at(kk).toDouble();
@@ -374,8 +415,12 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
                                     readNextPrcDataLine(line,strId,strList,1);
                                }
                                 nNum1=strTmpList.size();
+                                if (nNum1 < 1) {
+                                    infoW->ShowInformation("Invalid FRD file: empty result data record.");
+                                    return false;
+                                }
                                 double *d = new double[nNum1-1];
-                                
+
                                 for (int kk=1;kk<nNum1;kk++){
                                     d[kk-1]=strTmpList.at(kk).toDouble();
                                 }
@@ -383,6 +428,10 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
                                tmpStepFrd.nodeResultBlock.strDataRecord<<d;
                             }else{//-3
                                 nNum1=strTmpList.size();
+                                if (nNum1 < 1) {
+                                    infoW->ShowInformation("Invalid FRD file: empty result data record.");
+                                    return false;
+                                }
                                 double *d = new double[nNum1-1];
 
                                 for (int kk=1;kk<nNum1;kk++){

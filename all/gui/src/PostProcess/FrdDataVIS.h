@@ -118,6 +118,10 @@ class FrdDataVIS
         QStringList m_ListData;  
         void ActorPick(bool flag);
         void AcotrVisibility(bool f);
+        void Reset();
+        bool IsReady() const;
+        bool IsLoading() const;
+        void SetLoading(bool loading);
         //--pickerPoind ID
         //--get pointId
         int GetPointId(QString s,double x, double y, double z);
@@ -163,6 +167,7 @@ private:
         map<int, vtkVISUnEdge*> outlineMap_;
 		//map<int, vtkVISUnSlice*> cutMap_;
         bool scalarResultLoaded_;
+        bool loading_;
         map<QString, map<int, vtkVISUnShadeMesh*> > headerDisplacementsMap_;  //header fmt = L101-DISP
         map<QString, map<int, vtkVISUnContour*> > headerContoursMap_;  //contour on original-grid and deformed-grids.  key= "original" or "Lnnn-DISP"
         //map<int, map<int, vtkVISUnSlice*> >GridcutIdMap_;//gridId,cutId,vtkVISUnSlice

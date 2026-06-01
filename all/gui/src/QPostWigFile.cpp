@@ -1,6 +1,8 @@
-#include "QPostWigFile.h"
+﻿#include "QPostWigFile.h"
 #include <QFileInfo>
+#include <QMessageBox>
 #include "Information_Widget.h"
+#include "FileValidation.h"
 
 static QString SafeGetOpenFileName(QWidget *parent, const QString &caption, const QString &dir, const QString &filter)
 {
@@ -71,6 +73,7 @@ QPostWigFile::QPostWigFile(QWidget *parent, VTKColorS* mColor)
     connect(m_OutPutBtn,SIGNAL(clicked()),this,SLOT(BtnOutPutSlot()));
     connect(m_pickActorBtn, SIGNAL(toggled(bool)), this, SLOT(SwitchActorPickSlot(bool)));
     m_WigFrdNum=0;
+    m_isReadingFrd = false;
     init(mColor);
 }
 
@@ -109,23 +112,49 @@ void QPostWigFile::SwitchActorPickSlot(bool b)
 }
 void QPostWigFile::BtnOpenFrdSlot()
 {
+    if (m_isReadingFrd) return;
+    struct Guard { bool &f; Guard(bool &b) : f(b) { f = true; } ~Guard() { f = false; } } g(m_isReadingFrd);
+
     QString fileName = SafeGetOpenFileName(this, "Read Frd/Dat from file", "", "Frd Files (*.Frd *.frd);;Dat Files (*.Dat *.dat)");
     if (fileName.isEmpty()) return;
-    m_ReadEdit->setText(fileName);
     QString suffix = QFileInfo(fileName).suffix().toLower();
-    if (suffix == "frd") readOpenFrd(fileName);
-    else if (suffix == "dat") readOpenDat(fileName);
+    if (suffix == "frd") {
+        FileValidationResult v = validateFrdFile(fileName);
+        if (!v.valid) {
+            Information_Widget::GetInstance()->ShowInformation(v.errorMessage);
+            QMessageBox::warning(this, tr("Import File"), v.errorMessage, QMessageBox::Ok);
+            return;
+        }
+        m_ReadEdit->setText(fileName);
+        readOpenFrd(fileName);
+    } else if (suffix == "dat") {
+        FileValidationResult v = validateDatFile(fileName);
+        if (!v.valid) {
+            Information_Widget::GetInstance()->ShowInformation(v.errorMessage);
+            QMessageBox::warning(this, tr("Import File"), v.errorMessage, QMessageBox::Ok);
+            return;
+        }
+        m_ReadEdit->setText(fileName);
+        readOpenDat(fileName);
+    }
 }
 bool QPostWigFile::readOpenFrd(QString fileName)
 {
+    FileValidationResult v = validateFrdFile(fileName);
+    if (!v.valid) {
+        Information_Widget::GetInstance()->ShowInformation(v.errorMessage);
+        return false;
+    }
     QFrdDataPro	m_FrdDataPro;
     resultFrdS m_resultFrd;
     bool ret=m_FrdDataPro.ReadFileData(frdVIS_, fileName, m_resultFrd);
     if (!ret) {
+        frdVIS_.Reset();
         Information_Widget::GetInstance()->ShowInformation("FRD file read failed.");
         return false;
     }
     if (!frdVIS_.Step4_SetupFrd()) {
+        frdVIS_.Reset();
         Information_Widget::GetInstance()->ShowInformation("FRD data setup failed.");
         return false;
     }

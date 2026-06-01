@@ -82,15 +82,15 @@ bool InpDataVIS::LoadInpData(ReadInpResultS *Inp)
 {
     Clean();
     InpSource_ = new InpDataSource;
-    bool f = InpSource_->InitGridFromFrd(Inp);
-    if (f){
-         bool f2 = InpSource_->InitBCFromFrd(Inp);//点,单元，表面集合数据初始化
-         bool f = InpSource_->InpRowDataToSurf(Inp);
-    }else{
+    bool gridOk = InpSource_->InitGridFromFrd(Inp);
+    if (!gridOk) {
         delete InpSource_;
         InpSource_ = 0;
+        return false;
     }
-    return f;
+    InpSource_->InitBCFromFrd(Inp);
+    InpSource_->InpRowDataToSurf(Inp);
+    return true;
 }
 vtkRenderer* InpDataVIS::GetBindedRenderer()
 {
@@ -99,6 +99,9 @@ vtkRenderer* InpDataVIS::GetBindedRenderer()
 
 void InpDataVIS::ShallowCopyFrdData(InpDataVIS *source)
 {
+    // WARNING: shares InpSource_ pointer — both objects hold the same pointer.
+    // Deleting one makes the other dangling. Use with caution.
+    if (!source || source == this) return;
     this->InpSource_ = source->InpSource_;
 }
 vtkVISUnShadeMesh* InpDataVIS::CreateShadeMeshObject(int type)
