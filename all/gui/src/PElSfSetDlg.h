@@ -81,8 +81,8 @@ public:
         if (!this->m_LeftButtonUp)return;
         //if (!this->CurrentMode) return;
         
-        //if (this->CurrentMode == 1 && rwi->GetControlKey()){//VTKISRBP_SELECT
-        if (rwi->GetControlKey()){//VTKISRBP_SELECT
+        // Select on a normal left click/drag. Keep Shift reserved for removal.
+        if (!rwi->GetShiftKey()){//VTKISRBP_SELECT
             vtkPlanes *frustum =static_cast<vtkAreaPicker*>(this->GetInteractor()->GetPicker())->GetFrustum();
             vtkExtractPolyDataGeometry *extractPolyDataGeometry=vtkExtractPolyDataGeometry::New();
             extractPolyDataGeometry->SetImplicitFunction(frustum);
@@ -655,7 +655,8 @@ public:
         vtkRenderWindowInteractor*rwi = this->GetInteractor();
         if (!this->m_LeftButtonUp)return;
         
-        if (rwi->GetControlKey()){//VTKISRBP_SELECT
+        // Select on a normal left click/drag. Keep Shift reserved for removal.
+        if (!rwi->GetShiftKey()){//VTKISRBP_SELECT
             vtkPlanes *frustum =static_cast<vtkAreaPicker*>(this->GetInteractor()->GetPicker())->GetFrustum();
             vtkExtractGeometry *extractGeometry=vtkExtractGeometry::New();
             extractGeometry->SetImplicitFunction(frustum);

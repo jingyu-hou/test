@@ -1,4 +1,4 @@
-#include "./PostProcess/XYPlot_Panel.h"
+﻿#include "./PostProcess/XYPlot_Panel.h"
 #include "QPostPrc.h"
 #include "Information_Widget.h"
 #include <QTimer>
@@ -86,7 +86,7 @@ void QPostPrc::setStyle()
     
     connect(m_PostWigResultOut,SIGNAL(emitScalar(ResultVisS)),this,SLOT(UpDataScalar(ResultVisS)));
     connect(m_PosWigFile->m_ListActorWiget,SIGNAL(emitClickAcotrListWig(vector<int>)),this,SLOT(SetActorSlot(vector<int>)));
-    //--剖面
+    //--鍓栭潰
     //connect(m_PostWigResultOut,SIGNAL(emitSectionAdd(int)),this,SLOT(SectionCutAddSlot(int)));
     //--init 
     m_CfgFile=new QCfgFileManage();
@@ -115,9 +115,9 @@ void QPostPrc::setStyle()
 }
 
 //****************************************************
-// Method:    单击树节点的响应;
+// Method:    鍗曞嚮鏍戣妭鐐圭殑鍝嶅簲;
 // Returns:   void;
-// Parameter: index     树节点
+// Parameter: index     鏍戣妭鐐?
 // Author:	  
 //****************************************************
 void QPostPrc::ChangeModelIndexSlot( const QModelIndex & index )
@@ -145,7 +145,7 @@ void QPostPrc::ChangeModelIndexSlot( const QModelIndex & index )
 	}
 	else if (type == "ListRest")
 	{
-		//m_StackedWidget->setCurrentWidget(m_PosWigFile);打开当前Frd文件
+		//m_StackedWidget->setCurrentWidget(m_PosWigFile);鎵撳紑褰撳墠Frd鏂囦欢
 	}
 	else if (type == "Anim")
 	{
@@ -178,7 +178,7 @@ void QPostPrc::ChangeModelIndexSlot( const QModelIndex & index )
 }
 
 /*
-	数据选择显示
+	鏁版嵁閫夋嫨鏄剧ず
 */
 void QPostPrc::UpDataMenuListSlot(const map<QString, QStringList> *varMap)
 {
@@ -222,18 +222,28 @@ void QPostPrc::UpDataMenuListSlot(const map<QString, QStringList> *varMap)
         } 
         cit = varMap->begin();
     }
-    m_ActorListData.clear();
-    vector<int>::const_iterator it1=m_PosWigFile->frdVIS_.GetGridIds()->begin();//获取所有IdList
+    vector<int> previousActorList = m_ActorListData;
+    vector<int> allActorList;
+    vector<int>::const_iterator it1=m_PosWigFile->frdVIS_.GetGridIds()->begin();//鑾峰彇鎵€鏈塈dList
     for (it1;it1!=m_PosWigFile->frdVIS_.GetGridIds()->end();it1++){ 
-       m_ActorListData.push_back(*it1);
-      
+       allActorList.push_back(*it1);
     }
-    m_WholeActorData=m_ActorListData;
-    emit emitStepPlayMenu(m_ResultO);//主界面播放条
-    
+    m_WholeActorData=allActorList;
+    m_ActorListData.clear();
+    if (previousActorList.empty()) {
+        m_ActorListData = allActorList;
+    } else {
+        vector<int>::const_iterator oldIt=previousActorList.begin();
+        for (oldIt;oldIt!=previousActorList.end();oldIt++){
+            if (std::find(allActorList.begin(),allActorList.end(),*oldIt)!=allActorList.end()) {
+                m_ActorListData.push_back(*oldIt);
+            }
+        }
+    }
+    emit emitStepPlayMenu(m_ResultO);//涓荤晫闈㈡挱鏀炬潯    
 }
 /*----------------------------------------------
-	  Depend on Plot vtktext‘s Param to Set the VIS. 
+	  Depend on Plot vtktext鈥榮 Param to Set the VIS. 
 -------------------------------------------------*/
 void QPostPrc::UpVTKTextVisSlot(ReadResultDlgS vtkTextProp)
 {
@@ -253,7 +263,7 @@ void QPostPrc::UpVTKTextVisSlot(ReadResultDlgS vtkTextProp)
     m_PosWigFile->frdTextVIS_.Update();
 }
 /*----------------------------------------------
-	  Depend on Plot Option‘s Param to Set the VIS. 
+	  Depend on Plot Option鈥榮 Param to Set the VIS. 
 -------------------------------------------------*/
 
 void QPostPrc::UpDataVisSlot(OptDlgS OptDlg)
@@ -263,7 +273,7 @@ void QPostPrc::UpDataVisSlot(OptDlgS OptDlg)
     }
   
     m_optDlgs = OptDlg;
-    //m_ActorListData=m_PosWigFile->frdVIS_.GetGridIds();//获取所有IdList
+    //m_ActorListData=m_PosWigFile->frdVIS_.GetGridIds();//鑾峰彇鎵€鏈塈dList
     SetOptionS(m_optDlgs,&m_ActorListData);
     //VTKColorS tmpWHColor,tmpFSColor,tmpCSColor;
 }
@@ -318,20 +328,17 @@ void QPostPrc::SetOptionS(OptDlgS OptDlg,const vector<int>* idS)
         }
     }
    
-    //--设置颜色
-    //--设置线宽等
+    //--璁剧疆棰滆壊
+    //--璁剧疆绾垮绛?
     m_PosWigFile->frdVIS_.SetWidth(OptDlg.ClrEdgeAThikIndex *1.25);
     m_PosWigFile->frdVIS_.Update();
-    //--设置拾取颜色、大小；
+    //--璁剧疆鎷惧彇棰滆壊銆佸ぇ灏忥紱
     m_HisPointClr=ChangeColorToDouble(OptDlg.ClrHisCuvPoint);
     m_PosWigFile->frdVIS_.SetColorSize(OptDlg.ClrHisPointfactor.toDouble(),m_HisPointClr);
 }
 void QPostPrc::SetActorSlot(vector<int> dataId)
 {
     m_ActorListData=dataId;
-    if (m_ActorListData.empty() && !m_WholeActorData.empty()) {
-        m_ActorListData = m_WholeActorData;
-    }
     SetOptionS(m_optDlgs,&m_ActorListData);
 	QStringList strList;
 	for (int kk=0;kk<m_ActorListData.size();kk++)
@@ -339,18 +346,34 @@ void QPostPrc::SetActorSlot(vector<int> dataId)
 		strList<<QString("%1").arg(m_ActorListData.at(kk));
 	}
 	m_PostWigResultOut->setActorList(strList);
+
+    ResultVisS visParam = m_PostWigResultOut->m_VisParam;
+    if (visParam.strName == "" && m_FileScalarName != "") {
+        visParam.strName = m_FileScalarName;
+    }
+    if (visParam.strName != "") {
+        UpDataScalar(visParam);
+    }
+
+    vector<int>::const_iterator it=m_WholeActorData.begin();
+    for (it;it!=m_WholeActorData.end();it++) {
+        if (std::find(m_ActorListData.begin(),m_ActorListData.end(),*it)==m_ActorListData.end()) {
+            m_PosWigFile->frdVIS_.HideGridActors(*it);
+        }
+    }
+    m_PosWigFile->frdVIS_.Update();
 }
 /*
-    云图及等值线图
-    1.orig:云图一直使用原始云图;
-    2.current:云图使用当前步的云图;
-           bgridshow:网格使用当前的网格;
+    浜戝浘鍙婄瓑鍊肩嚎鍥?
+    1.orig:浜戝浘涓€鐩翠娇鐢ㄥ師濮嬩簯鍥?
+    2.current:浜戝浘浣跨敤褰撳墠姝ョ殑浜戝浘;
+           bgridshow:缃戞牸浣跨敤褰撳墠鐨勭綉鏍?
 */
 void QPostPrc::UpDataScalar(ResultVisS ResultVis)
 {
     QString scalar=ResultVis.strName;
     if (scalar == ""){
-        return;//没有加载文件
+        return;//娌℃湁鍔犺浇鏂囦欢
     }
     QString strOrigCurrentName = scalar.left(scalar.indexOf(":"));
     QString strComponent = scalar.section(":", 1, 1);
@@ -361,10 +384,6 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
         Information_Widget::GetInstance()->ShowInformation("Selected FRD result is not available: " + scalar);
         return;
     }
-    if (m_ActorListData.empty() && !m_WholeActorData.empty()) {
-        m_ActorListData = m_WholeActorData;
-    }
-    
     int iOrigCurrent=ResultVis.m_iOrigCurrentChg;
     if (iOrigCurrent <0) return;
     xyplotPanel_->UpDataComb(iOrigCurrent,scalar);
@@ -372,7 +391,7 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
     m_FileScalarName=scalar;
     QString strNumLabel=strOrigCurrentName.left(strOrigCurrentName.indexOf("-")).remove("L",Qt::CaseInsensitive);
     //
-    //关闭原始网格显示----
+    //鍏抽棴鍘熷缃戞牸鏄剧ず----
      vector<int>::iterator it=m_WholeActorData.begin();
      for (it;it!=m_WholeActorData.end();it++)
      {
@@ -384,8 +403,8 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
      }
     m_PosWigFile->frdVIS_.HideAllContours();
     static QString strOldName = strOrigCurrentName;
-    if (ResultVis.bContour){//云图 //显示变形后云图---
-        if (strOldName == strOrigCurrentName){//不需要更新
+    if (ResultVis.bContour){//浜戝浘 //鏄剧ず鍙樺舰鍚庝簯鍥?--
+        if (strOldName == strOrigCurrentName){//涓嶉渶瑕佹洿鏂?
             vector<int>::const_iterator it=m_WholeActorData.begin();
              for (it;it!=m_WholeActorData.end();it++){
                  if (std::find(m_ActorListData.begin(),m_ActorListData.end(),*it)!=m_ActorListData.end()){
@@ -396,14 +415,14 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
                      m_PosWigFile->frdVIS_.SetContourVisible(*it,scalar,false,"L"+strOldName.left(strOldName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP");
                  }
                 
-                 m_PosWigFile->frdVIS_.SetContourLevel(*it,ResultVis.m_iClrScalar,"L"+strNumLabel+"-DISP");//颜色级别
-                 m_PosWigFile->frdVIS_.SetContourType(*it,scalar,ResultVis.m_iStyle,"L"+strNumLabel+"-DISP");//云图0 or 2等值线
+                 m_PosWigFile->frdVIS_.SetContourLevel(*it,ResultVis.m_iClrScalar,"L"+strNumLabel+"-DISP");//棰滆壊绾у埆
+                 m_PosWigFile->frdVIS_.SetContourType(*it,scalar,ResultVis.m_iStyle,"L"+strNumLabel+"-DISP");//浜戝浘0 or 2绛夊€肩嚎
                  m_PosWigFile->frdVIS_.SetContourVariable(*it,scalar,"L"+strNumLabel+"-DISP");
-                 m_PosWigFile->frdVIS_.SetContourOpacity(*it,ResultVis.m_dTrans,"L"+strNumLabel+"-DISP");//透明度
+                 m_PosWigFile->frdVIS_.SetContourOpacity(*it,ResultVis.m_dTrans,"L"+strNumLabel+"-DISP");//閫忔槑搴?
 
 				if (std::find(m_ActorListData.begin(),m_ActorListData.end(),*it)!=m_ActorListData.end()){               
 					 if ((*it)==(*m_ActorListData.begin()))
-						 m_PosWigFile->frdVIS_.SetContourScalarbarVisible(*it,true,"L"+strNumLabel+"-DISP");//只显示一个Bar
+						 m_PosWigFile->frdVIS_.SetContourScalarbarVisible(*it,true,"L"+strNumLabel+"-DISP");//鍙樉绀轰竴涓狟ar
 					 else
 						 m_PosWigFile->frdVIS_.SetContourScalarbarVisible(*it,false,"L"+strNumLabel+"-DISP");
 				}else{
@@ -411,10 +430,10 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
 				}
 
                  if (ResultVis.bContourMinMax){
-                     m_PosWigFile->frdVIS_.SetContourRange(*it,ResultVis.contourMin,ResultVis.contourMax,"L"+strNumLabel+"-DISP");//范围
+                     m_PosWigFile->frdVIS_.SetContourRange(*it,ResultVis.contourMin,ResultVis.contourMax,"L"+strNumLabel+"-DISP");//鑼冨洿
                  }
              }
-        }else{//更新
+        }else{//鏇存柊
             vector<int>::const_iterator it=m_WholeActorData.begin();
             for (it;it!=m_WholeActorData.end();it++){
                 if (std::find(m_ActorListData.begin(),m_ActorListData.end(),*it)!=m_ActorListData.end()){
@@ -426,13 +445,13 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
                     m_PosWigFile->frdVIS_.SetContourVisible(*it,scalar,false,"L"+strOldName.left(strOldName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP");
                     m_PosWigFile->frdVIS_.SetContourVisible(*it,scalar,false,"L"+strNumLabel+"-DISP");
                 }
-                m_PosWigFile->frdVIS_.SetContourLevel(*it,ResultVis.m_iClrScalar,"L"+strNumLabel+"-DISP");//颜色级别
-                m_PosWigFile->frdVIS_.SetContourType(*it,scalar,ResultVis.m_iStyle,"L"+strNumLabel+"-DISP");//云图0 or 2等值线
+                m_PosWigFile->frdVIS_.SetContourLevel(*it,ResultVis.m_iClrScalar,"L"+strNumLabel+"-DISP");//棰滆壊绾у埆
+                m_PosWigFile->frdVIS_.SetContourType(*it,scalar,ResultVis.m_iStyle,"L"+strNumLabel+"-DISP");//浜戝浘0 or 2绛夊€肩嚎
                 m_PosWigFile->frdVIS_.SetContourVariable(*it,scalar,"L"+strNumLabel+"-DISP");
-                m_PosWigFile->frdVIS_.SetContourOpacity(*it,ResultVis.m_dTrans,"L"+strNumLabel+"-DISP");//透明度
+                m_PosWigFile->frdVIS_.SetContourOpacity(*it,ResultVis.m_dTrans,"L"+strNumLabel+"-DISP");//閫忔槑搴?
 				if (std::find(m_ActorListData.begin(),m_ActorListData.end(),*it)!=m_ActorListData.end()){  
 					if ((*it)==(*m_ActorListData.begin()))
-						m_PosWigFile->frdVIS_.SetContourScalarbarVisible(*it,true,"L"+strNumLabel+"-DISP");//只显示一个Bar
+						m_PosWigFile->frdVIS_.SetContourScalarbarVisible(*it,true,"L"+strNumLabel+"-DISP");//鍙樉绀轰竴涓狟ar
 					else
 						m_PosWigFile->frdVIS_.SetContourScalarbarVisible(*it,false,"L"+strNumLabel+"-DISP");
 				}else{
@@ -440,23 +459,23 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
 				}
 
                 if (ResultVis.bContourMinMax){
-                    m_PosWigFile->frdVIS_.SetContourRange(*it,ResultVis.contourMin,ResultVis.contourMax,"L"+strNumLabel+"-DISP");//范围
+                    m_PosWigFile->frdVIS_.SetContourRange(*it,ResultVis.contourMin,ResultVis.contourMax,"L"+strNumLabel+"-DISP");//鑼冨洿
                 }
             }
             strOldName = strOrigCurrentName;
         }
-    }else{//关闭云图
+    }else{//鍏抽棴浜戝浘
         vector<int>::const_iterator it=m_WholeActorData.begin();
         for (it;it!=m_WholeActorData.end();it++){
              m_PosWigFile->frdVIS_.SetContourVisible(*it,scalar,false);
-             m_PosWigFile->frdVIS_.SetContourVisible(*it,scalar,false,"L"+strOldName.left(strOldName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP");//隐藏之前的
+             m_PosWigFile->frdVIS_.SetContourVisible(*it,scalar,false,"L"+strOldName.left(strOldName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP");//闅愯棌涔嬪墠鐨?
              m_PosWigFile->frdVIS_.SetContourVisible(*it,scalar,false,"L"+strNumLabel+"-DISP");
-             m_PosWigFile->frdVIS_.SetContourLevel(*it,ResultVis.m_iClrScalar,"L"+strNumLabel+"-DISP");//颜色级别
-             m_PosWigFile->frdVIS_.SetContourType(*it,scalar,ResultVis.m_iStyle,"L"+strNumLabel+"-DISP");//云图0 or 2等值线
+             m_PosWigFile->frdVIS_.SetContourLevel(*it,ResultVis.m_iClrScalar,"L"+strNumLabel+"-DISP");//棰滆壊绾у埆
+             m_PosWigFile->frdVIS_.SetContourType(*it,scalar,ResultVis.m_iStyle,"L"+strNumLabel+"-DISP");//浜戝浘0 or 2绛夊€肩嚎
              m_PosWigFile->frdVIS_.SetContourVariable(*it,scalar,"L"+strNumLabel+"-DISP");
-             m_PosWigFile->frdVIS_.SetContourOpacity(*it,ResultVis.m_dTrans,"L"+strNumLabel+"-DISP");//透明度    
+             m_PosWigFile->frdVIS_.SetContourOpacity(*it,ResultVis.m_dTrans,"L"+strNumLabel+"-DISP");//閫忔槑搴?   
              if (ResultVis.bContourMinMax){
-                 m_PosWigFile->frdVIS_.SetContourRange(*it,ResultVis.contourMin,ResultVis.contourMax,"L"+strNumLabel+"-DISP");//范围
+                 m_PosWigFile->frdVIS_.SetContourRange(*it,ResultVis.contourMin,ResultVis.contourMax,"L"+strNumLabel+"-DISP");//鑼冨洿
              }
         }
        
@@ -470,22 +489,26 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
 		} 
 	}*/
   
-    //网格
+    //缃戞牸
+    if (ResultVis.bContour) {
+        m_PosWigFile->frdVIS_.RaiseVisibleContours("L"+strNumLabel+"-DISP", m_ActorListData);
+    }
+
     bool bGridVisable = ResultVis.bCurGrid;
     static QString oldDispName=strOrigCurrentName;
     m_PosWigFile->frdVIS_.SetDisplacementColor(ResultVis.m_gridShowColor);
 
     if (bGridVisable == true)
     {
-        if (iOrigCurrent==0){//显示原始的网格
+        if (iOrigCurrent==0){//鏄剧ず鍘熷鐨勭綉鏍?
             vector<int>::const_iterator it=m_WholeActorData.begin();
             QString header;header.clear(); 
             for (it;it!=m_WholeActorData.end();it++){
                 if (std::find(m_ActorListData.begin(),m_ActorListData.end(),*it)!=m_ActorListData.end()){
-                    m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+oldDispName.left(oldDispName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//隐藏之前的
+                    m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+oldDispName.left(oldDispName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//闅愯棌涔嬪墠鐨?
                     m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,header,true); 
                 }else{
-                    m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+oldDispName.left(oldDispName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//隐藏之前的
+                    m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+oldDispName.left(oldDispName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//闅愯棌涔嬪墠鐨?
                     m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,header,false); 
                 }
             }
@@ -504,10 +527,10 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
                     vector<int>::const_iterator it=m_WholeActorData.begin();
                     for (it;it!=m_WholeActorData.end();it++){
                         if (std::find(m_ActorListData.begin(),m_ActorListData.end(),*it)!=m_ActorListData.end()){
-                            m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,oldDispName,false); //隐藏之前的
-                            m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+strOrigCurrentName.left(strOrigCurrentName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",true);//显示现在的
+                            m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,oldDispName,false); //闅愯棌涔嬪墠鐨?
+                            m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+strOrigCurrentName.left(strOrigCurrentName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",true);//鏄剧ず鐜板湪鐨?
                         }else{
-                            m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,oldDispName,false); //隐藏之前的
+                            m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,oldDispName,false); //闅愯棌涔嬪墠鐨?
                             m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+strOrigCurrentName.left(strOrigCurrentName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);
                         }                          
                     }
@@ -515,10 +538,10 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
                     vector<int>::const_iterator it=m_WholeActorData.begin();
                     for (it;it!=m_WholeActorData.end();it++){
                          if (std::find(m_ActorListData.begin(),m_ActorListData.end(),*it)!=m_ActorListData.end()){
-                            m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+oldDispName.left(oldDispName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//隐藏之前的
-                            m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+strOrigCurrentName.left(strOrigCurrentName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",true);//显示现在的
+                            m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+oldDispName.left(oldDispName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//闅愯棌涔嬪墠鐨?
+                            m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+strOrigCurrentName.left(strOrigCurrentName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",true);//鏄剧ず鐜板湪鐨?
                          }else{
-                             m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+oldDispName.left(oldDispName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//隐藏之前的
+                             m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+oldDispName.left(oldDispName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//闅愯棌涔嬪墠鐨?
                              m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+strOrigCurrentName.left(strOrigCurrentName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//
                          }
                      }    
@@ -531,20 +554,31 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
         vector<int>::const_iterator it=m_WholeActorData.begin();
         for (it;it!=m_WholeActorData.end();it++){
             m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,header,false);
-            m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+oldDispName.left(oldDispName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//隐藏之前的
+            m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+oldDispName.left(oldDispName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//闅愯棌涔嬪墠鐨?
             m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+strOrigCurrentName.left(strOrigCurrentName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//
          }
         oldDispName=strOrigCurrentName;
     }
-    if (ResultVis.bContour) {
-        m_PosWigFile->frdVIS_.RaiseVisibleContours("L"+strNumLabel+"-DISP", m_ActorListData);
+    VTKColorS boundaryColor;
+    boundaryColor.r = 0.0;
+    boundaryColor.g = 0.0;
+    boundaryColor.b = 0.0;
+    vector<int>::const_iterator boundaryIt=m_WholeActorData.begin();
+    for (boundaryIt; boundaryIt!=m_WholeActorData.end(); boundaryIt++){
+        bool selected = std::find(m_ActorListData.begin(),m_ActorListData.end(),*boundaryIt)!=m_ActorListData.end();
+        bool showBoundary = bGridVisable && selected && (iOrigCurrent == 0);
+        m_PosWigFile->frdVIS_.SetAllEdgeMeshVisible(*boundaryIt, false, ResultVis.m_gridShowColor);
+        m_PosWigFile->frdVIS_.SetOutlineVisible(*boundaryIt, showBoundary, boundaryColor);
+        if (!selected) {
+            m_PosWigFile->frdVIS_.HideGridActors(*boundaryIt);
+        }
     }
     m_PosWigFile->frdVIS_.Update();
-    //--获取frdVis中数据，进行frdText显示
+    //--鑾峰彇frdVis涓暟鎹紝杩涜frdText鏄剧ず
     m_PosWigFile->frdTextVIS_.ShowText(m_PosWigFile->frdVIS_.GetText(scalar),m_readReDlg.RadioTextIndex);
     m_PosWigFile->frdTextVIS_.Update();
 
-	//--Writer Player(写AVI)
+	//--Writer Player(鍐橝VI)
 	if (ResultVis.movieSet==1){
 		if(m_PosWigFile->frdVIS_.StartAVI(ResultVis.movieName,ResultVis.movieNameRate));
 			m_PosWigFile->frdVIS_.ModifiedAVI();
@@ -559,7 +593,7 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
 
 
 ///*
-//	Tree中对应的切换
+//	Tree涓搴旂殑鍒囨崲
 //*/
 //void QPostPrc::ShowTheTreeItemSlot()
 //{
@@ -583,18 +617,20 @@ VTKColorS QPostPrc::ChangeColorToDouble(QString str)
 
 
 
-//--剖面:添加剖面
+//--鍓栭潰:娣诲姞鍓栭潰
 void QPostPrc::SectionCutAddSlot(int CutId)
 {
    // if (m_FileScalarName.isEmpty())return;
 
-   // //关闭原始网格显示----
+   // //鍏抽棴鍘熷缃戞牸鏄剧ず----
    // m_PosWigFile->frdVIS_.SetMeshVisible(false,m_WHColor);
    // m_PosWigFile->frdVIS_.SetShadeVisible(false,m_WHColor);
    // m_PosWigFile->frdVIS_.SetOutlineVisible(false,m_WHColor);
    // m_PosWigFile->frdVIS_.SetAllEdgeMeshVisible(false,m_WHColor);
 
-   ////关闭云图----
+   ////鍏抽棴浜戝浘----
    // m_PosWigFile->frdVIS_.SetContourVisible(m_FileScalarName,false,m_FileScalarName.split(":").at(0)); 
    // //m_PosWigFile->frdVIS_.Update();
 }
+
+

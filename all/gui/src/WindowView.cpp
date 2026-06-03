@@ -1,8 +1,10 @@
-#include "WindowView.h"
+﻿#include "WindowView.h"
 
 #include "QMyVTK.h"
+#include "AppLog.h"
 #include "QTextEdit"
 #include <QMessageBox>
+#include <QTimer>
 
  int QWindowView::m_indexCnt=0;
 QWindowView::QWindowView(QWidget *parent): QWidget(parent)//QDockWidget(parent)
@@ -12,7 +14,7 @@ QWindowView::QWindowView(QWidget *parent): QWidget(parent)//QDockWidget(parent)
      //QHBoxLayout *mainLayout = new QHBoxLayout(this);
      //mainLayout->addWidget(viewVTK_);
      //setLayout(mainLayout);
-     //mainLayout->setContentsMargins(0,0,0,0);//去除边框
+     //mainLayout->setContentsMargins(0,0,0,0);//鍘婚櫎杈规
  /*
     int index =0;
     viewVTK_= QMyVTK::GetInstance()->GetVTKWidget();
@@ -28,7 +30,7 @@ QWindowView::QWindowView(QWidget *parent): QWidget(parent)//QDockWidget(parent)
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
     mainLayout->addWidget(viewPostVTK_);
     setLayout(mainLayout);
-    mainLayout->setContentsMargins(0,0,0,0);//去除边框
+    mainLayout->setContentsMargins(0,0,0,0);//鍘婚櫎杈规
   
 }
 
@@ -41,15 +43,15 @@ QWindowView::QWindowView(QWidget *parent,int index): QWidget(parent)//QDockWidge
     //QHBoxLayout *mainLayout = new QHBoxLayout(this);
     //mainLayout->addWidget(viewPostVTK_);
     //setLayout(mainLayout);
-    //mainLayout->setContentsMargins(0,0,0,0);//去除边框   
+    //mainLayout->setContentsMargins(0,0,0,0);//鍘婚櫎杈规   
     //this->setWindowTitle("niho");
     m_CurrentIndex = index;
     viewPostVTK_= QMyVTK::GetInstance(index)->GetVTKWidget();
     viewPreVTK_= QMyVTK::GetInstance(index+1)->GetVTKWidget();
     tabView_ = new QTabWidget(this);//QTabWidget(this);
     //this->setCentralWidget(tabView_); //
-    index=tabView_->addTab(viewPostVTK_,QIcon(":/images/NewIcon.png"),tr("后处理"));
-    tabView_->addTab(viewPreVTK_,QIcon(":/images/NewIcon.png"),tr("前处理"));
+    index=tabView_->addTab(viewPostVTK_,QIcon(":/images/NewIcon.png"),QString::fromUtf8("\345\220\216\345\244\204\347\220\206"));
+    tabView_->addTab(viewPreVTK_,QIcon(":/images/NewIcon.png"),QString::fromUtf8("\345\211\215\345\244\204\347\220\206"));
     tabView_->setTabEnabled(0,true);
     tabView_->setTabEnabled(1,true);
     tabView_->setTabWhatsThis(index, "VTK");
@@ -60,7 +62,7 @@ QWindowView::QWindowView(QWidget *parent,int index): QWidget(parent)//QDockWidge
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
     mainLayout->addWidget(tabView_);
     setLayout(mainLayout);
-    mainLayout->setContentsMargins(0,0,0,0);//去除边框
+    mainLayout->setContentsMargins(0,0,0,0);//鍘婚櫎杈规
     this->setAcceptDrops(true);
     m_indexCnt++;
 	connect(tabView_,SIGNAL(currentChanged(int)),this,SLOT(TabViewSlot()));
@@ -94,18 +96,18 @@ void QWindowView::closeEvent(QCloseEvent *event)
 }
 void QWindowView::TabViewSlot()
 {
+    if (!tabView_) {
+        AppLog::Write("VIEW", "tab switch ignored: tabView is null");
+        return;
+    }
     tabView_->setTabEnabled(0,true);
     tabView_->setTabEnabled(1,true);
-	int index=tabView_->currentIndex();
-    QVTKWidget *widget = 0;
-    if (index == 0) {
-        widget = viewPostVTK_;
-    } else if (index == 1) {
-        widget = viewPreVTK_;
-    }
-    if (widget && widget->GetRenderWindow()) {
-        widget->GetRenderWindow()->Render();
-    }
+    AppLog::Write("VIEW", QString("tab switched index=%1").arg(tabView_->currentIndex()));
+}
+
+void QWindowView::RenderCurrentTabSlot()
+{
+    AppLog::Write("VIEW", "explicit tab render skipped");
 }
 //--center window change tab hide/shown
 void QWindowView::TabView(int index)
@@ -141,13 +143,13 @@ void QWindowView::ShowCurPreData(ReadInpResultS InpData)
     emit emitInpDataOk(&inpVIS_);//
     //inpVIS_.SetBCVisible(true,"nihao",InpData);
 }
-//高亮显示
+//楂樹寒鏄剧ず
 void QWindowView::HightLightPSet(NElSurfChsS data)
 {
     inpVIS_.SetBCVisible(true,data);
     inpVIS_.Update();
 }
-//单元集合checkBox选择显示
+//鍗曞厓闆嗗悎checkBox閫夋嫨鏄剧ず
 void QWindowView::ActorElSetCheckShow(QStringList strListData)
 {
 	int nSize=strListData.size();
@@ -165,3 +167,5 @@ void QWindowView::ActorElSetCheckShow(QStringList strListData)
 	inpVIS_.SetMeshActorShow(false);
 	inpVIS_.Update();
 }
+
+

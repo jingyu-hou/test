@@ -70,6 +70,7 @@ public slots:
     void HightLightPSet(NElSurfChsS);
 	void ActorElSetCheckShow(QStringList strListData);	
 	void TabViewSlot();
+    void RenderCurrentTabSlot();
 signals:
 	void emitInpDataOk(InpDataVIS*);
 

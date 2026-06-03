@@ -1,4 +1,5 @@
 #include "Assembling.h"
+#include <vtkCellPicker.h>
 
 Assembling::Assembling(QWidget *parent1)
       : QDialog(parent1)
@@ -8,6 +9,7 @@ Assembling::Assembling(QWidget *parent1)
 	/*setMinimumHeight(280);
 	setMinimumWidth(350);*/
   setWindowTitle(QString::fromUtf8("装配/缩放"));
+	  setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
   QLabel *text=new QLabel();
   text->setText("点集合：");
   Nset=new MyCombox(this,0);
@@ -151,7 +153,10 @@ Assembling::Assembling(QWidget *parent1)
   this->setMinimumHeight(350);
   this->setMaximumHeight(500);
 
+  inpObj_=0;
   pointPickCallback_=0;
+  pointPickInteractor_=0;
+  pointPickObserverId_=0;
   btnId0=3;
 
   connect(groupSurfBtn,SIGNAL(buttonClicked(int)),this,SLOT(PickPointSlot(int)));
@@ -161,6 +166,7 @@ Assembling::Assembling(QWidget *parent1)
 
 Assembling::~ Assembling()
  {
+	 StopPointPicking();
 	 m_PSetList.clear();
 	 delete(P1);
 	 delete(P2);
@@ -182,39 +188,32 @@ void Assembling::SetInpData(ReadInpResultS ReadInpData)
 
 void Assembling::PickPointSlot(int btnId)
 {
-	bool flag=false;
-	if (!inpObj_)  return;
+	if (!inpObj_) {
+		Information_Widget::GetInstance()->ShowInformation(tr("请先导入并显示前处理网格，再选择装配点。"));
+		return;
+	}
 	btnId0=btnId;
 	vtkRenderWindow *m_renWin = inpObj_->GetBindedRenderer()->GetRenderWindow();
 	vtkRenderWindowInteractor *m_ir = m_renWin->GetInteractor();
-	if (pointPickCallback_ == 0){
-		pointPickCallback_ = vtkCallbackCommand::New();
-		pointPickCallback_->SetCallback(Callback_PickPoint2);
-		pointPickCallback_->SetClientData(this); 
-		flag=true;
+	if (!m_ir) {
+		Information_Widget::GetInstance()->ShowInformation(tr("当前视图未初始化，无法选择装配点。"));
+		return;
 	}
-	/*if (pointPickCallback_ == 0&&btnId==0){
-		pointPickCallback_ = vtkCallbackCommand::New();
-		pointPickCallback_->SetCallback(Callback_PickPoint2);
-		pointPickCallback_->SetClientData(this); 
-		flag=true;
-	}else if (pointPickCallback_ == 0&&btnId==1){
-		pointPickCallback_ = vtkCallbackCommand::New();
-		pointPickCallback_->SetCallback(Callback_PickPoint2);
-		pointPickCallback_->SetClientData(this); 
-		flag=true;
-	}*/
-	if(flag)m_ir->AddObserver(vtkCommand::LeftButtonPressEvent, pointPickCallback_);
-	pointPickCallback_=0;
-	/*if(!flag ){
-		m_ir->RemoveObservers(vtkCommand::LeftButtonPressEvent, pointPickCallback_);
-	}else{
-		m_ir->AddObserver(vtkCommand::LeftButtonPressEvent, pointPickCallback_);
-	}*/
+	StopPointPicking();
+	pointPickCallback_ = vtkCallbackCommand::New();
+	pointPickCallback_->SetCallback(Callback_PickPoint2);
+	pointPickCallback_->SetClientData(this);
+	pointPickInteractor_ = m_ir;
+	pointPickObserverId_ = m_ir->AddObserver(vtkCommand::LeftButtonPressEvent, pointPickCallback_);
+	Information_Widget::GetInstance()->ShowInformation(tr("请在前处理视图中点击需要选择的装配点。"));
 }
 
 void Assembling::ApplySlot()
 {
+	if (!inpObj_) {
+		Information_Widget::GetInstance()->ShowInformation(tr("请先导入并显示前处理网格，再执行装配/缩放。"));
+		return;
+	}
 	
 	AssemblingS_ZP tmMRoveA;
 	tmMRoveA.strLingA=Nset->currentText();
@@ -265,7 +264,8 @@ void Assembling::ApplySlot()
 
 void Assembling::CancelSlot()
 {
-	inpObj_->ClearHisPointVtkShow();
+	StopPointPicking();
+	if (inpObj_) inpObj_->ClearHisPointVtkShow();
 	P1->clear();
 	P2->clear();
 	MX->clear();
@@ -322,24 +322,49 @@ void Assembling::Callback_PickPoint2(vtkObject *caller, unsigned long, void *cli
 	if (ir == 0|| w == 0)  return;
 	int winx, winy;
 	ir->GetEventPosition(winx, winy);
+	vtkRenderer *renderer = renWin->GetRenderers()->GetFirstRenderer();
+	if (renderer == 0) return;
+
+	double xyz[3] = {0.0, 0.0, 0.0};
+	int pointId = -1;
+	vtkActor *pickedActor = 0;
+
 	vtkPointPicker *picker = vtkPointPicker::New();
 	picker->SetTolerance(0.01);
-	vtkRenderer *renderer = renWin->GetRenderers()->GetFirstRenderer();
 	picker->Pick(winx, winy, 0, renderer);
-	int pointId = picker->GetPointId();//该编号不是节点编号，如果要得到节点编号需要根据xyz值与节点坐标进行查找匹配。
-	double xyz[3];
-	picker->GetPickPosition(xyz);
-	if (pointId<0){
+	pointId = picker->GetPointId();
+	if (pointId >= 0) {
+		picker->GetPickPosition(xyz);
+		pickedActor = picker->GetActor();
+	}
+
+	if (pointId < 0) {
+		vtkCellPicker *cellPicker = vtkCellPicker::New();
+		cellPicker->SetTolerance(0.005);
+		cellPicker->Pick(winx, winy, 0, renderer);
+		if (cellPicker->GetCellId() >= 0) {
+			pointId = cellPicker->GetCellId();
+			cellPicker->GetPickPosition(xyz);
+			pickedActor = cellPicker->GetActor();
+		}
+		cellPicker->Delete();
+	}
+
+	if (pointId < 0) {
 		Information_Widget::GetInstance()->ShowInformation("没有点被选中，请点击其需要的被选中的点");
+		picker->Delete();
 		return;
 	}
-	QString str=picker->GetMapper()->GetClassName();
-	w->setTex(picker->GetActor(),str,pointId+1, xyz[0], xyz[1], xyz[2]);
-	//ir->RemoveObservers(vtkCommand::LeftButtonPressEvent);
+
+	QString str;
+	if (pickedActor && pickedActor->GetMapper()) str = pickedActor->GetMapper()->GetClassName();
+	w->setTex(pickedActor, str, pointId+1, xyz[0], xyz[1], xyz[2]);
+	picker->Delete();
 }
 
 void Assembling::InitInpDataSlot1(InpDataVIS *InpObj)
 {
+    StopPointPicking();
     inpObj_=InpObj;
 }
 void Assembling::setTex(vtkActor *actor,QString str,int pointId, double x, double y, double z)
@@ -352,4 +377,17 @@ void Assembling::setTex(vtkActor *actor,QString str,int pointId, double x, doubl
 	inpObj_->SetHisPointVtkShow(pointId, x, y, z);
 	
 
+}
+
+void Assembling::StopPointPicking()
+{
+	if (pointPickInteractor_ && pointPickObserverId_ != 0) {
+		pointPickInteractor_->RemoveObserver(pointPickObserverId_);
+	}
+	pointPickObserverId_ = 0;
+	pointPickInteractor_ = 0;
+	if (pointPickCallback_) {
+		pointPickCallback_->Delete();
+		pointPickCallback_ = 0;
+	}
 }

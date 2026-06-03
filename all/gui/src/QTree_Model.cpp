@@ -20,7 +20,7 @@ QTree_Model::QTree_Model(QObject *parent,int ModPageId): QStandardItemModel(pare
     if (M_TREE_POST == ModPageId){
       CreatePostModelTree();
     }else if(M_TREE_PRE == ModPageId){
-      //CreatePreModelTree();//隐藏前处理模型树 luo
+        CreatePreModelTree();//隐藏前处理模型树 luo
     }else if(M_TREE_MATER == ModPageId){
       CreateMaterTree();
     }  
@@ -37,23 +37,23 @@ void QTree_Model::CreatePostModelTree()
 	this->setColumnCount(1);
 	QStandardItem* item = NULL;
 	QStandardItem* p_item = NULL;
-	QString name ="General Postproc";
+	QString name ="通用后处理";
 
 	item = CreateModelItem(NULL,name,false,true,"Project");
 	this->setItem(0,0,item);
 
 	p_item = this->item(0,0);
-    item = CreateModelItem(p_item,tr("Data&File Opts"),false,true,"DatafrdOpt");//0
-	item = CreateModelItem(p_item,tr("Plot Options"),false,true,"PlotOpt");//1
-	item = CreateModelItem(p_item,tr("Result Options"),false,true,"RestOpt");//2
-	item = CreateModelItem(p_item->child(2,0),tr("Read Results"),false,true,"ReadRest");
+    item = CreateModelItem(p_item,tr("数据文件选项"),false,true,"DatafrdOpt");//0
+	item = CreateModelItem(p_item,tr("绘图选项"),false,true,"PlotOpt");//1
+	item = CreateModelItem(p_item,tr("结果选项"),false,true,"RestOpt");//2
+	item = CreateModelItem(p_item->child(2,0),tr("读取结果"),false,true,"ReadRest");
 
-	item = CreateModelItem(p_item,tr("Result output"),false,true,"RestOut");//3
-	item = CreateModelItem(p_item->child(3,0),tr("Plot Results"),false,true,"PlotRest");
-	item = CreateModelItem(p_item->child(3,0),tr("List Results"),false,true,"ListRest");
-	item = CreateModelItem(p_item->child(3,0),tr("Time history curve"),false,true,"TimHisCur");
-	item = CreateModelItem(p_item->child(3,0),tr("Re-meshing"),false,true,"RMesh");
-	item = CreateModelItem(p_item->child(3,0),tr("other"),false,true,"Other");
+	item = CreateModelItem(p_item,tr("结果输出"),false,true,"RestOut");//3
+	item = CreateModelItem(p_item->child(3,0),tr("绘图结果"),false,true,"PlotRest");
+	item = CreateModelItem(p_item->child(3,0),tr("列表结果"),false,true,"ListRest");
+	item = CreateModelItem(p_item->child(3,0),tr("时间历程曲线"),false,true,"TimHisCur");
+	item = CreateModelItem(p_item->child(3,0),tr("重网格划分"),false,true,"RMesh");
+	item = CreateModelItem(p_item->child(3,0),tr("other"),false,true,"其它");
 	item->setEnabled(false);
 }
 QStandardItem* QTree_Model::CreateModelItem( QStandardItem *itemp,QString itemText,bool editable, bool enabled, QString tree )
@@ -230,17 +230,17 @@ void QTree_Model::CreateMaterTree()
 
     //p_item = this->item(0,0);
     //item = CreateModelItem(p_item,tr("用户材料"),false,true,"DatafrdOpt");//0
-    //item = CreateModelItem(p_item,tr("Plot Options"),false,true,"PlotOpt");//1
-    //item = CreateModelItem(p_item,tr("Result Options"),false,true,"RestOpt");//2
-    //item = CreateModelItem(p_item->child(2,0),tr("Read Results"),false,true,"ReadRest");
+    //item = CreateModelItem(p_item,tr("绘图选项"),false,true,"PlotOpt");//1
+    //item = CreateModelItem(p_item,tr("结果选项"),false,true,"RestOpt");//2
+    //item = CreateModelItem(p_item->child(2,0),tr("读取结果"),false,true,"ReadRest");
 
-    //item = CreateModelItem(p_item,tr("Result output"),false,true,"RestOut");//3
-    //item = CreateModelItem(p_item->child(3,0),tr("Plot Results"),false,true,"PlotRest");
-    //item = CreateModelItem(p_item->child(3,0),tr("List Results"),false,true,"ListRest");
+    //item = CreateModelItem(p_item,tr("结果输出"),false,true,"RestOut");//3
+    //item = CreateModelItem(p_item->child(3,0),tr("绘图结果"),false,true,"PlotRest");
+    //item = CreateModelItem(p_item->child(3,0),tr("列表结果"),false,true,"ListRest");
     //item = CreateModelItem(p_item->child(3,0),tr("Animate"),false,true,"Anim");
-    //item = CreateModelItem(p_item->child(3,0),tr("Time history curve"),false,true,"TimHisCur");
-    //item = CreateModelItem(p_item->child(3,0),tr("Re-meshing"),false,true,"RMesh");
-    //item = CreateModelItem(p_item->child(3,0),tr("other"),false,true,"Other");
+    //item = CreateModelItem(p_item->child(3,0),tr("时间历程曲线"),false,true,"TimHisCur");
+    //item = CreateModelItem(p_item->child(3,0),tr("重网格划分"),false,true,"RMesh");
+    //item = CreateModelItem(p_item->child(3,0),tr("other"),false,true,"其它");
     //item->setEnabled(false);
 }
 //材料模块在根部进行文件的增加
@@ -377,7 +377,7 @@ void QTree_Model::UpDataWidgetLanguage(int iLanguage)
                     else if (name =="ListRest")childItem2->setText("列表结果");
                     else if (name =="TimHisCur")childItem2->setText("历史曲线");
                     else if (name =="RMesh")childItem2->setText("网格重划");
-                    else if (name =="Other")childItem2->setText("其他");
+                    else if (name =="其它")childItem2->setText("其他");
                 }
             }
         }
@@ -388,7 +388,7 @@ void QTree_Model::UpDataWidgetLanguage(int iLanguage)
             if (pItem==NULL)continue;
             int rows2 = pItem->rowCount();
             QStandardItem* childItem0= pItem;
-            pItem->setText("General Postproc");
+            pItem->setText("通用后处理");
             for (int j=0;j<rows2;j++)
             {
                 QStandardItem* childItem1 = pItem->child(j,0);
@@ -396,10 +396,10 @@ void QTree_Model::UpDataWidgetLanguage(int iLanguage)
                 name = childItem1->index().data(Qt::UserRole+3).toString();
                 //QString LanguageName = getTreeItemLanguage(name);
                 //childItem1->setText(LanguageName);
-                if (name =="DatafrdOpt")childItem1->setText("Data&File Opts");
-                else if (name =="PlotOpt")childItem1->setText("Plot Options");
-                else if (name =="RestOpt")childItem1->setText("Result Options");
-                else if (name =="RestOut")childItem1->setText("Result output");
+                if (name =="DatafrdOpt")childItem1->setText("数据文件选项");
+                else if (name =="PlotOpt")childItem1->setText("绘图选项");
+                else if (name =="RestOpt")childItem1->setText("结果选项");
+                else if (name =="RestOut")childItem1->setText("结果输出");
                 int rows3 = childItem1->rowCount();
                 for (int k=0;k<rows3;k++)
                 {
@@ -408,12 +408,12 @@ void QTree_Model::UpDataWidgetLanguage(int iLanguage)
                     name = childItem2->index().data(Qt::UserRole+3).toString();
                     //QString LanguageName = getTreeItemLanguage(name);
                     //childItem2->setText(LanguageName);
-                    if (name =="ReadRest")childItem2->setText("Read Results");
-                    else if (name =="PlotRest")childItem2->setText("Plot Results");
-                    else if (name =="ListRest")childItem2->setText("List Results");
-                    else if (name =="TimHisCur")childItem2->setText("Time history curve");
-                    else if (name =="RMesh")childItem2->setText("Re-meshing");
-                    else if (name =="Other")childItem2->setText("Other");
+                    if (name =="ReadRest")childItem2->setText("读取结果");
+                    else if (name =="PlotRest")childItem2->setText("绘图结果");
+                    else if (name =="ListRest")childItem2->setText("列表结果");
+                    else if (name =="TimHisCur")childItem2->setText("时间历程曲线");
+                    else if (name =="RMesh")childItem2->setText("重网格划分");
+                    else if (name =="Other")childItem2->setText("其它");
                 }
             }
         }
@@ -423,27 +423,66 @@ void QTree_Model::UpDataWidgetLanguage(int iLanguage)
 //--将inp中数据加载到TREE中
 void QTree_Model::setInpData(ReadInpResultS data)
 {
-    int rows1 = this->rowCount();
-    QString name;
-    for (int i=0;i<rows1;i++){
-        QStandardItem* pItem = item(i,0);//root
-        if (pItem==NULL)continue;
-        int rows2 = pItem->rowCount();
-        for (int j=0;j<rows2;j++){
-            QStandardItem* childItem1 = pItem->child(j,0);//second
-            if (childItem1==NULL)continue;
-            name = childItem1->index().data(Qt::UserRole+3).toString();
-            int rows3 = childItem1->rowCount();
-            if (name == "AmpCurve"){//insert amplitude   
-                childItem1->removeRows(0,rows3);//删除所有项，进行添加
-                for (int kk=0; kk<data.TmpCurveInps.size(); kk++){
-                    childItem1->setChild(kk,0,CreateModelItem(childItem1,data.TmpCurveInps.at(kk).strName,false,true,data.TmpCurveInps.at(kk).strName));
-                }               
-            }              
-           /* else if (name =="PlotOpt")childItem1->setText("Plot Options");
-            else if (name =="RestOpt")childItem1->setText("Result Options");
-            else if (name =="RestOut")childItem1->setText("Result output");*/
+    clear();
+    setRowCount(1);
+    setColumnCount(1);
+
+    QStandardItem *root = CreateModelItem(NULL, "前处理模型", false, true, "Model");
+    setItem(0, 0, root);
+
+    QStandardItem *mesh = CreateModelItem(root, "网格", false, true, "网格");
+    CreateModelItem(mesh, QString("节点: %1").arg(data.TmpNodeInpS.strData.size()), false, true, "NodeCount");
+    CreateModelItem(mesh, QString("单元: %1").arg(data.TmpElInpS.strData.size()), false, true, "ElementCount");
+    QStandardItem *types = CreateModelItem(mesh, QString("单元类型: %1").arg(data.TmpElInpS.ElementType.size()), false, true, "ElementTypes");
+    for (int i = 0; i < data.TmpElInpS.ElementType.size(); ++i) {
+        QString typeName = data.TmpElInpS.ElementType.at(i);
+        QString text = typeName;
+        if (i < data.TmpElInpS.NumberE.size()) {
+            text += QString(" (%1)").arg(data.TmpElInpS.NumberE.at(i));
         }
+        CreateModelItem(types, text, false, true, typeName);
+    }
+
+    QStandardItem *sets = CreateModelItem(root, "集合", false, true, "集合");
+    QStandardItem *nsets = CreateModelItem(sets, QString("节点集合: %1").arg(data.TmpNsetInps.strNSetName.size()), false, true, "NodeSets");
+    for (int i = 0; i < data.TmpNsetInps.strNSetName.size(); ++i) {
+        CreateModelItem(nsets, data.TmpNsetInps.strNSetName.at(i), false, true, data.TmpNsetInps.strNSetName.at(i));
+    }
+    QStandardItem *elsets = CreateModelItem(sets, QString("单元集合: %1").arg(data.TmpElSetInps.strElSetName.size()), false, true, "ElementSets");
+    for (int i = 0; i < data.TmpElSetInps.strElSetName.size(); ++i) {
+        CreateModelItem(elsets, data.TmpElSetInps.strElSetName.at(i), false, true, data.TmpElSetInps.strElSetName.at(i));
+    }
+    QStandardItem *surfaces = CreateModelItem(sets, QString("面集合: %1").arg(data.TmpSurfaceInps.strSurfaceName.size()), false, true, "Surfaces");
+    for (int i = 0; i < data.TmpSurfaceInps.strSurfaceName.size(); ++i) {
+        CreateModelItem(surfaces, data.TmpSurfaceInps.strSurfaceName.at(i), false, true, data.TmpSurfaceInps.strSurfaceName.at(i));
+    }
+
+    QStandardItem *properties = CreateModelItem(root, "属性", false, true, "属性");
+    QStandardItem *materials = CreateModelItem(properties, QString("材料: %1").arg(data.TmpMaterialInps.size()), false, true, "Materials");
+    for (int i = 0; i < data.TmpMaterialInps.size(); ++i) {
+        QString name = data.TmpMaterialInps.at(i).strMaterialName;
+        if (name.isEmpty()) name = QString("材料 %1").arg(i + 1);
+        CreateModelItem(materials, name, false, true, name);
+    }
+    QStandardItem *sections = CreateModelItem(properties, QString("截面: %1").arg(data.TmpSectionInps.size()), false, true, "Sections");
+    for (int i = 0; i < data.TmpSectionInps.size(); ++i) {
+        QString name = data.TmpSectionInps.at(i).strelset;
+        if (name.isEmpty()) name = data.TmpSectionInps.at(i).PartName;
+        if (name.isEmpty()) name = QString("截面 %1").arg(i + 1);
+        CreateModelItem(sections, name, false, true, name);
+    }
+
+    QStandardItem *steps = CreateModelItem(root, QString("分析步: %1").arg(data.TmpSolveInps.size()), false, true, "AnalysisSteps");
+    for (int i = 0; i < data.TmpSolveInps.size(); ++i) {
+        QString name = data.TmpSolveInps.at(i).strProcess;
+        if (name.isEmpty()) name = data.TmpSolveInps.at(i).strNlgeomSTR;
+        if (name.isEmpty()) name = QString("分析步 %1").arg(i + 1);
+        CreateModelItem(steps, QString("第%1步: %2").arg(i + 1).arg(name), false, true, name);
+    }
+
+    QStandardItem *curves = CreateModelItem(root, QString("幅值曲线: %1").arg(data.TmpCurveInps.size()), false, true, "AmpCurve");
+    for (int i = 0; i < data.TmpCurveInps.size(); ++i) {
+        CreateModelItem(curves, data.TmpCurveInps.at(i).strName, false, true, data.TmpCurveInps.at(i).strName);
     }
 }
 //--增加一个树的节点

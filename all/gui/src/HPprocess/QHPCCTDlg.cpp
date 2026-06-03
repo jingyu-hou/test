@@ -1010,7 +1010,7 @@ HPTTTInps QHPCCTDlg::WriteHPCCToInp()
     //    }      
     //}  
     tmpChangePointInps.strName="PHASECURAVE";
-    tmpChangePointInps.strPhaseCurveType="TTT";
+    tmpChangePointInps.strPhaseCurveType="CCT";
     tmpChangePointInps.strHeadParam=strHeadParam;
     tmpChangePointInps.strData=strData;
 

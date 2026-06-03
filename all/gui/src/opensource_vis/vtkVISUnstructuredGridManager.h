@@ -1,4 +1,4 @@
-// Open-source replacement for vtkVISUnstructuredGridManager — base for all grid renderers
+﻿// Open-source replacement for vtkVISUnstructuredGridManager 鈥?base for all grid renderers
 #ifndef VTK_VIS_UNSTRUCTURED_GRID_MANAGER_OS_H
 #define VTK_VIS_UNSTRUCTURED_GRID_MANAGER_OS_H
 #include <iostream>
@@ -23,6 +23,7 @@ public:
     void SetDataSource(vtkVISUnstructuredGridSource* object);
     void ShowOn();
     void ShowOff();
+    void BringToFront();
     void ChangeRepresentation(char* style);
     void SetOpacity(double value);
     double GetOpacity();

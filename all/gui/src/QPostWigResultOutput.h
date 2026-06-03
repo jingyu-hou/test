@@ -56,6 +56,9 @@ typedef struct _S_RESULT_VISParam_S
         bContour=true;
         bCutZoneVisible=true;
         bCutVTKWidgetVisible=true;
+        m_gridShowColor.r=1.0;
+        m_gridShowColor.g=0.0;
+        m_gridShowColor.b=1.0;
         CutIdList.clear();
 		movieSet=0;
 		movieName="WelCMEtest.avi";

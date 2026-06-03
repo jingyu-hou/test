@@ -138,9 +138,7 @@ void QMaterPropDlg::CreatGUI()
     tabMaterView_->addTab(m_ListWiget,QIcon(":/images/NewIcon.png"),tr("热物性1"));//("力学"));
     tabMaterView_->addTab(m_ListWiget2,QIcon(":/images/NewIcon.png"),tr("热物性2"));
     tabMaterView_->addTab(m_WidTTT,QIcon(":/images/NewIcon.png"),tr("TTT"));
-    //tabMaterView_->addTab(m_WidCCT,QIcon(":/images/NewIcon.png"),tr("CCT"));
-	
-  	tabMaterView_->setTabEnabled(3,false);//CCT暂不适用;
+    tabMaterView_->addTab(m_WidCCT,QIcon(":/images/NewIcon.png"),tr("CCT"));
     tabMaterView_->setCurrentIndex(0);
     gbLayout->addWidget(tabMaterView_,2,2,1,4);
 	gbVLayout->addLayout(gbLayout);

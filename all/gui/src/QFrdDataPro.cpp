@@ -351,11 +351,11 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
 							int Numb=strList.size();
 							if(Striii=="STRESS" && strId == "-1"){
 								double equ[11],equ0[11],p3;
-								if (Numb < 7) {
+								if (Numb < 7 || strTmpList.size() < Numb) {
 									infoW->ShowInformation("Invalid FRD file: insufficient stress components.");
 									return false;
 								}
-								for(int jj=0;jj<Numb-1;jj++){
+								for(int jj=0;jj<Numb-1 && jj<6;jj++){
                                     equ[jj]=strList.at(jj+1).toDouble();
 									equ0[jj]=strTmpList.at(jj+1).toDouble();
 								}
@@ -386,11 +386,11 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
 								}
 							}else if(Striii=="TOSTRAIN" && strId == "-1"){
 								double equ[7],equ0[7];
-								if (Numb < 7) {
+								if (Numb < 7 || strTmpList.size() < Numb) {
 									infoW->ShowInformation("Invalid FRD file: insufficient strain components.");
 									return false;
 								}
-								for(int jj=0;jj<Numb-1;jj++){
+								for(int jj=0;jj<Numb-1 && jj<6;jj++){
                                    equ[jj]=strList.at(jj+1).toDouble();
 								   equ0[jj]=strTmpList.at(jj+1).toDouble();
 								}
@@ -406,6 +406,10 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
 
                             if (strId == "-1"){
                                 nNum1=strTmpList.size();
+                                if (nNum1 - 1 > tmpStepFrd.nodeResultBlock.strAttrNum) {
+                                    infoW->ShowInformation("Invalid FRD file: data record width mismatch.");
+                                    return false;
+                                }
                                 if (nNum1 < 1) {
                                     infoW->ShowInformation("Invalid FRD file: empty result data record.");
                                     return false;
@@ -418,6 +422,10 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
                                 tmpStepFrd.nodeResultBlock.strDataRecord<<d;
 
                                 nNum2=strList.size();
+                                if (nNum2 - 1 > tmpStepFrd.nodeResultBlock.strAttrNum) {
+                                    infoW->ShowInformation("Invalid FRD file: data record width mismatch.");
+                                    return false;
+                                }
                                 if (nNum2 < 1) {
                                     infoW->ShowInformation("Invalid FRD file: empty result data record.");
                                     return false;

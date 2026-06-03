@@ -52,8 +52,11 @@ public:
 private:
 	void setTex(vtkActor *actor,QString str,int pointId, double x, double y, double z);
 	void PointSetSelectedPick2();
+	void StopPointPicking();
     InpDataVIS *inpObj_;  
 	vtkCallbackCommand *pointPickCallback_;
+	vtkRenderWindowInteractor *pointPickInteractor_;
+	unsigned long pointPickObserverId_;
 private slots:
 	void PickPointSlot(int);
 public slots:

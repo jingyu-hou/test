@@ -1,4 +1,4 @@
-// Open-source implementation of vtkVISUnstructuredGridManager
+﻿// Open-source implementation of vtkVISUnstructuredGridManager
 #include "vtkVISUnstructuredGridManager.h"
 #include <vtkObjectFactory.h>
 #include <vtkProperty.h>
@@ -40,6 +40,13 @@ void vtkVISUnstructuredGridManager::ShowOn()
 void vtkVISUnstructuredGridManager::ShowOff()
 {
     if (_unActor) _unActor->VisibilityOff();
+}
+
+void vtkVISUnstructuredGridManager::BringToFront()
+{
+    if (_renderer == 0 || _unActor == 0) return;
+    _renderer->RemoveActor(_unActor);
+    _renderer->AddActor(_unActor);
 }
 
 void vtkVISUnstructuredGridManager::ChangeRepresentation(char* style)

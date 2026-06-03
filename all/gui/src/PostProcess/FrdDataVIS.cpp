@@ -1,4 +1,4 @@
-#include <vtkRenderer.h>
+﻿#include <vtkRenderer.h>
 #include <vtkVISUnShadeMesh.h>
 #include <vtkVISUnEdge.h>
 #include <vtkVISUnContour.h>
@@ -188,7 +188,7 @@ bool FrdDataVIS::Step4_SetupFrd()   //run 1 time
 
 void FrdDataVIS::ShallowCopyFrdData(FrdDataVIS *source)
 {
-    // WARNING: shares frdSource_ pointer — source and this must not be independently deleted.
+    // WARNING: shares frdSource_ pointer 鈥?source and this must not be independently deleted.
     // Both will hold the same pointer; deleting one makes the other dangling.
     if (!source || source == this) return;
     this->frdSource_ = source->frdSource_;
@@ -247,15 +247,14 @@ int FrdDataVIS::StartAVI(QString name,int rate)
 		Information_Widget::GetInstance()->ShowInformation("movie is recording...");
 		//int rate=vtkWriter_->GetRate();
 		//vtkWriter_->SetRate(2000);
-		return 1;//已经启动
+		return 1;//宸茬粡鍚姩
 	}else{
 		if (name=="")
 			name ="WelCMEtest.avi";
 		if (!name.contains(".avi",Qt::CaseSensitive))
 			name+=".avi";
 		vtkWriter_->SetFileName(name.toAscii().data());
-		vtkWriter_->Start();//第一次启动
-		//vtkWriter_->SetRate(2000);
+		vtkWriter_->Start();//绗竴娆″惎鍔?		//vtkWriter_->SetRate(2000);
 		//vtkWriter_->SetRate(5000);//(rate);
 		Information_Widget::GetInstance()->ShowInformation("movie is ready");
 		return 2;
@@ -315,7 +314,9 @@ void FrdDataVIS::SetMeshVisible(int gridId, bool visible, VTKColorS tmpClr)
     {
         //meshMap_[gridId]->SetColor(0,0,0);//(0, 1, 0); qy modify 2020-3-31
         meshMap_[gridId]->SetColor(tmpClr.r,tmpClr.g,tmpClr.b);
+        meshMap_[gridId]->SetMeshLineWidth(2.0);
         meshMap_[gridId]->ShowOn();
+        meshMap_[gridId]->BringToFront();
         //renderer_->ResetCamera();qy 2021-3-1
     }
     else  meshMap_[gridId]->ShowOff(); 
@@ -333,7 +334,9 @@ void FrdDataVIS::SetAllEdgeMeshVisible(int gridId, bool visible, VTKColorS tmpCl
     {
         //allEdgeMeshMap_[gridId]->SetColor(0, 1, 0);//qy modify 2020-3-31
         allEdgeMeshMap_[gridId]->SetColor(tmpClr.r,tmpClr.g,tmpClr.b);
+        allEdgeMeshMap_[gridId]->SetMeshLineWidth(2.0);
         allEdgeMeshMap_[gridId]->ShowOn();
+        allEdgeMeshMap_[gridId]->BringToFront();
         //renderer_->ResetCamera();qy 2021-3-1
     }
     else  allEdgeMeshMap_[gridId]->ShowOff();
@@ -351,7 +354,9 @@ void FrdDataVIS::SetOutlineVisible(int gridId, bool visible, VTKColorS tmpClr)
     {
         //outlineMap_[gridId]->SetColor(0, 1, 0);//qy modify 2020-3-31
         outlineMap_[gridId]->SetColor(tmpClr.r,tmpClr.g,tmpClr.b);
+        outlineMap_[gridId]->ChangeLineWidth(3.0);
         outlineMap_[gridId]->ShowOn();
+        outlineMap_[gridId]->BringToFront();
         //renderer_->ResetCamera();qy 2021-3-1
     }
     else  outlineMap_[gridId]->ShowOff();
@@ -465,6 +470,34 @@ void FrdDataVIS::RaiseVisibleContours(const QString &header, const vector<int> &
     }
 }
 
+void FrdDataVIS::HideGridActors(int gridId)
+{
+    if (shadeMap_.find(gridId) != shadeMap_.end() && shadeMap_[gridId])
+        shadeMap_[gridId]->ShowOff();
+    if (meshMap_.find(gridId) != meshMap_.end() && meshMap_[gridId])
+        meshMap_[gridId]->ShowOff();
+    if (allEdgeMeshMap_.find(gridId) != allEdgeMeshMap_.end() && allEdgeMeshMap_[gridId])
+        allEdgeMeshMap_[gridId]->ShowOff();
+    if (outlineMap_.find(gridId) != outlineMap_.end() && outlineMap_[gridId])
+        outlineMap_[gridId]->ShowOff();
+
+    for (map<QString, map<int, vtkVISUnContour*> >::iterator it = headerContoursMap_.begin();
+         it != headerContoursMap_.end(); ++it)
+    {
+        map<int, vtkVISUnContour*>::iterator contourIt = it->second.find(gridId);
+        if (contourIt == it->second.end() || contourIt->second == 0) continue;
+        contourIt->second->ShowOff();
+        contourIt->second->ShowOffScalarBar();
+    }
+
+    for (map<QString, map<int, vtkVISUnShadeMesh*> >::iterator it = headerDisplacementsMap_.begin();
+         it != headerDisplacementsMap_.end(); ++it)
+    {
+        map<int, vtkVISUnShadeMesh*>::iterator dispIt = it->second.find(gridId);
+        if (dispIt == it->second.end() || dispIt->second == 0) continue;
+        dispIt->second->ShowOff();
+    }
+}
 vtkVISUnContour* FrdDataVIS::CreateContourObject(int gridId, const QString &scalar, const QString &header)
 {
     if (!scalarResultLoaded_)  return 0;
@@ -619,7 +652,9 @@ void FrdDataVIS::SetDisplacementVisible(int gridId, const QString &header, bool 
     if (visible)
     {
         headerDisplacementsMap_[header][gridId]->SetColor(m_gridShowColor.r, m_gridShowColor.g, m_gridShowColor.b);
+        headerDisplacementsMap_[header][gridId]->SetMeshLineWidth(2.0);
         headerDisplacementsMap_[header][gridId]->ShowOn();
+        headerDisplacementsMap_[header][gridId]->BringToFront();
         //renderer_->ResetCamera();qy 2021-3-1
     }
     else  headerDisplacementsMap_[header][gridId]->ShowOff();
@@ -707,18 +742,16 @@ void FrdDataVIS::Callback_PickPoint(vtkObject *caller, unsigned long, void *clie
     //picker->SetTolerance(0.01);
     vtkRenderer *renderer = renWin->GetRenderers()->GetFirstRenderer();
     picker->Pick(winx, winy, 0, renderer);
-    int pointId=0; //= picker->GetPointId();
+    int pointId = picker->GetPointId();
 
     double xyz[3];
     picker->GetPickPosition(xyz);
     if (pointId<0){
-        
+        picker->Delete();
         return;
     }
-    //QString str=picker->GetMapper()->GetClassName();
     w->UpdataSelectActor(picker->GetActor());
-    //cout << xyz[0] << ", " << xyz[1] << ", " << xyz[2] << endl;
-    picker->GetActor();
+    picker->Delete();
 }
 void FrdDataVIS::UpdataSelectActor(vtkActor *actor)
 {
@@ -775,7 +808,7 @@ void FrdDataVIS::AcotrVisibility(bool f)
     }
     Update();
 }
-//属性线宽设置
+// Line width setting
 void FrdDataVIS::SetWidth(int LineW)
 {
     if (LineW <=0 )LineW = 1.0;
@@ -831,7 +864,7 @@ bool FrdDataVIS::SetHisPointVtkShow(int PointId,double x, double y, double z)
     text->SetText(QString("%1").arg(PointId).toAscii().data());
    
     
-    //--缩放
+    //--缂╂斁
     vtkTransform *t=vtkTransform::New();
     t->Translate(x+factor_,y+factor_,z+factor_);
     t->Scale(factor_,factor_,factor_);
@@ -903,7 +936,7 @@ bool FrdDataVIS::SetHisPointVtkShow(int PointId,double x, double y, double z)
     vtkVectorText *text=vtkVectorText::New();
     text->SetText(QString("%1").arg(PointId).toAscii().data());
   
-    //--缩放
+    //--缂╂斁
     vtkTransform *t=vtkTransform::New();
     t->Translate(x,y,z);
     t->Scale(0.04,0.04,0.04);
@@ -1005,7 +1038,7 @@ void FrdDataVIS::SetColorSize(double factor,VTKColorS tmpClr)
     } 
     Update();
 }
-//设置拾取点的lab visible
+//璁剧疆鎷惧彇鐐圭殑lab visible
 void FrdDataVIS::SetPickPointLabVisible(bool f)
 {
     bPointLab_=f;
@@ -1024,7 +1057,7 @@ void FrdDataVIS::SetPickPointLabVisible(bool f)
      Update();
 
 }
-//--获取id
+//--鑾峰彇id
 int FrdDataVIS::GetPointId(QString sLabel, double x, double y, double z)
 {
     int id=-1;
@@ -1049,7 +1082,7 @@ void FrdDataVIS::CreateCutObjects(int gridId,int cutId, bool bInsideOut,QString 
         VTKColorS color;
         color.r = color.g = color.b = 0.5;
 		SetShadeVisible(gridId,true, color);
-		  //set right frd data sources.(默认只有一块材料)
+		  //set right frd data sources.(榛樿鍙湁涓€鍧楁潗鏂?
         ////SetShadeVisible(true, color);  //set right frd data sources.
     }else{
 		SetDisplacementVisible(gridId,header, true);
@@ -1285,3 +1318,4 @@ bool FrdDataVIS::GetCutZoneBounds(int gridId,int cutId, double *bounds)
 }
 
 //cut api end
+

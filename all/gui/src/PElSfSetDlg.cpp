@@ -242,11 +242,19 @@ void PElSfSetDlg::clean()
 {
     if (m_ActorPElSet != NULL)
     {
-        if (inpObj_->GetBindedRenderer()!=NULL)
+        if (inpObj_ && inpObj_->GetBindedRenderer()!=NULL)
         {
             inpObj_->GetBindedRenderer()->RemoveActor(m_ActorPElSet);
         }
         m_ActorPElSet->Delete(); m_ActorPElSet=NULL;
+    }
+    if (m_ActorSurf != NULL)
+    {
+        if (inpObj_ && inpObj_->GetBindedRenderer()!=NULL)
+        {
+            inpObj_->GetBindedRenderer()->RemoveActor(m_ActorSurf);
+        }
+        m_ActorSurf->Delete(); m_ActorSurf=NULL;
     }
 
     if (m_hightLightElStyle !=NULL) 
@@ -328,7 +336,7 @@ void PElSfSetDlg::ChangePElIncludeSlot()
     {
        m_WholePointDataInput = m_PolyDataInput;
       // m_WholeCellDataInput = m_PolyDataInput;
-       if (!inpObj_){
+       if (inpObj_){
            inpObj_->SetMeshActorShow(false);
        }
        //m_AllSurfDataInput = m_PolyDataInput;
@@ -346,7 +354,10 @@ void PElSfSetDlg::ChangePElIncludeSlot()
 void PElSfSetDlg::PointGroupBtnSlot(int btnId)
 {
     if (btnId<0)return;
-    if (!inpObj_)  return;
+    if (!inpObj_) {
+        Information_Widget::GetInstance()->ShowInformation(tr("请先导入并显示前处理网格，再创建点集合。"));
+        return;
+    }
     m_pickPointSetBtn->setDown(false);
     m_PointSetClrBtn->setDown(false);
     m_PointSetEditBtn->setDown(false);
@@ -380,7 +391,10 @@ void PElSfSetDlg::PointGroupBtnSlot(int btnId)
 void PElSfSetDlg::ElGroupBtnSlot(int btnId)
 {
     if (btnId<0)return;
-    if (!inpObj_)  return;
+    if (!inpObj_) {
+        Information_Widget::GetInstance()->ShowInformation(tr("请先导入并显示前处理网格，再创建单元集合。"));
+        return;
+    }
    /* m_pickPointSetBtn->setDown(false);
     m_PointSetClrBtn->setDown(false);
     m_PointSetEditBtn->setDown(false);
@@ -423,7 +437,10 @@ void PElSfSetDlg::ElGroupBtnSlot(int btnId)
 void PElSfSetDlg::SurfGroupBtnSlot(int btnId)
 {
     if (btnId<0)return;
-    if (!inpObj_)  return;
+    if (!inpObj_) {
+        Information_Widget::GetInstance()->ShowInformation(tr("请先导入并显示前处理网格，再创建表面集合。"));
+        return;
+    }
     /*m_pickPointSetBtn->setDown(false);
     m_PointSetClrBtn->setDown(false);
     m_PointSetEditBtn->setDown(false);
@@ -709,8 +726,8 @@ void PElSfSetDlg::PointSetSelectedPick()
         m_hightLightElStyle->ClearCurrentSelectedMap();
     }
 
-    m_ActorSurf->VisibilityOff();
-    m_ActorPElSet->VisibilityOn();
+    if (m_ActorSurf) m_ActorSurf->VisibilityOff();
+    if (m_ActorPElSet) m_ActorPElSet->VisibilityOn();
 
     if (m_hightLightPointStyle==NULL)
     {
@@ -753,8 +770,8 @@ void PElSfSetDlg::ElSetSelectedPick()
         m_hightLightSurfPickerStyle->ClearCurrentSelectedMap();
     }
 
-    m_ActorSurf->VisibilityOff();
-    m_ActorPElSet->VisibilityOn();
+    if (m_ActorSurf) m_ActorSurf->VisibilityOff();
+    if (m_ActorPElSet) m_ActorPElSet->VisibilityOn();
 
     if (m_hightLightElStyle == NULL)
     {
@@ -800,8 +817,8 @@ void PElSfSetDlg::SurfSetSelectedPick()
         m_hightLightElStyle->ClearCurrentSelectedMap();
     }
 
-    m_ActorPElSet->VisibilityOff();
-    m_ActorSurf->VisibilityOn();
+    if (m_ActorPElSet) m_ActorPElSet->VisibilityOff();
+    if (m_ActorSurf) m_ActorSurf->VisibilityOn();
 
     if (m_hightLightSurfPickerStyle==0)
     {

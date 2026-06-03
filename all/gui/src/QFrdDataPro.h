@@ -24,6 +24,12 @@ typedef struct _PointXYZ_S{
         y.clear();
         z.clear();
     }*/
+    void clear(){
+        PointId.clear();
+        x.clear();
+        y.clear();
+        z.clear();
+    }
 }NodalPointXYZ;
 //typedef struct _ELEM_NODE_S{
 //	vector<QStringList> Enode;
@@ -35,10 +41,9 @@ typedef struct _MODELERESULT_S_{
         //	strId="1C";
         strName="";
     }
-    //void clear(){
-    //	strId.clear();
-    //	strName.clear();
-    //}
+    void clear(){
+        strName="";
+    }
 }modelHeaderS;
 
 typedef struct _USERESULT_S_{
@@ -48,10 +53,9 @@ typedef struct _USERESULT_S_{
     //_USERESULT_S_(){
     //	strId="1U";
     //}
-    //void clear(){
-    //strId.clear();
-    //strName.clear();
-    //}
+    void clear(){
+        strName.clear();
+    }
 }userHeaderS;
 
 typedef struct _NODALRESULT_S_{ 
@@ -70,6 +74,12 @@ typedef struct _NODALRESULT_S_{
         nFormat=1;//0:short/1:long/2:binary(coordinaters float)/3:binary(coordinaters double)
         //strEnd = "-3";
         //strStartNodal = "-1";
+    }
+    void clear(){
+        nNum=1000;
+        nFormat=1;
+        DataId.clear();
+        Data.clear();
     }
 }nodalPointS;
 typedef struct _RESULT_ELEM_S 
@@ -103,7 +113,21 @@ typedef struct _RESULT_ELEM_S
         for (int k=0;k<isize;k++){
             delete[] DataElem2[k];
             DataElem2[k]=0;
-        }   
+        }
+    }
+    void clear(){
+        int isize = DataElem2.size();
+        for (int k = 0; k < isize; k++){
+            delete[] DataElem2[k];
+            DataElem2[k] = 0;
+        }
+        nNum = 1000;
+        nFormat = 1;
+        DataElem1PointId.clear();
+        DataElem1PointStyle.clear();
+        DataElem1PointGrps.clear();
+        DataElem1PointMats.clear();
+        DataElem2.clear();
     }
 }elemBlockS;
 
@@ -165,7 +189,23 @@ typedef struct _NODALRESULTBLOCKS_{
         for (int k=0;k<isize;k++){
             delete[] strDataRecord[k];
             strDataRecord[k]=0;
-        }   
+        }
+    }
+    void clear(){
+        int isize = strDataRecord.size();
+        for (int k = 0; k < isize; k++){
+            delete[] strDataRecord[k];
+            strDataRecord[k] = 0;
+        }
+        strName = "";
+        strTimeVal = 0.0;
+        strNum = 0;
+        strFormat = 0;
+        strAttrHeaderName = "";
+        strAttrNum = 0;
+        strComptHeaderName.clear();
+        dataIndex.clear();
+        strDataRecord.clear();
     }
 }nodalResultBlockS;
 
@@ -177,8 +217,11 @@ typedef struct _RESULT_S_ {
     nodalResultBlockS nodeResultBlock;
     paraHeaderS       paraHeader;
     void clear(){
-        //modelHeader.clear();
-        //userHeader.clear();
+        modelHeader.clear();
+        userHeader.clear();
+        nodalPoint.clear();
+        elemBlock.clear();
+        nodeResultBlock.clear();
     }
 }resultFrdS;
 
@@ -186,14 +229,18 @@ typedef struct _RESULTS_Dat_{
 	QStringList SetName;
 	QList<QString> SetTime;//<集合+时间>
 	QList<QString> Force;//数据
+	void clear(){
+		SetName.clear();
+		SetTime.clear();
+		Force.clear();
+	}
 }resultDatS;
 
 typedef struct _RESULT_STEP_S_ {
     paraHeaderS       paraHeader;
     nodalResultBlockS nodeResultBlock;
     void clear(){
-    //modelHeader.clear();
-    //userHeader.clear();
+        nodeResultBlock.clear();
     }
 }resultStepFrdS;
 //------------------------------

@@ -17,6 +17,7 @@
 #include <vtkLine.h>//画线
 #include <vtkPolyLine.h>
 #include "CRWManage.h"
+#include <QDebug>
 
 InpDataSource::InpDataSource()
 {
@@ -152,7 +153,7 @@ bool InpDataSource::InitGridFromFrd(ReadInpResultS *Inp)
         case 8: cell = vtkQuadraticTriangle::New(); break;
         case 9: cell = vtkQuad::New(); break;
         case 10: cell = vtkQuadraticQuad::New(); break;
-        default: break;
+        default: qDebug() << "InitGridFromFrd: unsupported cell type" << inpCellType; break;
         }
         if (!cell) continue;
 
@@ -429,7 +430,7 @@ vtkUnstructuredGrid* InpDataSource::ELDisplacementGrid(const QString &header)
 			    case 4:{m_iCelltype0 =9;}break;
 		     	case 6:{m_iCelltype0 =8;}break;
 				case 8:{m_iCelltype0 =10;}break;
-				default:{;} break; 
+				default: qDebug() << "ELDisplacementGrid: unsupported node count" << NodeNumber; break; 
 			}
 		}else{
 			switch(NodeNumber){
@@ -439,7 +440,7 @@ vtkUnstructuredGrid* InpDataSource::ELDisplacementGrid(const QString &header)
 			    case 10:{m_iCelltype0 =6;}break;
 			    case 15:{m_iCelltype0 =5;}break;
 			    case 20:{m_iCelltype0 =4;}break;	
-				default:{;} break; 
+				default: qDebug() << "ELDisplacementGrid: unsupported node count" << NodeNumber; break;
 			}
 		}
 
@@ -454,7 +455,7 @@ vtkUnstructuredGrid* InpDataSource::ELDisplacementGrid(const QString &header)
         case 8:{cell = vtkQuadraticTriangle::New();}break; 
         case 9:{cell = vtkQuad::New();}break;   
         case 10:{cell = vtkQuadraticQuad::New();}break;
-        default:{;} break;   
+        default: qDebug() << "ELDisplacementGrid: unsupported cell type" << m_iCelltype0; break;
         }
         if (cell){
             int cellType_vtk = cell->GetCellType();
@@ -593,14 +594,19 @@ bool InpDataSource::GetElCellData(QStringList *CellListData,QString header)
 
             if (GenerateSetData.iDataGenerate==0 && NListSize==3){//只有一行，“1,1592,1 -->第1个：开始点；第2个：结束点；第三个间隔数字”
                 for(int kk=tmpList.at(0).toInt();kk<=tmpList.at(1).toInt();kk+=tmpList.at(2).toInt()){
-                    *CellListData<<m_ElementData.find(kk-1).value(); 
+                    if (m_ElementData.find(kk-1) != m_ElementData.end())
+                        *CellListData<<m_ElementData.find(kk-1).value();
+                    else
+                        qDebug() << "GetElCellData: element" << kk << "not found in element data map";
                 }
                 break;
             }else{//按点数解析
                 for (int j=0; j<NListSize;j++){
                     if (m_ElementData.find(tmpList.at(j).toInt()-1)!=m_ElementData.end()){
                         *CellListData<<m_ElementData.find(tmpList.at(j).toInt()-1).value();
-                    } 
+                    } else {
+                        qDebug() << "GetElCellData: element" << tmpList.at(j) << "not found in element data map";
+                    }
                 }
                 break;
             }
@@ -625,6 +631,7 @@ bool InpDataSource:: GetSurfCellData(QVector<QStringList> *CellListData,QStringL
            for (int i=0;i<nSize;i++){
                QStringList strL1;
                QStringList tmpStrL=qListString.at(i).split(",",QString::SkipEmptyParts);
+               if (tmpStrL.size() < 2) continue;
                QString strElsetName = tmpStrL.at(0).simplified();
                QString strCellNewStyle = tmpStrL.at(1).simplified();
                GetElCellData(&strL1,strElsetName);
@@ -658,7 +665,7 @@ bool InpDataSource::GetChooseData(QStringList *strRowData,QString strFName)
 			    case 4:{m_iCelltype0 =9;}break;
 		     	case 6:{m_iCelltype0 =8;}break;
 				case 8:{m_iCelltype0 =10;}break;
-				default:{;} break; 
+				default: qDebug() << "GetChooseData: unsupported 2D node count" << NodeNumber; break; 
 			}
 		}else{
 			switch(NodeNumber){
@@ -668,48 +675,50 @@ bool InpDataSource::GetChooseData(QStringList *strRowData,QString strFName)
 			    case 10:{m_iCelltype0 =6;}break;
 			    case 15:{m_iCelltype0 =5;}break;
 			    case 20:{m_iCelltype0 =4;}break;	
-				default:{;} break; 
+				default: qDebug() << "GetChooseData: unsupported 3D node count" << NodeNumber; break; 
 			}
 		}
 		switch (m_iCelltype0){
         case 1://8节点6面体->四边形
         case 4:{//20节点6面体->四边形
              QString strTmp,strTmp1,strTmp2,strTmp3;strTmp.clear();strTmp1.clear();strTmp2.clear();strTmp3.clear();
+             QStringList parts = StrL.at(i).split(",");
+             if (parts.size() <= 8) continue;
              if (strFName =="s1"){
-                 strTmp =StrL.at(i).split(",").at(1).simplified();
-                 strTmp1=StrL.at(i).split(",").at(2).simplified();
-                 strTmp2=StrL.at(i).split(",").at(3).simplified();
-                 strTmp3 =StrL.at(i).split(",").at(4).simplified();
+                 strTmp =parts.at(1).simplified();
+                 strTmp1=parts.at(2).simplified();
+                 strTmp2=parts.at(3).simplified();
+                 strTmp3 =parts.at(4).simplified();
                  strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
              }else if(strFName=="s2"){
-                 strTmp =StrL.at(i).split(",").at(5).simplified();
-                 strTmp1=StrL.at(i).split(",").at(8).simplified();
-                 strTmp2=StrL.at(i).split(",").at(7).simplified();
-                 strTmp3 =StrL.at(i).split(",").at(6).simplified();
+                 strTmp =parts.at(5).simplified();
+                 strTmp1=parts.at(8).simplified();
+                 strTmp2=parts.at(7).simplified();
+                 strTmp3 =parts.at(6).simplified();
                  strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
              }else if(strFName=="s3"){
-                 strTmp =StrL.at(i).split(",").at(1).simplified();
-                 strTmp1=StrL.at(i).split(",").at(5).simplified();
-                 strTmp2=StrL.at(i).split(",").at(6).simplified();
-                 strTmp3 =StrL.at(i).split(",").at(2).simplified();
+                 strTmp =parts.at(1).simplified();
+                 strTmp1=parts.at(5).simplified();
+                 strTmp2=parts.at(6).simplified();
+                 strTmp3 =parts.at(2).simplified();
                  strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
              }else if(strFName=="s4"){
-                 strTmp =StrL.at(i).split(",").at(2).simplified();
-                 strTmp1=StrL.at(i).split(",").at(6).simplified();
-                 strTmp2=StrL.at(i).split(",").at(7).simplified();
-                 strTmp3 =StrL.at(i).split(",").at(3).simplified();
+                 strTmp =parts.at(2).simplified();
+                 strTmp1=parts.at(6).simplified();
+                 strTmp2=parts.at(7).simplified();
+                 strTmp3 =parts.at(3).simplified();
                  strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
              }else if(strFName=="s5"){
-                 strTmp =StrL.at(i).split(",").at(3).simplified();
-                 strTmp1=StrL.at(i).split(",").at(7).simplified();
-                 strTmp2=StrL.at(i).split(",").at(8).simplified();
-                 strTmp3 =StrL.at(i).split(",").at(4).simplified();
+                 strTmp =parts.at(3).simplified();
+                 strTmp1=parts.at(7).simplified();
+                 strTmp2=parts.at(8).simplified();
+                 strTmp3 =parts.at(4).simplified();
                  strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
              }else if(strFName=="s6"){
-                 strTmp =StrL.at(i).split(",").at(4).simplified();
-                 strTmp1=StrL.at(i).split(",").at(8).simplified();
-                 strTmp2=StrL.at(i).split(",").at(5).simplified();
-                 strTmp3 =StrL.at(i).split(",").at(1).simplified();
+                 strTmp =parts.at(4).simplified();
+                 strTmp1=parts.at(8).simplified();
+                 strTmp2=parts.at(5).simplified();
+                 strTmp3 =parts.at(1).simplified();
                  strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
              } 
 			 QString jj3=QString::number(m_iCelltype0,10);
@@ -719,22 +728,24 @@ bool InpDataSource::GetChooseData(QStringList *strRowData,QString strFName)
         case 3://4节点4面体->三角形
         case 6:{//10节点4面体->三角形
             QString strTmp,strTmp1,strTmp2; strTmp.clear();strTmp1.clear();strTmp2.clear();
+             QStringList parts = StrL.at(i).split(",");
+             if (parts.size() <= 4) continue;
              if (strFName =="s1"){
-                 strTmp =StrL.at(i).split(",").at(1).simplified();
-                 strTmp1=StrL.at(i).split(",").at(2).simplified();
-                 strTmp2=StrL.at(i).split(",").at(3).simplified();
+                 strTmp =parts.at(1).simplified();
+                 strTmp1=parts.at(2).simplified();
+                 strTmp2=parts.at(3).simplified();
              }else if(strFName=="s2"){
-                 strTmp =StrL.at(i).split(",").at(1).simplified();
-                 strTmp1=StrL.at(i).split(",").at(4).simplified();
-                 strTmp2=StrL.at(i).split(",").at(2).simplified();
+                 strTmp =parts.at(1).simplified();
+                 strTmp1=parts.at(4).simplified();
+                 strTmp2=parts.at(2).simplified();
              }else if(strFName=="s3"){
-                 strTmp =StrL.at(i).split(",").at(2).simplified();
-                 strTmp1=StrL.at(i).split(",").at(4).simplified();
-                 strTmp2=StrL.at(i).split(",").at(3).simplified();
+                 strTmp =parts.at(2).simplified();
+                 strTmp1=parts.at(4).simplified();
+                 strTmp2=parts.at(3).simplified();
              }else if(strFName=="s4"){
-                 strTmp =StrL.at(i).split(",").at(3).simplified();
-                 strTmp1=StrL.at(i).split(",").at(4).simplified();
-                 strTmp2=StrL.at(i).split(",").at(1).simplified();
+                 strTmp =parts.at(3).simplified();
+                 strTmp1=parts.at(4).simplified();
+                 strTmp2=parts.at(1).simplified();
              }
            strTmp.append(",").append(strTmp1).append(",").append(strTmp2);
 		   QString jj3=QString::number(m_iCelltype0,10);
@@ -744,15 +755,17 @@ bool InpDataSource::GetChooseData(QStringList *strRowData,QString strFName)
      case 7:
      case 8:{//三角形-->直线
          QString strTmp,strTmp1;strTmp.clear();strTmp1.clear();
+         QStringList parts = StrL.at(i).split(",");
+         if (parts.size() <= 3) continue;
          if (strFName =="s1"){
-             strTmp =StrL.at(i).split(",").at(1).simplified();
-             strTmp1=StrL.at(i).split(",").at(2).simplified();
+             strTmp =parts.at(1).simplified();
+             strTmp1=parts.at(2).simplified();
          }else if(strFName=="s2"){
-             strTmp =StrL.at(i).split(",").at(2).simplified();
-             strTmp1=StrL.at(i).split(",").at(3).simplified();
+             strTmp =parts.at(2).simplified();
+             strTmp1=parts.at(3).simplified();
          }else if(strFName=="s3"){
-             strTmp =StrL.at(i).split(",").at(3).simplified();
-             strTmp1=StrL.at(i).split(",").at(1).simplified();
+             strTmp =parts.at(3).simplified();
+             strTmp1=parts.at(1).simplified();
          }
          strTmp.append(",").append(strTmp1);
 		 QString jj3=QString::number(m_iCelltype0,10);
@@ -762,45 +775,47 @@ bool InpDataSource::GetChooseData(QStringList *strRowData,QString strFName)
      case 2:
      case 5:{
          QString strTmp,strTmp1,strTmp2,strTmp3;strTmp.clear();strTmp1.clear();strTmp2.clear();strTmp3.clear();
+         QStringList parts = StrL.at(i).split(",");
+         if (parts.size() <= 6) continue;
          if (strFName =="s1"){//1-2-3三角形
-             strTmp =StrL.at(i).split(",").at(1).simplified();
-             strTmp1=StrL.at(i).split(",").at(2).simplified();
-             strTmp2=StrL.at(i).split(",").at(3).simplified();
+             strTmp =parts.at(1).simplified();
+             strTmp1=parts.at(2).simplified();
+             strTmp2=parts.at(3).simplified();
              strTmp.append(",").append(strTmp1).append(",").append(strTmp2);
 			 QString jj3=QString::number(m_iCelltype0,10);
              strTmp.append(",").append(jj3);
              tmpStrL<<strTmp;
          }else if(strFName=="s2"){//-4-5-6
-             strTmp =StrL.at(i).split(",").at(4).simplified();
-             strTmp1=StrL.at(i).split(",").at(5).simplified();
-             strTmp2=StrL.at(i).split(",").at(6).simplified();
+             strTmp =parts.at(4).simplified();
+             strTmp1=parts.at(5).simplified();
+             strTmp2=parts.at(6).simplified();
              strTmp.append(",").append(strTmp1).append(",").append(strTmp2);
 			 QString jj3=QString::number(m_iCelltype0,10);
              strTmp.append(",").append(jj3);
              tmpStrL<<strTmp;
          }else if(strFName=="s3"){//1-2-5-4
-             strTmp =StrL.at(i).split(",").at(1).simplified();
-             strTmp1=StrL.at(i).split(",").at(2).simplified();
-             strTmp2=StrL.at(i).split(",").at(5).simplified();
-             strTmp3 =StrL.at(i).split(",").at(4).simplified();
+             strTmp =parts.at(1).simplified();
+             strTmp1=parts.at(2).simplified();
+             strTmp2=parts.at(5).simplified();
+             strTmp3 =parts.at(4).simplified();
              strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
 			 QString jj3=QString::number(m_iCelltype0,10);
              strTmp.append(",").append(jj3);
              tmpStrL<<strTmp;
          }else if(strFName=="s4"){//2-3-6-5
-             strTmp =StrL.at(i).split(",").at(2).simplified();
-             strTmp1=StrL.at(i).split(",").at(3).simplified();
-             strTmp2=StrL.at(i).split(",").at(6).simplified();
-             strTmp3 =StrL.at(i).split(",").at(5).simplified();
+             strTmp =parts.at(2).simplified();
+             strTmp1=parts.at(3).simplified();
+             strTmp2=parts.at(6).simplified();
+             strTmp3 =parts.at(5).simplified();
              strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
 			 QString jj3=QString::number(m_iCelltype0,10);
              strTmp.append(",").append(jj3);
              tmpStrL<<strTmp;
          }else if(strFName=="s5"){//3-1-4-6
-             strTmp =StrL.at(i).split(",").at(3).simplified();
-             strTmp1=StrL.at(i).split(",").at(1).simplified();
-             strTmp2=StrL.at(i).split(",").at(4).simplified();
-             strTmp3 =StrL.at(i).split(",").at(6).simplified();
+             strTmp =parts.at(3).simplified();
+             strTmp1=parts.at(1).simplified();
+             strTmp2=parts.at(4).simplified();
+             strTmp3 =parts.at(6).simplified();
              strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
 			 QString jj3=QString::number(m_iCelltype0,10);
              tmpStrL<<strTmp;
@@ -809,25 +824,27 @@ bool InpDataSource::GetChooseData(QStringList *strRowData,QString strFName)
      case 9: //4节点4边形--s1~s4:则表示为直线
      case 10:{//8节点4边形--s1~s4:则表示为直线
            QString strTmp,strTmp1; strTmp.clear();strTmp1.clear();
+	         QStringList parts = StrL.at(i).split(",");
+	         if (parts.size() <= 4) continue;
          if (strFName =="s1"){
-             strTmp =StrL.at(i).split(",").at(1).simplified();
-             strTmp1=StrL.at(i).split(",").at(2).simplified();
+             strTmp =parts.at(1).simplified();
+             strTmp1=parts.at(2).simplified();
          }else if(strFName=="s2"){
-             strTmp =StrL.at(i).split(",").at(2).simplified();
-             strTmp1=StrL.at(i).split(",").at(3).simplified();
+             strTmp =parts.at(2).simplified();
+             strTmp1=parts.at(3).simplified();
          }else if(strFName=="s3"){
-             strTmp =StrL.at(i).split(",").at(3).simplified();
-             strTmp1=StrL.at(i).split(",").at(4).simplified();
+             strTmp =parts.at(3).simplified();
+             strTmp1=parts.at(4).simplified();
          }else if(strFName=="s4"){
-             strTmp =StrL.at(i).split(",").at(4).simplified();
-             strTmp1=StrL.at(i).split(",").at(1).simplified(); 
+             strTmp =parts.at(4).simplified();
+             strTmp1=parts.at(1).simplified(); 
          }
          strTmp.append(",").append(strTmp1);
 		 QString jj3=QString::number(m_iCelltype0,10);
          strTmp.append(",").append(jj3);
          tmpStrL<<strTmp;
        }break;   
-      default:{;} break;  
+      default: qDebug() << "GetChooseData: unsupported cell type" << m_iCelltype0; break;  
         }
     }
    
@@ -902,7 +919,7 @@ vtkCell* InpDataSource::NewVTKCellS(int InpCellType, QString strFName)
                 cell = vtkQuad::New();
             }
           }break;
-        default:{;} break;  
+        default: qDebug() << "NewVTKCellS: unsupported cell type" << InpCellType; break;  
 
       }
     return cell;
@@ -916,9 +933,12 @@ bool InpDataSource::InpRowDataToSurf(ReadInpResultS *Inp)
     int nPoint = Inp->TmpNodeInpS.strData.size();//nodalPoint.nNum;
     PointCoordinate p;
     vtkPoints *points = vtkPoints::New();
+    if (nPoint < 1) return false;
 	QStringList TmpBasePoint=(Inp->TmpNodeInpS.strData.at(0).split(","));
+    if (TmpBasePoint.isEmpty()) return false;
     points->SetNumberOfPoints(nPoint+TmpBasePoint.at(0).toInt()-1);
     QString AnalysisType=Inp->TmpElInpS.strELType.mid(0,2).toLower();
+    if (Inp->TmpElInpS.ElementType.isEmpty()) return false;
 	if(AnalysisType=="")AnalysisType=Inp->TmpElInpS.ElementType.at(0).mid(0,2).toLower();
 	if(AnalysisType=="c3")n2D3D=3;
 	else n2D3D=2;
@@ -927,6 +947,7 @@ bool InpDataSource::InpRowDataToSurf(ReadInpResultS *Inp)
     {
         QStringList TmpNodeData=Inp->TmpNodeInpS.strData.at(i).split(",");
        
+        if (TmpNodeData.size() < (n2D3D==3 ? 4 : 3)) continue;
         p.x=TmpNodeData.at(1).toDouble();
         p.y=TmpNodeData.at(2).toDouble();
         if (n2D3D==3){//体
@@ -951,7 +972,7 @@ bool InpDataSource::InpRowDataToSurf(ReadInpResultS *Inp)
                 case 4:{inpCellType =9;}break;
                 case 6:{inpCellType =8;}break;
                 case 8:{inpCellType =10;}break;
-                default:{;} break;
+                default: qDebug() << "InpRowDataToSurf: unsupported 2D node count" << NodeNumber; break;
             }
         }else{
             switch(NodeNumber){
@@ -961,7 +982,7 @@ bool InpDataSource::InpRowDataToSurf(ReadInpResultS *Inp)
                 case 10:{inpCellType =6;}break;
                 case 15:{inpCellType =5;}break;
                 case 20:{inpCellType =4;}break;	
-                default:{;} break; 
+                default: qDebug() << "InpRowDataToSurf: unsupported 3D node count" << NodeNumber; break; 
             }
         }
         m_iCelltype = inpCellType;
@@ -976,6 +997,7 @@ bool InpDataSource::InpRowDataToSurf(ReadInpResultS *Inp)
     for(it; it!=m_ElementSurfmap.end(); ++it){
         vtkCell *cell = NULL;
         QStringList SnData=it.value().split(",");
+			if (SnData.size() < 3) continue;
 		inpCellType =SnData.at(2).toInt();
         switch (inpCellType){
             case 1:{cell = vtkQuad::New();}break;//ok vtkHexahedron::New();}break;
@@ -994,7 +1016,7 @@ bool InpDataSource::InpRowDataToSurf(ReadInpResultS *Inp)
             case 8:{cell = vtkPolyLine::New();}break;//vtkQuadraticTriangle::New();}break; 
             case 9:{cell = vtkLine::New();}break;//(ok)vtkQuad::New();}break;   
             case 10:{cell = vtkPolyLine::New();}break;//vtkQuadraticQuad::New();}break;
-            default:{;} break;
+            default: qDebug() << "InpRowDataToSurf: unsupported cell type" << inpCellType; break;
 		}
 
 		//--no more point(eg:only support C3D6,not support c3d15 )
@@ -1030,6 +1052,22 @@ bool InpDataSource::InpRowDataToSurf(ReadInpResultS *Inp)
 //Del the same 3d face
 void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
 {
+	// Validate list size for element type (1 ID + N nodes)
+	int expectedNodes = 0;
+	switch(iType) {
+		case 1: expectedNodes = 8; break;  // C3D8
+		case 2: expectedNodes = 6; break;  // C3D6
+		case 3: expectedNodes = 4; break;  // C3D4
+		case 4: expectedNodes = 20; break; // C3D20
+		case 5: expectedNodes = 15; break; // C3D15
+		case 6: expectedNodes = 10; break; // C3D10
+		case 7: expectedNodes = 3; break;  // CPS3
+		case 8: expectedNodes = 6; break;  // CPS6
+		case 9: expectedNodes = 4; break;  // CPS4
+		case 10: expectedNodes = 8; break; // CPS8
+		default: return;
+	}
+	if (tmpStrList.size() <= expectedNodes) return;
     switch(iType){
         case 1:{//C3D8(C3D8R)
                 QList<int> sortD;

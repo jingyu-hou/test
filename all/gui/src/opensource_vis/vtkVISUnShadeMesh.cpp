@@ -1,6 +1,7 @@
 // Open-source implementation of vtkVISUnShadeMesh
 #include "vtkVISUnShadeMesh.h"
 #include <vtkObjectFactory.h>
+#include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
 #include <vtkUnstructuredGrid.h>
 #include <string.h>
@@ -55,10 +56,15 @@ void vtkVISUnShadeMesh::CreateShadeMeshDisplay(bool flag)
         vtkPolyDataMapper* mapper = vtkPolyDataMapper::New();
         mapper->SetInputConnection(edges->GetOutputPort());
         mapper->ScalarVisibilityOff();
+        mapper->SetResolveCoincidentTopologyToPolygonOffset();
+        mapper->SetResolveCoincidentTopologyPolygonOffsetParameters(-1.0, -1.0);
 
         vtkActor* actor = vtkActor::New();
         actor->SetMapper(mapper);
         actor->GetProperty()->SetRepresentationToWireframe();
+        actor->GetProperty()->SetLineWidth(2.0);
+        actor->GetProperty()->SetAmbient(1.0);
+        actor->GetProperty()->SetDiffuse(0.0);
 
         if (_renderer) _renderer->AddActor(actor);
         if (_unActor) { _renderer->RemoveActor(_unActor); _unActor->Delete(); }
@@ -94,6 +100,11 @@ void vtkVISUnShadeMesh::CreateShadeMeshSurfaceDisplay(bool flag)
     } else {
         // Mesh surface
         actor->GetProperty()->SetRepresentationToWireframe();
+        mapper->SetResolveCoincidentTopologyToPolygonOffset();
+        mapper->SetResolveCoincidentTopologyPolygonOffsetParameters(-1.0, -1.0);
+        actor->GetProperty()->SetLineWidth(2.0);
+        actor->GetProperty()->SetAmbient(1.0);
+        actor->GetProperty()->SetDiffuse(0.0);
     }
 
     if (_renderer) _renderer->AddActor(actor);

@@ -44,6 +44,14 @@ void QPreHIPPrc::InsertPart(QString strName)
    m_TreeModel->InsertRootPreModelTree();
 }
 
+void QPreHIPPrc::RefreshTree()
+{
+    if (!m_TreeView) return;
+    m_TreeView->reset();
+    m_TreeView->expandAll();
+    m_TreeView->viewport()->update();
+}
+
 
 //****************************************************
 // Method:    单击树节点的响应;

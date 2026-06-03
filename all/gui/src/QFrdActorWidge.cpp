@@ -1,4 +1,4 @@
-#include "QFrdActorWidge.h"
+﻿#include "QFrdActorWidge.h"
 #include <QPushButton>
 #include <QModelIndex>
 
@@ -36,24 +36,19 @@ void QFrdActorWidge::upDataListWidget(const vector<int>* data)
         box->setChecked(true);
         widgetList_->addItem(item);
         widgetList_->setItemWidget(item, box);
-        connect(box,SIGNAL(clicked()),this,SLOT(ActorSlot()));
+        connect(box,SIGNAL(toggled(bool)),this,SLOT(ActorSlot()));
         Da.push_back(data->at(kk));
      }
     emit emitClickAcotrListWig(Da);
 }
 void QFrdActorWidge:: ActorSlot()
 {
-    QCheckBox *checkBox=(QCheckBox*) sender();
-    int x=checkBox->mapToParent(QPoint(0,0)).x();
-    int y=checkBox->mapToParent(QPoint(0,0)).y();
-    QModelIndex index=widgetList_->indexAt(QPoint(x,y));
-    int iRow=index.row();
-    if (iRow<0 ||widgetList_->count()<=0)return;
+    if (widgetList_->count()<=0)return;
 
     vector<int> Da;
     for (int kk=0; kk<widgetList_->count(); kk++)  { 
         QCheckBox *box =(QCheckBox *)widgetList_->itemWidget(widgetList_->item(kk));
-        if(box->isChecked()){
+        if(box && box->isChecked()){
             Da.push_back(box->text().remove("Element--").toInt());
         } 
     }

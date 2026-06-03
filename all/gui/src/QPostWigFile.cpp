@@ -3,6 +3,7 @@
 #include <QMessageBox>
 #include "Information_Widget.h"
 #include "FileValidation.h"
+#include "AppLog.h"
 
 static QString SafeGetOpenFileName(QWidget *parent, const QString &caption, const QString &dir, const QString &filter)
 {
@@ -187,10 +188,12 @@ bool QPostWigFile::readOpenFrd(QString fileName)
     const vector<int>* gridIds = frdVIS_.GetGridIds();
     if (gridIds) {
         m_ListActorWiget->upDataListWidget(gridIds);
+        AppLog::Write("FRD", QString("grid ids loaded count=%1; auto render skipped").arg((int)gridIds->size()));
+    } else {
+        AppLog::Write("FRD", "no grid ids after FRD setup");
     }
     if (frdVIS_.GetBindedRenderer()) {
-        frdVIS_.ResetCamera();
-        frdVIS_.Update();
+        AppLog::Write("FRD", "FRD import complete; reset camera/render deferred");
     }
     return true;
 }
@@ -248,3 +251,4 @@ void QPostWigFile::LanguageUpData()
     m_ReadBtn->setText(tr("Import")); 
     m_LabName->setText(tr("File Name"));
 }
+

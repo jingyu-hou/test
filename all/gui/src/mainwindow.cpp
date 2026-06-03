@@ -129,6 +129,7 @@ MainWindow::MainWindow(QWidget *par):SARibbonMainWindow(par)
     m_contextCategoryHE = 0;
     m_contextCategory_HE_C = 0;
     m_isImporting = false;
+    m_CheckDlg = NULL;
 
     InitDlg();
     createActions();
@@ -214,6 +215,11 @@ MainWindow::~MainWindow()
         m_HpSubmissionDlg = NULL;
     }
 	
+    if (m_CheckDlg!=NULL)
+    {
+        delete m_CheckDlg;
+        m_CheckDlg = NULL;
+    }
     //--dlg
     if (m_PElSfSetDlg != NULL)
     {
@@ -284,7 +290,9 @@ void MainWindow::ForceShowMainWindow()
     } else {
         int w = qMin(screen.width() - 120, 1500);
         int h = qMin(screen.height() - 120, 900);
-        geom = QRect(screen.left() + 60, screen.top() + 60, w, h);
+        int x = screen.left() + (screen.width() - w) / 2;
+        int y = screen.top() + (screen.height() - h) / 2;
+        geom = QRect(x, y, w, h);
     }
 
     setWindowState(windowState() & ~Qt::WindowMinimized);
@@ -332,8 +340,11 @@ void MainWindow::InitProcess()
 	
     connect(viewWindow_,SIGNAL(emitInpDataOk(InpDataVIS*)),m_PElSfSetDlg,SLOT(InitInpDataSlot(InpDataVIS*)));
     connect(m_PElSfSetDlg,SIGNAL(emitPsetHighLight(NElSurfChsS)),viewWindow_,SLOT(HightLightPSet(NElSurfChsS)));
-    connect(viewWindow_,SIGNAL(emitInpDataOk(InpDataVIS*)),m_AssemblingAct_,SLOT(InitInpDataSlot1(InpDataVIS*)));
+	connect(viewWindow_,SIGNAL(emitInpDataOk(InpDataVIS*)),m_AssemblingAct_,SLOT(InitInpDataSlot1(InpDataVIS*)));
 	connect(viewWindow_,SIGNAL(emitInpDataOk(InpDataVIS*)),m_DistMeasurementAct_,SLOT(InitInpDataSlot2(InpDataVIS*)));
+	if (PostPro_ && PostPro_->m_PosWigFile) {
+		connect(PostPro_->m_PosWigFile,SIGNAL(frdDataOk(FrdDataVIS*)),m_DistMeasurementAct_,SLOT(InitFrdSlot2(FrdDataVIS*)));
+	}
 	connect(m_AssemblingAct_,SIGNAL(emitPsetHighLight1(NElSurfChsS)),viewWindow_,SLOT(HightLightPSet(NElSurfChsS)));
 	connect(m_WidgetInpElsetDlg,SIGNAL(emitCheckActor(QStringList)),viewWindow_,SLOT(ActorElSetCheckShow(QStringList)));
 	//connect(m_WidgetInpElsetDlg,SIGNAL(emitCheckActor(QStringList)),m_PElSfSetDlg,SLOT(UpDataInpElSetDataSlot(QStringList)));//ElementSet Part Show/Hide
@@ -643,6 +654,7 @@ void MainWindow::AssembleDlgViewSlot(AssemblingS_ZP data)
 
 	ImportTrace("OpenSlot: before TreeModel");
         PreHIPPro_->m_TreeModel->setInpData(m_Data);
+        PreHIPPro_->RefreshTree();
         ImportTrace("OpenSlot: after TreeModel");
 	if (viewWindow_){
 		viewWindow_->TabView(1);//setCurrentIndex(1);
@@ -2086,6 +2098,7 @@ void MainWindow::MergeSlot()
     //--写入到Tree
     ImportTrace("OpenSlot: before TreeModel");
         PreHIPPro_->m_TreeModel->setInpData(m_Data);
+        PreHIPPro_->RefreshTree();
         ImportTrace("OpenSlot: after TreeModel");
     //--写入到view显示区域
     viewWindow_->TabView(1);//->tabView_setCurrentIndex(1);
@@ -2148,6 +2161,7 @@ void MainWindow::ApplyInpDataToUi(const ReadInpResultS &data)
     m_AssemblingAct_->SetInpData(data);
     m_WidgetInpElsetDlg->SetInpData(data.TmpElSetInps);
     PreHIPPro_->m_TreeModel->setInpData(data);
+    PreHIPPro_->RefreshTree();
     ImportTrace("ApplyInpDataToUi: dialogs updated");
     if (viewWindow_) {
         viewWindow_->TabView(1);
@@ -2243,6 +2257,7 @@ void MainWindow::ViewAss( ReadInpResultS m_Data)
 {
 	ImportTrace("OpenSlot: before TreeModel");
         PreHIPPro_->m_TreeModel->setInpData(m_Data);
+        PreHIPPro_->RefreshTree();
         ImportTrace("OpenSlot: after TreeModel");
     if (viewWindow_){
         viewWindow_->TabView(1);//tabView_->setCurrentIndex(1);
@@ -2275,76 +2290,235 @@ void MainWindow::MainSaveForgingInpSlot()
 }
 void MainWindow::InpCheckSlot()
 {
-	QString CheStr,CheStr1,CheStr2,CheStr3;
-	int   Nsize,Nsize1,Nsize2,Nsize3;
-	int   Nsize4=0;
+    if (!m_CheckDlg) {
+        m_CheckDlg = new Check(this);
+    } else {
+        delete m_CheckDlg;
+        m_CheckDlg = new Check(this);
+    }
+    m_CheckDlg->clearResults();
 
-	CheStr=m_HpPartDlg->m_NodeElSetData.NodeInpData.strNodeTitle;
-	Nsize=m_HpPartDlg->m_NodeElSetData.NodeInpData.strData.size();
-	if(CheStr=="*Node"&&Nsize<=0)"错误:缺少节点信息";
-	Nsize=m_HpPartDlg->m_NodeElSetData.ELInpData.strELType.size();
-	Nsize1=m_HpPartDlg->m_NodeElSetData.ELInpData.strData.size();
-	Nsize2=m_HpPartDlg->m_NodeElSetData.ELInpData.NumberE.size();
-	Nsize3=m_HpPartDlg->m_NodeElSetData.ELInpData.ElementType.size();
-	for(int i=0;i<Nsize2;i++){
-		Nsize4+=m_HpPartDlg->m_NodeElSetData.ELInpData.NumberE.at(i);
-	}
-	if(Nsize>0&&Nsize1<=0||Nsize2!=Nsize3||Nsize1!=Nsize4)"错误:缺少单元信息";
-	Nsize=m_HpBCDlg->m_nodeBCList.size();
-	for(int i=0;i<Nsize;i++){
-         CheStr=m_HpBCDlg->m_nodeBCList.at(i).strBoundaryName;
-         Nsize1=m_HpBCDlg->m_nodeBCList.at(i).strPSetName.size();
-		 Nsize2=m_HpBCDlg->m_nodeBCList.at(i).strURstyle.size();
-		 if(CheStr=="Boundary"&&Nsize1<=0||CheStr=="Boundary"&&Nsize2<=0)"警告:缺少部分边界条件，有可能会造成计算无法进行";
-	}
-	Nsize=m_HpSolveSetDlg->m_nodeVarList.size();
-	for(int i=0;i<Nsize;i++){
-		CheStr=m_HpSolveSetDlg->m_nodeVarList.at(i).strELInclude;
-		CheStr1=m_HpSolveSetDlg->m_nodeVarList.at(i).strNInclude;
-		CheStr2=m_HpSolveSetDlg->m_nodeVarList.at(i).strTimeOrFreqName;
-		CheStr3=m_HpSolveSetDlg->m_nodeVarList.at(i).strTname;
-		if(CheStr!=""&&CheStr1!="")"警告:缺少结果的输出";
-		if(CheStr2=="TIME POINTS"&&CheStr3=="")"警告:结果变量按照时间间隔输出时，缺少必要的时间间隔信息";
-	}
-	Nsize=m_HpSystemDlg->m_nodeHPSystemRList.size();
-	Nsize1=m_HpSystemDlg->m_nodeHPSystemFList.size();
-	Nsize2=m_HpSolveSetDlg->m_nodeHPPhyList.size();
-	CheStr=m_HpSolveSetDlg->m_nodeHPPhyList.at(0).strStyle;
-	CheStr1=m_HpSolveSetDlg->m_nodeHPPhyList.at(0).strAbsZero;
-	CheStr2=m_HpSolveSetDlg->m_nodeHPPhyList.at(0).strStefanBoltzman;
-	if(Nsize>0||Nsize1>0&&Nsize2<=0||CheStr=="")"错误:计算模型中包含对流/辐射边界信息，但物理常数尚未指定";
-	if(Nsize>0||Nsize1>0&&CheStr1=="")"错误:计算模型中包含对流/辐射边界信息，但尚未指定绝对零度";
-	if(Nsize>0||Nsize1>0&&CheStr2=="")"错误:计算模型中包含对流/辐射边界信息，但尚未指定波尔兹曼常数";
-	for(int i=0;i<Nsize;i++){
-		CheStr=m_HpSystemDlg->m_nodeHPSystemRList.at(i).strElsetName;
-		CheStr1=m_HpSystemDlg->m_nodeHPSystemRList.at(i).strFilmRadiateAmpName;
-		CheStr2=m_HpSystemDlg->m_nodeHPSystemRList.at(i).strAmplitudeName;
-		if(CheStr1!=""){
-		}
-		if(CheStr2!=""){
-		}
-	}
-	for(int i=0;i<Nsize1;i++){
-		CheStr=m_HpSystemDlg->m_nodeHPSystemFList.at(i).strElsetName;
-		CheStr1=m_HpSystemDlg->m_nodeHPSystemFList.at(i).strFilmRadiateAmpName;
-		CheStr2=m_HpSystemDlg->m_nodeHPSystemFList.at(i).strAmplitudeName;
-	}
-	m_HpPartDlg->m_nodeSList;
-	m_HpPartDlg->m_nodeMList;
-	m_HpPartDlg->m_nodeSList;
-	m_HpPartDlg->m_HpTTTDataInps;
-	m_HIPSystemDlg->m_nodeCurveList;
-	m_ForgingSystemDlg->m_CurveList;
-	m_ForgingContactDlg->m_OutPutContInfS;
-	m_ThermalBoundaryDlg->m_CurveList;
-	m_HpInitDlg->m_nodeInitList;
-	m_HpSolveSetDlg->m_nodeVarList;
-	m_HpSolveSetDlg->m_nodeHPSolveList;
-	m_HIPSystemDlg->m_nodeHIPSystemList;
-	m_ForgingSystemDlg->m_OutPutFSystemInfS;	
-    m_HpBCDlg->m_nodeBCList;
-	m_ThermalBoundaryDlg->m_OutPutTBFList;
-	m_ThermalBoundaryDlg->m_OutPutTBRList;
+    QString CheStr, CheStr1, CheStr2, CheStr3;
+    int Nsize, Nsize1, Nsize2, Nsize3;
+    int Nsize4 = 0;
+    bool hasError = false;
+    bool hasWarning = false;
+
+    // ---- Part (node + element) ----
+    CheStr = m_HpPartDlg->m_NodeElSetData.NodeInpData.strNodeTitle;
+    Nsize = m_HpPartDlg->m_NodeElSetData.NodeInpData.strData.size();
+    if (CheStr == "*Node" && Nsize <= 0) {
+        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("Error: missing node data"), Check::Error);
+        hasError = true;
+    } else if (CheStr == "*Node" && Nsize > 0) {
+        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("Pass: nodes defined"), Check::Pass);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("Warning: node section not found"), Check::Warning);
+        hasWarning = true;
+    }
+    Nsize = m_HpPartDlg->m_NodeElSetData.ELInpData.strELType.size();
+    Nsize1 = m_HpPartDlg->m_NodeElSetData.ELInpData.strData.size();
+    Nsize2 = m_HpPartDlg->m_NodeElSetData.ELInpData.NumberE.size();
+    Nsize3 = m_HpPartDlg->m_NodeElSetData.ELInpData.ElementType.size();
+    Nsize4 = 0;
+    for (int i = 0; i < Nsize2; i++) {
+        Nsize4 += m_HpPartDlg->m_NodeElSetData.ELInpData.NumberE.at(i);
+    }
+    if (Nsize > 0 && Nsize1 <= 0 || Nsize2 != Nsize3 || Nsize1 != Nsize4) {
+        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("Error: missing or inconsistent element data"), Check::Error);
+        hasError = true;
+    } else if (Nsize > 0) {
+        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("Pass: elements defined"), Check::Pass);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("Warning: no elements defined"), Check::Warning);
+        hasWarning = true;
+    }
+
+    // ---- Node Set ----
+    if (m_HpPartDlg->m_nodeSList.size() > 0) {
+        m_CheckDlg->addResult(m_CheckDlg->NodeSetItem, tr("Pass: node sets defined"), Check::Pass);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->NodeSetItem, tr("Warning: no node sets"), Check::Warning);
+        hasWarning = true;
+    }
+
+    // ---- Element Set ----
+    if (m_HpPartDlg->m_nodeMList.size() > 0) {
+        m_CheckDlg->addResult(m_CheckDlg->ElementSetItem, tr("Pass: element sets defined"), Check::Pass);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->ElementSetItem, tr("Warning: no element sets"), Check::Warning);
+        hasWarning = true;
+    }
+
+    // ---- Surface Set ----
+    if (m_PElSfSetDlg) {
+        m_CheckDlg->addResult(m_CheckDlg->SurfaceSetItem, tr("Surface set check available"), Check::Pass);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->SurfaceSetItem, tr("Warning: surface set dialog not initialized"), Check::Warning);
+        hasWarning = true;
+    }
+
+    // ---- Material ----
+    if (m_HpPartDlg->m_nodeMList.size() > 0) {
+        m_CheckDlg->addResult(m_CheckDlg->MaterialItem, tr("Pass: material data defined"), Check::Pass);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->MaterialItem, tr("Warning: no material data"), Check::Warning);
+        hasWarning = true;
+    }
+
+    // ---- Boundary ----
+    Nsize = m_HpBCDlg->m_nodeBCList.size();
+    if (Nsize <= 0) {
+        m_CheckDlg->addResult(m_CheckDlg->BoundaryItem, tr("Warning: no boundary conditions"), Check::Warning);
+        hasWarning = true;
+    } else {
+        bool bcOk = true;
+        for (int i = 0; i < Nsize; i++) {
+            CheStr = m_HpBCDlg->m_nodeBCList.at(i).strBoundaryName;
+            Nsize1 = m_HpBCDlg->m_nodeBCList.at(i).strPSetName.size();
+            Nsize2 = m_HpBCDlg->m_nodeBCList.at(i).strURstyle.size();
+            if (CheStr == "Boundary" && Nsize1 <= 0 || CheStr == "Boundary" && Nsize2 <= 0) {
+                m_CheckDlg->addResult(m_CheckDlg->BoundaryItem, tr("Warning: boundary missing set or constraint type"), Check::Warning);
+                hasWarning = true;
+                bcOk = false;
+            }
+        }
+        if (bcOk) {
+            m_CheckDlg->addResult(m_CheckDlg->BoundaryItem, tr("Pass: boundary conditions defined"), Check::Pass);
+        }
+    }
+
+    // ---- Contact ----
+    if (m_ForgingContactDlg && m_ForgingContactDlg->m_OutPutContInfS.size() > 0) {
+        m_CheckDlg->addResult(m_CheckDlg->ContactItem, tr("Pass: contact defined"), Check::Pass);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->ContactItem, tr("Pass: no contact (optional)"), Check::Pass);
+    }
+
+    // ---- Initialization ----
+    if (m_HpInitDlg->m_nodeInitList.size() > 0) {
+        m_CheckDlg->addResult(m_CheckDlg->InitializationItem, tr("Pass: initialization defined"), Check::Pass);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->InitializationItem, tr("Warning: no initialization"), Check::Warning);
+        hasWarning = true;
+    }
+
+    // ---- Thermal Boundary ----
+    Nsize = m_ThermalBoundaryDlg->m_OutPutTBFList.size();
+    Nsize1 = m_ThermalBoundaryDlg->m_OutPutTBRList.size();
+    if (Nsize > 0 || Nsize1 > 0) {
+        m_CheckDlg->addResult(m_CheckDlg->ThermalItem, tr("Pass: thermal boundary defined"), Check::Pass);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->ThermalItem, tr("Pass: no thermal boundary (optional)"), Check::Pass);
+    }
+
+    // ---- Loading ----
+    Nsize = m_HpSystemDlg->m_nodeHPSystemFList.size();
+    Nsize1 = m_HpSystemDlg->m_nodeHPSystemRList.size();
+    if (Nsize > 0 || Nsize1 > 0) {
+        m_CheckDlg->addResult(m_CheckDlg->LodingItem, tr("Pass: loads defined"), Check::Pass);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->LodingItem, tr("Warning: no loads defined"), Check::Warning);
+        hasWarning = true;
+    }
+
+    // ---- Motion ----
+    m_CheckDlg->addResult(m_CheckDlg->MotionItem, tr("Pass: motion check (not configured)"), Check::Pass);
+
+    // ---- Casting System ----
+    if (m_contextCategoryCasting) {
+        m_CheckDlg->addResult(m_CheckDlg->CastingSystemItem, tr("Pass: casting system active"), Check::Pass);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->CastingSystemItem, tr("Pass: casting not active (optional)"), Check::Pass);
+    }
+
+    // ---- HP System (Heat Treatment) ----
+    Nsize = m_HpSolveSetDlg->m_nodeHPSolveList.size();
+    if (Nsize > 0) {
+        m_CheckDlg->addResult(m_CheckDlg->HPSystemItem, tr("Pass: heat treatment steps defined"), Check::Pass);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->HPSystemItem, tr("Pass: no heat treatment (optional)"), Check::Pass);
+    }
+
+    // ---- HIP System ----
+    Nsize = m_HIPSystemDlg->m_nodeHIPSystemList.size();
+    if (Nsize > 0) {
+        m_CheckDlg->addResult(m_CheckDlg->HIPSystemItem, tr("Pass: HIP steps defined"), Check::Pass);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->HIPSystemItem, tr("Pass: no HIP (optional)"), Check::Pass);
+    }
+
+    // ---- Variable Output ----
+    Nsize = m_HpSolveSetDlg->m_nodeVarList.size();
+    if (Nsize <= 0) {
+        m_CheckDlg->addResult(m_CheckDlg->VariableOutputItem, tr("Error: no variable output defined"), Check::Error);
+        hasError = true;
+    } else {
+        bool varOk = true;
+        for (int i = 0; i < Nsize; i++) {
+            CheStr = m_HpSolveSetDlg->m_nodeVarList.at(i).strELInclude;
+            CheStr1 = m_HpSolveSetDlg->m_nodeVarList.at(i).strNInclude;
+            CheStr2 = m_HpSolveSetDlg->m_nodeVarList.at(i).strTimeOrFreqName;
+            CheStr3 = m_HpSolveSetDlg->m_nodeVarList.at(i).strTname;
+            if (CheStr != "" && CheStr1 != "") {
+                m_CheckDlg->addResult(m_CheckDlg->VariableOutputItem, tr("Warning: output result scope may be missing"), Check::Warning);
+                hasWarning = true;
+                varOk = false;
+            }
+            if (CheStr2 == "TIME POINTS" && CheStr3 == "") {
+                m_CheckDlg->addResult(m_CheckDlg->VariableOutputItem, tr("Warning: time-point output missing interval"), Check::Warning);
+                hasWarning = true;
+                varOk = false;
+            }
+        }
+        if (varOk) {
+            m_CheckDlg->addResult(m_CheckDlg->VariableOutputItem, tr("Pass: variable output defined"), Check::Pass);
+        }
+    }
+
+    // ---- Step ----
+    {
+        Nsize = m_HpSystemDlg->m_nodeHPSystemRList.size();
+        Nsize1 = m_HpSystemDlg->m_nodeHPSystemFList.size();
+        Nsize2 = m_HpSolveSetDlg->m_nodeHPPhyList.size();
+        if (Nsize2 > 0) {
+            CheStr = m_HpSolveSetDlg->m_nodeHPPhyList.at(0).strStyle;
+            CheStr1 = m_HpSolveSetDlg->m_nodeHPPhyList.at(0).strAbsZero;
+            CheStr2 = m_HpSolveSetDlg->m_nodeHPPhyList.at(0).strStefanBoltzman;
+            if ((Nsize > 0 || Nsize1 > 0) && (Nsize2 <= 0 || CheStr == "")) {
+                m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("Error: convection/radiation BC requires physics constants"), Check::Error);
+                hasError = true;
+            }
+            if ((Nsize > 0 || Nsize1 > 0) && CheStr1 == "") {
+                m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("Error: missing absolute zero temperature"), Check::Error);
+                hasError = true;
+            }
+            if ((Nsize > 0 || Nsize1 > 0) && CheStr2 == "") {
+                m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("Error: missing Stefan-Boltzmann constant"), Check::Error);
+                hasError = true;
+            }
+        }
+        if (m_HpSolveSetDlg->m_nodeHPSolveList.size() > 0) {
+            m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("Pass: analysis steps defined"), Check::Pass);
+        } else {
+            m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("Warning: no analysis steps"), Check::Warning);
+            hasWarning = true;
+        }
+    }
+
+    // Summary status
+    if (hasError) {
+        m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("SUMMARY: errors found, solve may fail"), Check::Error);
+    } else if (hasWarning) {
+        m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("SUMMARY: warnings only, review before solve"), Check::Warning);
+    } else {
+        m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("SUMMARY: all checks passed"), Check::Pass);
+    }
+
+    m_CheckDlg->CheckItemTree->expandAll();
+    m_CheckDlg->show();
+    m_CheckDlg->raise();
+    m_CheckDlg->activateWindow();
 }
 void MainWindow::SaveSlot()
 {
@@ -2822,11 +2996,16 @@ void MainWindow::ShowProcessDialog(QDialog *dlg)
     if (dlg->parentWidget() != this) {
         dlg->setParent(this, Qt::Dialog);
     }
-    dlg->setWindowModality(Qt::ApplicationModal);
+    const bool vtkPickTool = (dlg == m_PElSfSetDlg ||
+                              dlg == m_AssemblingAct_ ||
+                              dlg == m_DistMeasurementAct_);
+    dlg->setWindowModality(vtkPickTool ? Qt::NonModal : Qt::ApplicationModal);
     RaiseDialogNow(dlg);
-    QTimer::singleShot(0, dlg, SLOT(raise()));
-    QTimer::singleShot(50, dlg, SLOT(raise()));
-    QTimer::singleShot(100, dlg, SLOT(activateWindow()));
+    if (!vtkPickTool) {
+        QTimer::singleShot(0, dlg, SLOT(raise()));
+        QTimer::singleShot(50, dlg, SLOT(raise()));
+        QTimer::singleShot(100, dlg, SLOT(activateWindow()));
+    }
 }
 
 //创建集合

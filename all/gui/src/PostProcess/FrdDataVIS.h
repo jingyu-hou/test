@@ -1,4 +1,4 @@
-#ifndef FRDDATAVIS_H
+﻿#ifndef FRDDATAVIS_H
 #define FRDDATAVIS_H
 
 #include "../ADefineQ.h"
@@ -88,6 +88,7 @@ class FrdDataVIS
         void SetContourScalarbarVisible(int gridId, bool visible, const QString &header = "original");
         void HideAllContours();
         void RaiseVisibleContours(const QString &header, const vector<int> &priorityGridIds);
+        void HideGridActors(int gridId);
         //displacement
         void SetDisplacementVisible(int gridId, const QString &header, bool visible);
         void SetDisplacementColor(VTKColorS Color); 
@@ -105,7 +106,7 @@ class FrdDataVIS
         void Update();
         //get textVIS data
         TextStepIncTimeS GetText(const QString &scalar, const QString &header = "original");
-        //属性
+        // display width
         void SetWidth(int LineW);
 
         bool SetHisPointVtkShow(int PointId,double x, double y, double z);
@@ -176,8 +177,8 @@ private:
 		//map<int, QVTKUnClip*> cutMap_;
         map<int, QString> cutZoneHeaderMap_;
         //--size color
-        VTKColorS PointColor_;//颜色
-        double factor_;//系数（大小）
+        VTKColorS PointColor_;//棰滆壊
+        double factor_;//绯绘暟锛堝ぇ灏忥級
         bool bPointLab_;
         //--output
         vtkCallbackCommand *pointPickCallback_;
@@ -203,3 +204,5 @@ private:
 };
 
 #endif
+
+

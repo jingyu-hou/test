@@ -21,6 +21,7 @@ public:
 public:
     void setStyle();
     void InsertPart(QString strName);
+    void RefreshTree();
     public slots:
     void ChangeModelIndexSlot( const QModelIndex & index );
 private:

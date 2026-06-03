@@ -2,6 +2,7 @@
 #define DistMeasurement_H
 class vtkObject;
 class vtkCallbackCommand;
+class FrdDataVIS;
 #include <QDialog>
 #include <QPushButton>
 #include <QHBoxLayout>
@@ -51,14 +52,19 @@ public:
 private:
 	void setTex(vtkActor *actor,QString str,int pointId, double x, double y, double z);
 	void PointSetSelectedPick2();
+	void StopPointPicking();
     InpDataVIS *inpObj_;  
+	FrdDataVIS *frdVISObj_;
 	vtkCallbackCommand *pointPickCallback_;
+	vtkRenderWindowInteractor *pointPickInteractor_;
+	unsigned long pointPickObserverId_;
 private slots:
 	void PickPointSlot(int);
 	void ClearSlot();
 	void DistantSlot();
 public slots:
 	void InitInpDataSlot2(InpDataVIS *InpObj);
+	void InitFrdSlot2(FrdDataVIS *FrdObj);
 };
 
 #endif // DistMeasurement_H

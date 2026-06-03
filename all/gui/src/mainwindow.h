@@ -65,6 +65,7 @@
 #include "SARibbonButtonGroupWidget.h"
 //#include "Information_return.h"
 #include "appkey.h"//************************
+#include "Check.h"
 //class MainWindow : public QMainWindow
 
 
@@ -320,6 +321,7 @@ public:
      QHPSolveSetDlg *m_HpSolveSetDlg;
      QHPSubmissionDlg *m_HpSubmissionDlg;
 	 QStatistics *m_QStatisticsDlg;
+	 Check *m_CheckDlg;
 
 //--Forging DLG 
       QForgingContactDlg *m_ForgingContactDlg;
