@@ -49,6 +49,7 @@ void vtkVISUnContour::CreateContourDisplay(char* scalarName, char* vectorName)
 
     contourScalarIndex_ = _source->GetScalarIndex(scalarName);
     if (contourScalarIndex_ < 0) return;
+    if (contourScalarIndex_ >= _source->scalarNumber_) return;
 
     // Get scalar range
     if (_source->scalarRange && _source->scalarRange[contourScalarIndex_]) {
@@ -169,16 +170,18 @@ void vtkVISUnContour::CreateContourDisplay(char* scalarName, char* vectorName)
 void vtkVISUnContour::ModifyContourDisplay(char* scalarName)
 {
     if (!_source || !_unActor || !_source->unstruGrid) return;
+    if (!scalarName || !_source->scalarName) return;
+    if (!_source->scalarSource && !_source->cellScalarSource_) return;
 
     int newIdx = _source->GetScalarIndex(scalarName);
-    if (newIdx < 0) return;
+    if (newIdx < 0 || newIdx >= _source->scalarNumber_) return;
     contourScalarIndex_ = newIdx;
 
     // Update scalar data on the unstruGrid
     if (_source->scalarSource && _source->scalarSource[contourScalarIndex_]) {
         if (_source->scalarSource[contourScalarIndex_]->GetDataSize() != 0)
             _source->unstruGrid->GetPointData()->SetScalars(_source->scalarSource[contourScalarIndex_]);
-        else if (_source->cellScalarSource_)
+        else if (_source->cellScalarSource_ && _source->cellScalarSource_[contourScalarIndex_])
             _source->unstruGrid->GetCellData()->SetScalars(_source->cellScalarSource_[contourScalarIndex_]);
     }
 
@@ -319,35 +322,32 @@ void vtkVISUnContour::SetContourType(int type)
 
 void vtkVISUnContour::ModifyContourDisplayType()
 {
-    // Re-create display with new contour type
-    if (_source && _unActor && _source->unstruGrid) {
-        // Remove existing pipeline
-        if (_unActor) {
-            vtkMapper* m = _unActor->GetMapper();
-            if (_renderer) _renderer->RemoveActor(_unActor);
-            _unActor->Delete();
-            _unActor = 0;
-            _contourActor = 0;
-        }
-        // Clean and rebuild
-        if (_vtkObjects) {
-            for (int i = 0; i < _vtkObjectsNum; ++i)
-                if (_vtkObjects[i]) _vtkObjects[i]->Delete();
-            delete[] _vtkObjects;
-            _vtkObjects = 0;
-            _vtkObjectsNum = 0;
-        }
-        conFilter_ = 0;
-        lineContourFilter_ = 0;
-        contourLookupTable_ = 0;
+    if (!_source || !_unActor || !_source->unstruGrid) return;
+    if (contourScalarIndex_ < 0 || contourScalarIndex_ >= _source->scalarNumber_) return;
+    if (!_source->scalarName || !_source->scalarName[contourScalarIndex_]) return;
 
-        // Rebuild pipeline (scalar data should still be set on the grid)
-        // We re-create from scratch using current settings
-        if (_source->scalarName && contourScalarIndex_ >= 0) {
-            char* sname = const_cast<char*>(_source->scalarName[contourScalarIndex_]);
-            CreateContourDisplay(sname);
-        }
+    // Remove existing pipeline
+    if (_unActor) {
+        if (_renderer) _renderer->RemoveActor(_unActor);
+        _unActor->Delete();
+        _unActor = 0;
+        _contourActor = 0;
     }
+    // Clean and rebuild
+    if (_vtkObjects) {
+        for (int i = 0; i < _vtkObjectsNum; ++i)
+            if (_vtkObjects[i]) _vtkObjects[i]->Delete();
+        delete[] _vtkObjects;
+        _vtkObjects = 0;
+        _vtkObjectsNum = 0;
+    }
+    conFilter_ = 0;
+    lineContourFilter_ = 0;
+    csdVectorWarp_ = 0;
+    contourLookupTable_ = 0;
+
+    char* sname = const_cast<char*>(_source->scalarName[contourScalarIndex_]);
+    CreateContourDisplay(sname);
 }
 
 void vtkVISUnContour::SetDeformation(int flag) { deformation_ = flag; }

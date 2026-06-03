@@ -3,17 +3,17 @@
 #include <QScrollArea>
 #include <vtkCallbackCommand.h>
 /*
- 鍚庡鐞嗕腑缁撴灉鏄剧ず鐣岄潰锛?        1.涓昏瀹屾垚浜戝浘銆佺瓑鍊肩嚎绛?        2.鍒楄〃鏄剧ず...
+ 鍚庡鐞嗕腑缁撴灉鏄剧ず鐣岄潰锛?        1.涓昏瀹屾垚云图銆佺瓑鍊肩嚎绛?        2.鍒楄〃鏄剧ず...
 */
 QPostWigResultOutput::QPostWigResultOutput(QWidget *parent)
 	: QWidget(parent)
 {
     m_gbBox0= new QGroupBox(this);
     m_gbBox0->setStyleSheet(QString::fromUtf8("::title{color:blue}"));
-    m_gbBox0->setTitle(tr("绫诲瀷"));
-    m_BtNephogram = new QPushButton(tr("浜戝浘"),m_gbBox0);
+    m_gbBox0->setTitle(tr("类型"));
+    m_BtNephogram = new QPushButton(tr("云图"),m_gbBox0);
     m_BtEqui = new QPushButton(tr("等值线"),m_gbBox0);
-    m_SectionBtn = new QPushButton(tr("鍓栭潰"),m_gbBox0);
+    m_SectionBtn = new QPushButton(tr("剖面"),m_gbBox0);
     
  
     QHBoxLayout *gbH0Layout1=new QHBoxLayout(m_gbBox0);
@@ -24,10 +24,10 @@ QPostWigResultOutput::QPostWigResultOutput(QWidget *parent)
 
     m_gbBox1 = new QGroupBox(this);
     m_gbBox1->setStyleSheet(QString::fromUtf8("::title{color:blue}"));
-    m_gbBox1->setTitle(tr("浜戝浘/绛夊€肩嚎"));
+    m_gbBox1->setTitle(tr("云图/等值线"));
     
-    QLabel *ColorScalarLab = new QLabel(tr("褰╄壊甯︿唤鏁?"),m_gbBox1);
-    QLabel *TransparentLab = new QLabel(tr("閫忔槑搴?"),m_gbBox1);
+    QLabel *ColorScalarLab = new QLabel(tr("彩色带份数:"),m_gbBox1);
+    QLabel *TransparentLab = new QLabel(tr("透明度:"),m_gbBox1);
     m_SpinBoxClr = new QSpinBox(m_gbBox1);
     m_SpinBoxClr->setRange(2,50);
     m_SpinBoxClr->setValue(m_VisParam.m_iClrScalar);
@@ -41,8 +41,8 @@ QPostWigResultOutput::QPostWigResultOutput(QWidget *parent)
     m_gbBox11->setTitle(tr("最值设置"));
     m_gbBox11->setCheckable(true);
     m_gbBox11->setChecked(false);
-    QLabel *CounterMaxLab= new QLabel(tr("鏈€澶у€?"),m_gbBox11);
-    QLabel *CounterMinLab= new QLabel(tr("鏈€灏忓€?"),m_gbBox11);
+    QLabel *CounterMaxLab= new QLabel(tr("最大值:"),m_gbBox11);
+    QLabel *CounterMinLab= new QLabel(tr("最小值:"),m_gbBox11);
     m_CounterMax = new QLineEdit(m_gbBox11);
     m_CounterMin = new QLineEdit(m_gbBox11);
 
@@ -54,12 +54,12 @@ QPostWigResultOutput::QPostWigResultOutput(QWidget *parent)
 
     m_gbBox12 = new QGroupBox(m_gbBox1);
     m_gbBox12->setStyleSheet(QString::fromUtf8("::title{color:blue}"));
-    m_gbBox12->setTitle(tr("缃戞牸鏄剧ず"));
+    m_gbBox12->setTitle(tr("网格显示"));
     m_gbBox12->setCheckable(true);
     m_gbBox12->setChecked(false);
 
     m_Undeformed = new QCheckBox(tr("未变形"));
-    m_GridColorBtn = new QPushButton(tr("棰滆壊"));
+    m_GridColorBtn = new QPushButton(tr("颜色"));
     m_GridColorBtn->setMaximumWidth(50);
     QHBoxLayout *HLayout = new QHBoxLayout(m_gbBox12);
     HLayout->addWidget(m_Undeformed);
@@ -67,7 +67,7 @@ QPostWigResultOutput::QPostWigResultOutput(QWidget *parent)
 
     m_gbBox3 = new QGroupBox(this);
     m_gbBox3->setStyleSheet(QString::fromUtf8("::title{color:blue}"));
-    m_gbBox3->setTitle(tr("鎴潰"));
+    m_gbBox3->setTitle(tr("剖面"));
     //m_gbBox13->s//setUsesScrollButtons
 
     QVBoxLayout *gLayout3 =new QVBoxLayout(m_gbBox3);  
@@ -120,9 +120,9 @@ QPostWigResultOutput::QPostWigResultOutput(QWidget *parent)
     connect(m_SliderTranc,SIGNAL(valueChanged(int)),this,SLOT(SliderTrancSlot(int)));
 
 
-    connect(m_Undeformed, SIGNAL(clicked()),this,SLOT(SetChgShowSlot()));//缃戞牸鏄剧ず->undeformed銆?    connect(m_GridColorBtn,SIGNAL(clicked()),this,SLOT(gridColorBtnSlot()));
-    connect(m_gbBox12,SIGNAL(clicked()),this,SLOT(ChkGridSlot()));//grid->缃戞牸鏄剧ず涓庡惁;
-    connect(m_SectionBtn,SIGNAL(clicked()),this, SLOT(BtnSectionSlot()));//鎴潰鏄剧ず锛?    connect(m_SectionAddBtn,SIGNAL(clicked()),this,SLOT(BtnSectionAddSlot()));//Add Table 
+    connect(m_Undeformed, SIGNAL(clicked()),this,SLOT(SetChgShowSlot()));//网格显示->undeformed銆?    connect(m_GridColorBtn,SIGNAL(clicked()),this,SLOT(gridColorBtnSlot()));
+    connect(m_gbBox12,SIGNAL(clicked()),this,SLOT(ChkGridSlot()));//grid->网格显示涓庡惁;
+    connect(m_SectionBtn,SIGNAL(clicked()),this, SLOT(BtnSectionSlot()));//剖面鏄剧ず锛?    connect(m_SectionAddBtn,SIGNAL(clicked()),this,SLOT(BtnSectionAddSlot()));//Add Table 
     connect(m_SectionDelBtn,SIGNAL(clicked()),this,SLOT(BtnSectionDelSlot()));//Del Table
     
     m_VisParam.m_iOrigCurrentChg = 0;
@@ -454,8 +454,8 @@ CutParamWidget::CutParamWidget(int cutId, QWidget *parent) : QWidget(parent), cu
 {
     m_gbBox0 = new QGroupBox(this);
     //m_gbBox0->setStyleSheet(QString::fromUtf8("::title{color:blue}"));
-    //m_gbBox0->setTitle(tr("娉曠嚎"));
-    m_ZoneVisible = new QCheckBox(tr("瀹炰綋鏄剧ず"), m_gbBox0);
+    //m_gbBox0->setTitle(tr("法线"));
+    m_ZoneVisible = new QCheckBox(tr("实体显示"), m_gbBox0);
     m_OutLineVisible=new QCheckBox(tr("切平面"), m_gbBox0);
     QHBoxLayout *gbBox0LayoutH1_1 = new QHBoxLayout();
     gbBox0LayoutH1_1->addWidget(m_ZoneVisible);
@@ -467,7 +467,7 @@ CutParamWidget::CutParamWidget(int cutId, QWidget *parent) : QWidget(parent), cu
 
     m_gbBox1 = new QGroupBox(this);
     m_gbBox1->setStyleSheet(QString::fromUtf8("::title{color:blue}"));
-    m_gbBox1->setTitle(tr("娉曠嚎"));
+    m_gbBox1->setTitle(tr("法线"));
     //m_gbBox1->setCheckable(true);
     //m_gbBox1->setChecked(false);
 
@@ -496,7 +496,7 @@ CutParamWidget::CutParamWidget(int cutId, QWidget *parent) : QWidget(parent), cu
 
     m_gbBox2 = new QGroupBox(this);
     m_gbBox2->setStyleSheet(QString::fromUtf8("::title{color:blue}"));
-    m_gbBox2->setTitle(tr("浣嶇疆"));
+    m_gbBox2->setTitle(tr("位置"));
     //m_gbBox1->setCheckable(true);
     //m_gbBox1->setChecked(false);
 
@@ -536,13 +536,13 @@ CutParamWidget::CutParamWidget(int cutId, QWidget *parent) : QWidget(parent), cu
 
     m_gbBox3 = new QGroupBox(this);
     m_gbBox3->setStyleSheet(QString::fromUtf8("::title{color:blue}"));
-    m_gbBox3->setTitle(tr("浜戝浘"));
+    m_gbBox3->setTitle(tr("云图"));
     m_gbBox3->setCheckable(true);
     m_gbBox3->setChecked(true);
     QVBoxLayout *gbBox3LayoutV = new QVBoxLayout(m_gbBox3);
-    m_ContourBtn = new QPushButton(tr("浜戝浘"), m_gbBox3);
-    m_ContourLineBtn = new QPushButton(tr("绛夊€肩嚎"), m_gbBox3);
-    m_CoutourClrLab = new QLabel(tr("棰滆壊绛夌骇:"), m_gbBox3);
+    m_ContourBtn = new QPushButton(tr("云图"), m_gbBox3);
+    m_ContourLineBtn = new QPushButton(tr("等值线"), m_gbBox3);
+    m_CoutourClrLab = new QLabel(tr("颜色等级:"), m_gbBox3);
     m_CoutourLevelSpinB = new QSpinBox(m_gbBox3);
     QHBoxLayout *gbBox3LayoutH1_1 = new QHBoxLayout();
     gbBox3LayoutH1_1->addWidget(m_ContourBtn);
@@ -588,7 +588,7 @@ CutParamWidget::CutParamWidget(int cutId, QWidget *parent) : QWidget(parent), cu
     connect(m_LineEditPosX, SIGNAL(editingFinished()), this, SLOT(ChangeCutPosition()));
     connect(m_LineEditPosY, SIGNAL(editingFinished()), this, SLOT(ChangeCutPosition()));
     connect(m_LineEditPosZ, SIGNAL(editingFinished()), this, SLOT(ChangeCutPosition()));
-    connect(m_gbBox3,SIGNAL(clicked()),this,SLOT(ChangeCutContourState()));//浜戝浘鏄剧ず涓庡惁
+    connect(m_gbBox3,SIGNAL(clicked()),this,SLOT(ChangeCutContourState()));//云图鏄剧ず涓庡惁
     connect(m_BtnGroupContour, SIGNAL(buttonClicked(int)), this, SLOT(ChangeCutContourType(int)));
     connect(m_CoutourLevelSpinB,SIGNAL(valueChanged(int)), this, SLOT(ChangeCutContourLevel(int)));
 }

@@ -356,7 +356,7 @@ void XYPlot_Panel::UpdataSelectedPoint(vtkActor *actor,QString strMapperName,int
            Information_Widget::GetInstance()->ShowInformation("No point picked.");
            return;
        }
-       if (strMapperName!="vtkDataSetMapper"){
+       if (strMapperName!="vtkDataSetMapper" && strMapperName!="vtkPolyDataMapper"){
            Information_Widget::GetInstance()->ShowInformation("Point has picked...");
            return;
        }

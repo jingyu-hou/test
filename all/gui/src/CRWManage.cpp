@@ -1919,17 +1919,17 @@ bool CRWManage::ReadSectionInpFile(QFile *file,QString FileName)
                 }
                 ret=ReadNextLine(inText, line); //ret==0
                 SloveList = line.split(",");
-                TmpSlove.strInitStep=SloveList.at(0);
-                TmpSlove.strTotalTime=SloveList.at(1).simplified();
+                TmpSlove.strInitStep=SloveList.size()>0?SloveList.at(0):"0.01";
+                TmpSlove.strTotalTime=SloveList.size()>1?SloveList.at(1).simplified():"1.0";
 				if(SolverType=="*dynamic"){
 					TmpSlove.strMinStep=1e-8;//min
 					TmpSlove.strMaxStep=10000000;//max
 				}else{
-					TmpSlove.strMinStep=SloveList.at(2).simplified();//min
-					TmpSlove.strMaxStep=SloveList.at(3).simplified();//max
+					TmpSlove.strMinStep=SloveList.size()>2?SloveList.at(2).simplified():"1e-8";
+					TmpSlove.strMaxStep=SloveList.size()>3?SloveList.at(3).simplified():"10000000";
 				}
 				int ijk=TmpSolveInps.size();
-				TmpSlove.TimeFrequencyInc=IncOutput.at(ijk);
+				TmpSlove.TimeFrequencyInc=ijk<IncOutput.size()?IncOutput.at(ijk):"";
                 TmpSolveInps.append(TmpSlove);
                 break;
                }
@@ -1951,21 +1951,21 @@ bool CRWManage::ReadSectionInpFile(QFile *file,QString FileName)
 			   if(strList.size()>=3&&strList.at(strList.size()-1)=="totals=only"){
 				   VariabList.Igforce="1";
                    QStringList str=strList.at(1).split("=");
-				   QString str2=str.at(1);
+				   QString str2=str.size()>1?str.at(1):"";
 				   VariabList.NodeSet=str2;
 				   //VariabList.NodeSet1<<str2;
 				   strTmp=strList.at(2);
 				   QStringList  TimeFreqList=strTmp.split("=");
-				   VariabList.strTimeOrFreqName=TimeFreqList.at(0);
-				   strTmp = TimeFreqList.at(1);
+				   VariabList.strTimeOrFreqName=TimeFreqList.size()>0?TimeFreqList.at(0):"";
+				   strTmp = TimeFreqList.size()>1?TimeFreqList.at(1):"";
 				   VariabList.strTname=strTmp.remove("t",Qt::CaseInsensitive).simplified();
 			   }else{
 				   strTmp=strList.at(strList.size()-1);
 				   //VariabList.strTimeOrFreqName=strTmp.remove("TIME POINTS", Qt::CaseInsensitive);//("FREQUENCY",Qt::CaseInsensitive);
 				   //VariabList.strTimeOrFreqName=strTmp.remove("FREQUENCY", Qt::CaseInsensitive);
 				   QStringList  TimeFreqList=strTmp.split("=");
-				   VariabList.strTimeOrFreqName=TimeFreqList.at(0);
-				   strTmp = TimeFreqList.at(1);
+				   VariabList.strTimeOrFreqName=TimeFreqList.size()>0?TimeFreqList.at(0):"";
+				   strTmp = TimeFreqList.size()>1?TimeFreqList.at(1):"";
 				   VariabList.strTname=strTmp.remove("t",Qt::CaseInsensitive).simplified();
 			   }
                ret=ReadNextLine(inText, line);//ret==0
@@ -1983,19 +1983,19 @@ bool CRWManage::ReadSectionInpFile(QFile *file,QString FileName)
 			   if(strList.size()>=3&&strList.at(strList.size()-1)=="totals=only"){
 				   VariabList.Igforce="1";
 				   QStringList str=strList.at(1).split("=");
-				   QString str2=str.at(1);
+				   QString str2=str.size()>1?str.at(1):"";
 				   VariabList.NodeSet=str2;
 				   strTmp=strList.at(2);
 				   QStringList  TimeFreqList=strTmp.split("=");
-				   VariabList.strTimeOrFreqName=TimeFreqList.at(0);
-				   strTmp = TimeFreqList.at(1);
+				   VariabList.strTimeOrFreqName=TimeFreqList.size()>0?TimeFreqList.at(0):"";
+				   strTmp = TimeFreqList.size()>1?TimeFreqList.at(1):"";
 				   VariabList.strTname=strTmp.remove("t",Qt::CaseInsensitive).simplified();
 			   }else{
 				   strTmp=strList.at(strList.size()-1);
 				   QStringList  TimeFreqList=strTmp.split("=");
-				   VariabList.strTimeOrFreqName=TimeFreqList.at(0);
+				   VariabList.strTimeOrFreqName=TimeFreqList.size()>0?TimeFreqList.at(0):"";
 				   VariabList.strELFile=strList.at(0);
-				   strTmp = TimeFreqList.at(1);
+				   strTmp = TimeFreqList.size()>1?TimeFreqList.at(1):"";
 				   VariabList.strTname=strTmp.remove("t",Qt::CaseInsensitive).simplified();
                    }
                    ret=ReadNextLine(inText,line);
@@ -2021,9 +2021,18 @@ bool CRWManage::ReadSectionInpFile(QFile *file,QString FileName)
                    if (strTmp.size()>1){
 					   if(TMaterial.at(0)=="*material"||TMaterial.at(0)=="*boundary"||
 						   TMaterial.at(0)=="*physicalconstants"||TMaterial.at(0)=="*initialconditions"||
-						   TMaterial.at(0)=="*amplitude"||TMaterial.at(0)=="*surfaceinteraction"){
+						   TMaterial.at(0)=="*amplitude"||TMaterial.at(0)=="*surfaceinteraction"||
+						   TMaterial.at(0)=="*nset"||TMaterial.at(0)=="*elset"||
+						   TMaterial.at(0)=="*step"||TMaterial.at(0)=="*cload"||
+						   TMaterial.at(0)=="*dload"||TMaterial.at(0)=="*endstep"||
+						   TMaterial.at(0)=="*nodefile"||TMaterial.at(0)=="*nodeprint"||
+						   TMaterial.at(0)=="*elfile"||TMaterial.at(0)=="*elprint"||
+						   TMaterial.at(0)=="*solidsection"||TMaterial.at(0)=="*radiate"||
+						   TMaterial.at(0)=="*film"||TMaterial.at(0)=="*contactpair"||
+						   TMaterial.at(0)=="*tie"||TMaterial.at(0)=="*surface"||
+						   TMaterial.at(0)=="*dsload"||TMaterial.at(0)=="*timepoints"){
                         break;
-                     }                       
+                     }
                    }
 				   QString str=line.remove("*").simplified();
                    MaterialList.strMaterialStyleName<<str;

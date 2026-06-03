@@ -85,6 +85,15 @@ void FrdDataVIS::Swap(FrdDataVIS &other)
     bool tmpLoading = loading_;
     loading_ = other.loading_;
     other.loading_ = tmpLoading;
+
+    shadeMap_.swap(other.shadeMap_);
+    meshMap_.swap(other.meshMap_);
+    allEdgeMeshMap_.swap(other.allEdgeMeshMap_);
+    outlineMap_.swap(other.outlineMap_);
+    headerDisplacementsMap_.swap(other.headerDisplacementsMap_);
+    headerContoursMap_.swap(other.headerContoursMap_);
+    GridcutIdMap_.swap(other.GridcutIdMap_);
+    cutZoneHeaderMap_.swap(other.cutZoneHeaderMap_);
 }
 
 void FrdDataVIS::Clean()
@@ -545,11 +554,12 @@ void FrdDataVIS::SetContourType(int gridId, const QString &scalar, int type, con
     {
         return;
     }
-    if (frdSource_->IsScalarValuesDiff(scalar))
-    {
-        headerContoursMap_[header][gridId]->SetContourType(type);
-        headerContoursMap_[header][gridId]->ModifyContourDisplayType();
-    }
+    if (!frdSource_->IsScalarValuesDiff(scalar))  return;
+    vtkVISUnContour *obj = headerContoursMap_[header][gridId];
+    int oldType = obj->GetContourType();
+    obj->SetContourType(type);
+    if (oldType != type)
+        obj->ModifyContourDisplayType();
 }
 
 void FrdDataVIS::SetContourLevel(int gridId, int level, const QString &header)

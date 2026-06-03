@@ -376,6 +376,7 @@ private slots:
 	void HIPSolveActKillSlot();
 private:
 	bool m_isImporting;
+    bool StartGmshProcess(bool restart);
 	void InitDlg();
 	void createActions();
 	void createDockWindows();
@@ -527,3 +528,4 @@ public:
 };
 
 #endif // MAINWINDOW_H
+

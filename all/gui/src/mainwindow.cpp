@@ -58,6 +58,52 @@ static void SetUtf8WindowTitleForWm(QWidget *widget)
 #endif
 }
 
+
+static QString FindGmshExecutable()
+{
+    QStringList candidates;
+    const QByteArray envGmsh = qgetenv("AESIM_FM_GMSH");
+    if (!envGmsh.isEmpty()) candidates << QString::fromLocal8Bit(envGmsh);
+
+#ifdef _MSC_VER
+    const QString appDir = QCoreApplication::applicationDirPath();
+    candidates << appDir + "/gmsh-4.8.4-Windows64/gmsh.exe";
+    candidates << appDir + "/../gmsh-4.8.4-Windows64/gmsh.exe";
+    candidates << "D:/WeICME/gmsh-4.8.4-Windows64/gmsh.exe";
+#else
+    candidates << "/mnt/d/WeICME/gmsh-4.8.4-Windows64/gmsh.exe";
+    candidates << "/mnt/d/WeICME/gmsh/gmsh";
+    candidates << QCoreApplication::applicationDirPath() + "/gmsh/gmsh.sh";
+    candidates << QCoreApplication::applicationDirPath() + "/gmsh";
+    candidates << "gmsh";
+#endif
+
+    for (int i = 0; i < candidates.size(); ++i) {
+        const QString path = QDir::cleanPath(candidates.at(i));
+        if (path == "gmsh") return path;
+        QFileInfo info(path);
+        if (info.exists() && info.isFile()) return info.absoluteFilePath();
+    }
+    return QString();
+}
+
+static QString FindGmshStartupGeo()
+{
+    QStringList candidates;
+    const QByteArray envGeo = qgetenv("AESIM_FM_GMSH_GEO");
+    if (!envGeo.isEmpty()) candidates << QString::fromLocal8Bit(envGeo);
+    candidates << QCoreApplication::applicationDirPath() + "/t1.geo";
+    candidates << QCoreApplication::applicationDirPath() + "/untitled.geo";
+    candidates << "/mnt/d/ZZKK/inp/t1.geo";
+    candidates << "/mnt/d/ZZKK/inp/untitled.geo";
+
+    for (int i = 0; i < candidates.size(); ++i) {
+        const QString path = QDir::cleanPath(candidates.at(i));
+        QFileInfo info(path);
+        if (info.exists() && info.isFile()) return info.absoluteFilePath();
+    }
+    return QString();
+}
 static QString SafeGetOpenFileName(QWidget *parent, const QString &caption, const QString &dir, const QString &filter)
 {
     AppLog::File(QString("open dialog caption='%1' dir='%2' filter='%3'")
@@ -2290,13 +2336,11 @@ void MainWindow::MainSaveForgingInpSlot()
 }
 void MainWindow::InpCheckSlot()
 {
-    if (!m_CheckDlg) {
-        m_CheckDlg = new Check(this);
-    } else {
-        delete m_CheckDlg;
-        m_CheckDlg = new Check(this);
+    if (m_CheckDlg) {
+        m_CheckDlg->deleteLater();
+        m_CheckDlg = NULL;
     }
-    m_CheckDlg->clearResults();
+    m_CheckDlg = new Check(this);
 
     QString CheStr, CheStr1, CheStr2, CheStr3;
     int Nsize, Nsize1, Nsize2, Nsize3;
@@ -2308,12 +2352,12 @@ void MainWindow::InpCheckSlot()
     CheStr = m_HpPartDlg->m_NodeElSetData.NodeInpData.strNodeTitle;
     Nsize = m_HpPartDlg->m_NodeElSetData.NodeInpData.strData.size();
     if (CheStr == "*Node" && Nsize <= 0) {
-        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("Error: missing node data"), Check::Error);
+        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("错误：缺少节点数据"), Check::Error);
         hasError = true;
     } else if (CheStr == "*Node" && Nsize > 0) {
-        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("Pass: nodes defined"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("通过：节点已定义"), Check::Pass);
     } else {
-        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("Warning: node section not found"), Check::Warning);
+        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("警告：未找到节点段"), Check::Warning);
         hasWarning = true;
     }
     Nsize = m_HpPartDlg->m_NodeElSetData.ELInpData.strELType.size();
@@ -2325,51 +2369,51 @@ void MainWindow::InpCheckSlot()
         Nsize4 += m_HpPartDlg->m_NodeElSetData.ELInpData.NumberE.at(i);
     }
     if (Nsize > 0 && Nsize1 <= 0 || Nsize2 != Nsize3 || Nsize1 != Nsize4) {
-        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("Error: missing or inconsistent element data"), Check::Error);
+        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("错误：缺少单元数据或数据不一致"), Check::Error);
         hasError = true;
     } else if (Nsize > 0) {
-        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("Pass: elements defined"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("通过：单元已定义"), Check::Pass);
     } else {
-        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("Warning: no elements defined"), Check::Warning);
+        m_CheckDlg->addResult(m_CheckDlg->PartItem, tr("警告：未定义单元"), Check::Warning);
         hasWarning = true;
     }
 
     // ---- Node Set ----
     if (m_HpPartDlg->m_nodeSList.size() > 0) {
-        m_CheckDlg->addResult(m_CheckDlg->NodeSetItem, tr("Pass: node sets defined"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->NodeSetItem, tr("通过：节点集已定义"), Check::Pass);
     } else {
-        m_CheckDlg->addResult(m_CheckDlg->NodeSetItem, tr("Warning: no node sets"), Check::Warning);
+        m_CheckDlg->addResult(m_CheckDlg->NodeSetItem, tr("警告：无节点集"), Check::Warning);
         hasWarning = true;
     }
 
     // ---- Element Set ----
     if (m_HpPartDlg->m_nodeMList.size() > 0) {
-        m_CheckDlg->addResult(m_CheckDlg->ElementSetItem, tr("Pass: element sets defined"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->ElementSetItem, tr("通过：单元集已定义"), Check::Pass);
     } else {
-        m_CheckDlg->addResult(m_CheckDlg->ElementSetItem, tr("Warning: no element sets"), Check::Warning);
+        m_CheckDlg->addResult(m_CheckDlg->ElementSetItem, tr("警告：无单元集"), Check::Warning);
         hasWarning = true;
     }
 
     // ---- Surface Set ----
     if (m_PElSfSetDlg) {
-        m_CheckDlg->addResult(m_CheckDlg->SurfaceSetItem, tr("Surface set check available"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->SurfaceSetItem, tr("面集检查可用"), Check::Pass);
     } else {
-        m_CheckDlg->addResult(m_CheckDlg->SurfaceSetItem, tr("Warning: surface set dialog not initialized"), Check::Warning);
+        m_CheckDlg->addResult(m_CheckDlg->SurfaceSetItem, tr("警告：面集对话框未初始化"), Check::Warning);
         hasWarning = true;
     }
 
     // ---- Material ----
     if (m_HpPartDlg->m_nodeMList.size() > 0) {
-        m_CheckDlg->addResult(m_CheckDlg->MaterialItem, tr("Pass: material data defined"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->MaterialItem, tr("通过：材料数据已定义"), Check::Pass);
     } else {
-        m_CheckDlg->addResult(m_CheckDlg->MaterialItem, tr("Warning: no material data"), Check::Warning);
+        m_CheckDlg->addResult(m_CheckDlg->MaterialItem, tr("警告：无材料数据"), Check::Warning);
         hasWarning = true;
     }
 
     // ---- Boundary ----
     Nsize = m_HpBCDlg->m_nodeBCList.size();
     if (Nsize <= 0) {
-        m_CheckDlg->addResult(m_CheckDlg->BoundaryItem, tr("Warning: no boundary conditions"), Check::Warning);
+        m_CheckDlg->addResult(m_CheckDlg->BoundaryItem, tr("警告：未定义边界条件"), Check::Warning);
         hasWarning = true;
     } else {
         bool bcOk = true;
@@ -2378,28 +2422,28 @@ void MainWindow::InpCheckSlot()
             Nsize1 = m_HpBCDlg->m_nodeBCList.at(i).strPSetName.size();
             Nsize2 = m_HpBCDlg->m_nodeBCList.at(i).strURstyle.size();
             if (CheStr == "Boundary" && Nsize1 <= 0 || CheStr == "Boundary" && Nsize2 <= 0) {
-                m_CheckDlg->addResult(m_CheckDlg->BoundaryItem, tr("Warning: boundary missing set or constraint type"), Check::Warning);
+                m_CheckDlg->addResult(m_CheckDlg->BoundaryItem, tr("警告：边界条件缺少集合或约束类型"), Check::Warning);
                 hasWarning = true;
                 bcOk = false;
             }
         }
         if (bcOk) {
-            m_CheckDlg->addResult(m_CheckDlg->BoundaryItem, tr("Pass: boundary conditions defined"), Check::Pass);
+            m_CheckDlg->addResult(m_CheckDlg->BoundaryItem, tr("通过：边界条件已定义"), Check::Pass);
         }
     }
 
     // ---- Contact ----
     if (m_ForgingContactDlg && m_ForgingContactDlg->m_OutPutContInfS.size() > 0) {
-        m_CheckDlg->addResult(m_CheckDlg->ContactItem, tr("Pass: contact defined"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->ContactItem, tr("通过：接触已定义"), Check::Pass);
     } else {
-        m_CheckDlg->addResult(m_CheckDlg->ContactItem, tr("Pass: no contact (optional)"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->ContactItem, tr("通过：无接触（可选）"), Check::Pass);
     }
 
     // ---- Initialization ----
     if (m_HpInitDlg->m_nodeInitList.size() > 0) {
-        m_CheckDlg->addResult(m_CheckDlg->InitializationItem, tr("Pass: initialization defined"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->InitializationItem, tr("通过：初始化已定义"), Check::Pass);
     } else {
-        m_CheckDlg->addResult(m_CheckDlg->InitializationItem, tr("Warning: no initialization"), Check::Warning);
+        m_CheckDlg->addResult(m_CheckDlg->InitializationItem, tr("警告：未定义初始化"), Check::Warning);
         hasWarning = true;
     }
 
@@ -2407,51 +2451,47 @@ void MainWindow::InpCheckSlot()
     Nsize = m_ThermalBoundaryDlg->m_OutPutTBFList.size();
     Nsize1 = m_ThermalBoundaryDlg->m_OutPutTBRList.size();
     if (Nsize > 0 || Nsize1 > 0) {
-        m_CheckDlg->addResult(m_CheckDlg->ThermalItem, tr("Pass: thermal boundary defined"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->ThermalItem, tr("通过：热边界已定义"), Check::Pass);
     } else {
-        m_CheckDlg->addResult(m_CheckDlg->ThermalItem, tr("Pass: no thermal boundary (optional)"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->ThermalItem, tr("通过：无热边界（可选）"), Check::Pass);
     }
 
     // ---- Loading ----
     Nsize = m_HpSystemDlg->m_nodeHPSystemFList.size();
     Nsize1 = m_HpSystemDlg->m_nodeHPSystemRList.size();
     if (Nsize > 0 || Nsize1 > 0) {
-        m_CheckDlg->addResult(m_CheckDlg->LodingItem, tr("Pass: loads defined"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->LodingItem, tr("通过：载荷已定义"), Check::Pass);
     } else {
-        m_CheckDlg->addResult(m_CheckDlg->LodingItem, tr("Warning: no loads defined"), Check::Warning);
+        m_CheckDlg->addResult(m_CheckDlg->LodingItem, tr("警告：未定义载荷"), Check::Warning);
         hasWarning = true;
     }
 
     // ---- Motion ----
-    m_CheckDlg->addResult(m_CheckDlg->MotionItem, tr("Pass: motion check (not configured)"), Check::Pass);
+    m_CheckDlg->addResult(m_CheckDlg->MotionItem, tr("通过：运动检查（未配置）"), Check::Pass);
 
-    // ---- Casting System ----
-    if (m_contextCategoryCasting) {
-        m_CheckDlg->addResult(m_CheckDlg->CastingSystemItem, tr("Pass: casting system active"), Check::Pass);
-    } else {
-        m_CheckDlg->addResult(m_CheckDlg->CastingSystemItem, tr("Pass: casting not active (optional)"), Check::Pass);
-    }
+    // ---- Casting System disabled ----
+    m_CheckDlg->CastingSystemItem->setHidden(true);
 
     // ---- HP System (Heat Treatment) ----
     Nsize = m_HpSolveSetDlg->m_nodeHPSolveList.size();
     if (Nsize > 0) {
-        m_CheckDlg->addResult(m_CheckDlg->HPSystemItem, tr("Pass: heat treatment steps defined"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->HPSystemItem, tr("通过：热处理步骤已定义"), Check::Pass);
     } else {
-        m_CheckDlg->addResult(m_CheckDlg->HPSystemItem, tr("Pass: no heat treatment (optional)"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->HPSystemItem, tr("通过：无热处理（可选）"), Check::Pass);
     }
 
     // ---- HIP System ----
     Nsize = m_HIPSystemDlg->m_nodeHIPSystemList.size();
     if (Nsize > 0) {
-        m_CheckDlg->addResult(m_CheckDlg->HIPSystemItem, tr("Pass: HIP steps defined"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->HIPSystemItem, tr("通过：HIP步骤已定义"), Check::Pass);
     } else {
-        m_CheckDlg->addResult(m_CheckDlg->HIPSystemItem, tr("Pass: no HIP (optional)"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->HIPSystemItem, tr("通过：无HIP（可选）"), Check::Pass);
     }
 
     // ---- Variable Output ----
     Nsize = m_HpSolveSetDlg->m_nodeVarList.size();
     if (Nsize <= 0) {
-        m_CheckDlg->addResult(m_CheckDlg->VariableOutputItem, tr("Error: no variable output defined"), Check::Error);
+        m_CheckDlg->addResult(m_CheckDlg->VariableOutputItem, tr("错误：未定义变量输出"), Check::Error);
         hasError = true;
     } else {
         bool varOk = true;
@@ -2461,18 +2501,18 @@ void MainWindow::InpCheckSlot()
             CheStr2 = m_HpSolveSetDlg->m_nodeVarList.at(i).strTimeOrFreqName;
             CheStr3 = m_HpSolveSetDlg->m_nodeVarList.at(i).strTname;
             if (CheStr != "" && CheStr1 != "") {
-                m_CheckDlg->addResult(m_CheckDlg->VariableOutputItem, tr("Warning: output result scope may be missing"), Check::Warning);
+                m_CheckDlg->addResult(m_CheckDlg->VariableOutputItem, tr("警告：输出结果范围可能缺失"), Check::Warning);
                 hasWarning = true;
                 varOk = false;
             }
             if (CheStr2 == "TIME POINTS" && CheStr3 == "") {
-                m_CheckDlg->addResult(m_CheckDlg->VariableOutputItem, tr("Warning: time-point output missing interval"), Check::Warning);
+                m_CheckDlg->addResult(m_CheckDlg->VariableOutputItem, tr("警告：时间点输出缺少间隔"), Check::Warning);
                 hasWarning = true;
                 varOk = false;
             }
         }
         if (varOk) {
-            m_CheckDlg->addResult(m_CheckDlg->VariableOutputItem, tr("Pass: variable output defined"), Check::Pass);
+            m_CheckDlg->addResult(m_CheckDlg->VariableOutputItem, tr("通过：变量输出已定义"), Check::Pass);
         }
     }
 
@@ -2486,39 +2526,39 @@ void MainWindow::InpCheckSlot()
             CheStr1 = m_HpSolveSetDlg->m_nodeHPPhyList.at(0).strAbsZero;
             CheStr2 = m_HpSolveSetDlg->m_nodeHPPhyList.at(0).strStefanBoltzman;
             if ((Nsize > 0 || Nsize1 > 0) && (Nsize2 <= 0 || CheStr == "")) {
-                m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("Error: convection/radiation BC requires physics constants"), Check::Error);
+                m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("错误：对流/辐射边界需要物理常数"), Check::Error);
                 hasError = true;
             }
             if ((Nsize > 0 || Nsize1 > 0) && CheStr1 == "") {
-                m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("Error: missing absolute zero temperature"), Check::Error);
+                m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("错误：缺少绝对零度温度"), Check::Error);
                 hasError = true;
             }
             if ((Nsize > 0 || Nsize1 > 0) && CheStr2 == "") {
-                m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("Error: missing Stefan-Boltzmann constant"), Check::Error);
+                m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("错误：缺少Stefan-Boltzmann常数"), Check::Error);
                 hasError = true;
             }
         }
         if (m_HpSolveSetDlg->m_nodeHPSolveList.size() > 0) {
-            m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("Pass: analysis steps defined"), Check::Pass);
+            m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("通过：分析步已定义"), Check::Pass);
         } else {
-            m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("Warning: no analysis steps"), Check::Warning);
+            m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("警告：无分析步"), Check::Warning);
             hasWarning = true;
         }
     }
 
     // Summary status
     if (hasError) {
-        m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("SUMMARY: errors found, solve may fail"), Check::Error);
+        m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("总结：发现错误，求解可能失败"), Check::Error);
     } else if (hasWarning) {
-        m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("SUMMARY: warnings only, review before solve"), Check::Warning);
+        m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("总结：仅警告，求解前请检查"), Check::Warning);
     } else {
-        m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("SUMMARY: all checks passed"), Check::Pass);
+        m_CheckDlg->addResult(m_CheckDlg->StepItem, tr("总结：全部检查通过"), Check::Pass);
     }
 
     m_CheckDlg->CheckItemTree->expandAll();
-    m_CheckDlg->show();
-    m_CheckDlg->raise();
-    m_CheckDlg->activateWindow();
+    m_CheckDlg->exec();
+    m_CheckDlg->deleteLater();
+    m_CheckDlg = NULL;
 }
 void MainWindow::SaveSlot()
 {
@@ -2700,75 +2740,78 @@ void MainWindow::treeViewClick( const QModelIndex& index )
     QString strNode = index.data().toString();
 }
 //--Gmsh
+bool MainWindow::StartGmshProcess(bool restart)
+{
+    const QString gmshPath = FindGmshExecutable();
+    if (gmshPath.isEmpty()) {
+        Information_Widget::GetInstance()->ShowInformation(tr("未找到 Gmsh，请检查 AESIM_FM_GMSH 或 /mnt/d/WeICME/gmsh-4.8.4-Windows64/gmsh.exe"));
+        return false;
+    }
+
+    if (GmshProcess != NULL) {
+        if (!restart) {
+            Information_Widget::GetInstance()->ShowInformation(tr("Gmsh 已经启动。"));
+            return true;
+        }
+        GmshProcess->close();
+        if (!GmshProcess->waitForFinished(1500)) {
+            GmshProcess->kill();
+            GmshProcess->waitForFinished(1500);
+        }
+        delete GmshProcess;
+        GmshProcess = NULL;
+    }
+
+    QStringList args;
+    const QString geoPath = FindGmshStartupGeo();
+    if (!geoPath.isEmpty()) args << geoPath;
+
+    GmshProcess = new QProcess(this);
+    connect(GmshProcess, SIGNAL(error(QProcess::ProcessError)), this, SLOT(GmshProcessErrorSlot()));
+    GmshProcess->start(gmshPath, args);
+    if (!GmshProcess->waitForStarted(3000)) {
+        Information_Widget::GetInstance()->ShowInformation(tr("Gmsh 启动失败：") + gmshPath);
+        delete GmshProcess;
+        GmshProcess = NULL;
+        return false;
+    }
+
+    Information_Widget::GetInstance()->ShowInformation(tr("Gmsh 已启动：") + gmshPath);
+    return true;
+}
+
 void MainWindow::GridDivActPrc()
 {
-	dockInfomation_->hide();
-	DockPostPrc_->hide();
-	//DockFrowardPrc_->hide();
+    dockInfomation_->hide();
+    DockPostPrc_->hide();
     DockPreHIPPrc_->hide();
-   if (m_MdiArea->subWindowList().count()>0)
+    if (m_MdiArea->subWindowList().count()>0)
     {
         m_MdiArea->hide();
         viewWindow_->hide();
     }
 
-	GmshWiget->show();
-	
-    if (GmshProcess != NULL)
-    {
-        return;
-    }
+    GmshWiget->show();
     GmshRcW=GmshWiget->width();
     GmshRcH=GmshWiget->height();
-#ifdef _MSC_VER
-	RECT rc;
-	QString &str = QCoreApplication::applicationDirPath(); 
-	//QString &cmd = QString("%1//gmsh-4.3.0-Windows64//gmsh.exe").arg(str);
-    QString &cmd = QString("%1//gmsh.exe").arg(str);
-    GmshProcess= new QProcess;
-    GmshProcess->start(cmd,QStringList()<<"C:\\Users\\adi\\AppData\\Roaming/untitled.geo");
- //   Sleep(300);
-	//QString exeName="FLTK";
-	//QByteArray ba= exeName.toLatin1();
-	//const char *c_str=ba.data();
-	//HWND childHwnd=FindWindowA(c_str,NULL);
-	//HWND ParentHwnd = (HWND)GmshWiget->winId();
-	//LONG TEST=GetWindowLong(childHwnd,GWL_STYLE);//GWL_STYLE);//GCW_ATOM//&~WS_EX_ACCEPTFILES&~WS_EX_MDICHILD;&~WS_CAPTION;
-	//SetWindowLong(childHwnd,(GWL_STYLE),(TEST&~WS_CAPTION&~WS_THICKFRAME));//~WS_CAPTION));
-	//GetClientRect(ParentHwnd,&rc);
-	//SetParent(childHwnd, ParentHwnd);
-	//SetWindowPos(childHwnd,HWND_TOP,0,0,GmshRcW,GmshRcH,SWP_FRAMECHANGED|SWP_SHOWWINDOW);
-	//ShowWindow(childHwnd,SW_SHOW);
-#else 
-    QString str = QCoreApplication::applicationDirPath(); 
-    //QString &cmd = QString("%1//gmsh-4.3.0-Windows64//gmsh.exe").arg(str);
-    QString cmd = str+"/gmsh";
-    GmshProcess= new QProcess(this);
-    GmshProcess->start(cmd,QStringList()<<"t1.geo");
-#endif
-   
+    StartGmshProcess(false);
 }
 void MainWindow::GridDivActPrcClose()
 {
-	GmshWiget->hide();
-	dockInfomation_->show();
-	DockPostPrc_->show();
+    GmshWiget->hide();
+    dockInfomation_->show();
+    DockPostPrc_->show();
     DockPreHIPPrc_->show();
-	//DockFrowardPrc_->show();
-	//viewWindow_->show();
     if (m_MdiArea->subWindowList().count()>0)
     {
         m_MdiArea->show();
         viewWindow_->show();
     }
-    
 }
 void MainWindow::GridDivActPrcReset()
 {
     dockInfomation_->hide();
     DockPostPrc_->hide();
-    //DockFrowardPrc_->hide();
-    //
     DockPreHIPPrc_->hide();
     if (m_MdiArea->subWindowList().count()>0)
     {
@@ -2776,59 +2819,14 @@ void MainWindow::GridDivActPrcReset()
         viewWindow_->hide();
     }
     GmshWiget->show();
-
-    if (GmshProcess != NULL)
-    {
-        GmshProcess->close();
-        delete GmshProcess;
-        GmshProcess=NULL;
-    }
     GmshRcW=GmshWiget->width();
     GmshRcH=GmshWiget->height();
-#ifdef _MSC_VER
-    RECT rc;
-    QString str = QCoreApplication::applicationDirPath(); 
-    //QString &cmd = QString("%1//gmsh-4.3.0-Windows64//gmsh.exe").arg(str);
-    QString cmd = str+"/gmsh.exe";//QString("%1//gmsh.exe").arg(str);
-    GmshProcess= new QProcess;
-    GmshProcess->start(cmd,QStringList()<<"C:\\Users\\adi\\AppData\\Roaming/untitled.geo");
-    Sleep(300);
-    QString exeName="FLTK";
-    QByteArray ba= exeName.toLatin1();
-    const char *c_str=ba.data();
-    HWND childHwnd=FindWindowA(c_str,NULL);
-    HWND ParentHwnd = (HWND)GmshWiget->winId();
-    LONG TEST=GetWindowLong(childHwnd,GWL_STYLE);//GWL_STYLE);//GCW_ATOM//&~WS_EX_ACCEPTFILES&~WS_EX_MDICHILD;&~WS_CAPTION;
-    SetWindowLong(childHwnd,(GWL_STYLE),(TEST&~WS_CAPTION&~WS_THICKFRAME));//~WS_CAPTION));
-    GetClientRect(ParentHwnd,&rc);
-    SetParent(childHwnd, ParentHwnd);
-    SetWindowPos(childHwnd,HWND_TOP,0,0,GmshRcW,GmshRcH,SWP_FRAMECHANGED|SWP_SHOWWINDOW);
-    ShowWindow(childHwnd,SW_SHOW);
-#else
-    QString str = QCoreApplication::applicationDirPath(); 
-    //QString &cmd = QString("%1//gmsh-4.3.0-Windows64//gmsh.exe").arg(str);
-    QString cmd = str+"/gmsh";//QString("%1//gmsh.exe").arg(str);
-    GmshProcess= new QProcess(this);
-    GmshProcess->start(cmd,QStringList()<<"t1.geo");
-#endif 
+    StartGmshProcess(true);
 }
 
 void MainWindow::GridDivActPrcOpen()
 {
-    QString workpath=QDir::currentPath();
-    QString str= QCoreApplication::applicationDirPath();
-    workpath=str.left(str.lastIndexOf("/"));
-#ifdef _MSC_VER 
-   // str+="../gmsh-4.8.4-Windows64/gmsh.exe";
-    workpath+="/gmsh-4.8.4-Windows64/gmsh.exe";
-#else
-  // str+="../gmsh/gmsh.sh";
-   workpath+="/gmsh/gmsh.sh";
-  // qDebug() <<workpath;
-#endif
-    QProcess *RMshProcess= new QProcess(this);
-    RMshProcess->start(workpath);
-   // RMshProcess->start(str);
+    StartGmshProcess(false);
 }
 
 void MainWindow::ViewDirectionChangedSlot(QString direction)
@@ -3621,3 +3619,4 @@ void MainWindow::SolverProcessErrorSlot()
 {
     Information_Widget::GetInstance()->ShowInformation("solver process error occurred");
 }
+

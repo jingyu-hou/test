@@ -58,6 +58,7 @@ public:
     void SetScalarBarEnable(bool enable);
 
     void SetContourType(int type);
+    int GetContourType() const { return contourType_; }
     void ModifyContourDisplayType();
 
     void SetDeformation(int flag);

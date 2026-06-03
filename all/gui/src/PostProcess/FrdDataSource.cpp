@@ -611,40 +611,36 @@ TextStepIncTimeS FrdDataSource::GetStepTimeIncMap(int pointId, const QString &sc
 
 int FrdDataSource::GetPointID(QString strLabel,double x,double y,double z)
 {
-    int id=-1; 
+    int id=-1;
     if (strLabel.isEmpty()) return id;
     int gridId = gridIdsVec_[0];//use any grid is ok, all grids share the same points.
+    vtkPoints *points = 0;
     if (strLabel == "undeformed"){//原始网格
-        vtkPoints *points = idGridMap_[gridId]->GetPoints();
-        int pointNum = points->GetNumberOfPoints();
-        for (int i = 0; i < pointNum; ++i)
-        {
-            double xyz[3];
-            points->GetPoint(i, xyz);
-            if (fabs(xyz[0]-x)<0.00001 &&fabs(xyz[1]-y)<0.00001 && fabs(xyz[2]-z)<0.00001){
-                id = i+1;
-                break;
-            } 
-        }
-        return id;
+        points = idGridMap_[gridId]->GetPoints();
     }else{//变形后网格
-        strLabel=strLabel.left(strLabel.indexOf("-"))+"-DISP";
+        int idx = strLabel.indexOf("-");
+        if (idx < 0) return id;
+        strLabel=strLabel.left(idx)+"-DISP";
         if (dispGridsMap_.find(strLabel) == dispGridsMap_.end()){
-            return   id;
+            return id;
         }
-        vtkPoints *points = dispGridsMap_[strLabel][gridId]->GetPoints();
-        int pointNum = points->GetNumberOfPoints();
-        for (int i = 0; i < pointNum; ++i)
-        {
-            double xyz[3];
-            points->GetPoint(i, xyz);
-            if (fabs(xyz[0]-x)<0.00001 &&fabs(xyz[1]-y)<0.00001 && fabs(xyz[2]-z)<0.00001){
-                id = i+1;
-                break;
-            } 
+        points = dispGridsMap_[strLabel][gridId]->GetPoints();
+    }
+    if (!points) return id;
+    int pointNum = points->GetNumberOfPoints();
+    double minDist2 = 1e30;
+    for (int i = 0; i < pointNum; ++i)
+    {
+        double xyz[3];
+        points->GetPoint(i, xyz);
+        double dx = xyz[0] - x;
+        double dy = xyz[1] - y;
+        double dz = xyz[2] - z;
+        double dist2 = dx*dx + dy*dy + dz*dz;
+        if (dist2 < minDist2){
+            minDist2 = dist2;
+            id = i + 1;
         }
-        return id;
-    } 
-
-   return id;
+    }
+    return id;
 }

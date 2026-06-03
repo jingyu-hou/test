@@ -31,6 +31,16 @@ echo ""
 echo "=== Step 2/2: Building GUI ==="
 cd "$SCRIPT_DIR/gui"
 
+# External VTK headers path (WSL mount of D:\ZZKK\externalized_components)
+if [ -z "${AESIM_FM_DEPS_ROOT:-}" ]; then
+    if [ -d /mnt/d/ZZKK/externalized_components ]; then
+        export AESIM_FM_DEPS_ROOT=/mnt/d/ZZKK/externalized_components
+    elif [ -d /mnt/c/ZZKK/externalized_components ]; then
+        export AESIM_FM_DEPS_ROOT=/mnt/c/ZZKK/externalized_components
+    fi
+fi
+echo "AESIM_FM_DEPS_ROOT=${AESIM_FM_DEPS_ROOT:-not set, using .pro default}"
+
 echo "=== Loading Qt4 environment ==="
 if [ -f /mnt/d/AESgui_for_linux/env_qt4.sh ]; then
     source /mnt/d/AESgui_for_linux/env_qt4.sh
@@ -45,6 +55,9 @@ fi
 
 make clean 2>/dev/null || true
 qmake QProject_x64.pro
+if [ -d /home/hjy/src/qt-everywhere-opensource-src-4.8.7 ]; then
+    sed -i "s#/share/apps/Qt-4.8.7#/home/hjy/src/qt-everywhere-opensource-src-4.8.7#g" Makefile
+fi
 make -j$(nproc)
 echo "GUI built: $(pwd)/WeICME"
 

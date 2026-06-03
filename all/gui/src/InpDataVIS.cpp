@@ -149,7 +149,7 @@ void InpDataVIS::SetBCCheckVisible(bool visible, NElSurfChsS Settype)//QString s
 		if (Settype.iType == 0){//--设置点显示
 			BCmeshMap_[Settype.strName]->ChangeRepresentation("Points");
 			vtkActor* vtkActor_ = BCmeshMap_[Settype.strName]->GetActor();
-			vtkActor_->GetProperty()->SetPointSize(5.0);
+			if (vtkActor_) vtkActor_->GetProperty()->SetPointSize(5.0);
 		}else{
 			BCmeshMap_[Settype.strName]->SetMeshLineWidth(1.0);
 		}
@@ -177,7 +177,7 @@ void InpDataVIS::SetBCVisible(bool visible, NElSurfChsS Settype)//QString str)
         if (type == 0){//--设置点显示
             BCmesh_->ChangeRepresentation("Points");
             vtkActor* vtkActor_ = BCmesh_->GetActor();
-            vtkActor_->GetProperty()->SetPointSize(5.0);
+            if (vtkActor_) vtkActor_->GetProperty()->SetPointSize(5.0);
         }else{
             BCmesh_->SetMeshLineWidth(2.0);
         }
@@ -256,9 +256,9 @@ void InpDataVIS::SetMeshActorShow(bool bShow)
         if (mesh_ == 0)  return;
     }
     if (bShow){
-        mesh_->GetActor()->VisibilityOn();
+        vtkActor* _a=mesh_->GetActor();if(_a)_a->VisibilityOn();
     }else{
-        mesh_->GetActor()->VisibilityOff();
+        vtkActor* _a=mesh_->GetActor();if(_a)_a->VisibilityOff();
     }
 
 }

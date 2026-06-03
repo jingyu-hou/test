@@ -111,6 +111,7 @@ private:
     vtkRenderer *render_;
     vtkRenderer *m_axisRenderer;
     vtkAxesActor *m_axisActor;
+    vtkActor *m_axisLabels[3];
 };
 
 class Dialog_BG : public QDialog

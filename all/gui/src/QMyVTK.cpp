@@ -1,4 +1,4 @@
-#include "QMyVTK.h"
+﻿#include "QMyVTK.h"
 #include "vtkCommand.h"
 //#include "./OCCView/QOCCView.h"
 //#include "vtkTextProperty.h"
@@ -9,6 +9,8 @@
 #include "vtkAxesActor.h"
 #include "vtkCaptionActor2D.h"
 #include "vtkTextProperty.h"
+#include "vtkVectorText.h"
+#include "vtkPolyDataMapper.h"
 
 
 QMyVTK* QMyVTK::instance = 0;
@@ -20,6 +22,9 @@ QMyVTK::QMyVTK()
     render_= vtkRenderer::New();
     m_axisRenderer=0;
     m_axisActor=0;
+    m_axisLabels[0]=0;
+    m_axisLabels[1]=0;
+    m_axisLabels[2]=0;
     BackColor();
     //vtkTextActor *m_vtkTextActor= vtkTextActor::New();
     //m_vtkTextActor->SetTextScaleModeToProp();
@@ -43,9 +48,11 @@ QMyVTK::QMyVTK()
 
 QMyVTK::~QMyVTK()
 {
-    vtkRenderWindow *renWin = m_VTKWidget ? m_VTKWidget->GetRenderWindow() : 0;
-    if (renWin && m_axisRenderer) {
-        renWin->RemoveRenderer(m_axisRenderer);
+    for (int i = 0; i < 3; i++) {
+        if (m_axisLabels[i]) {
+            m_axisLabels[i]->Delete();
+            m_axisLabels[i] = 0;
+        }
     }
     if (m_axisActor) {
         m_axisActor->Delete();
@@ -84,11 +91,15 @@ QMyVTK* QMyVTK::GetInstance()
 
 void QMyVTK::clear()
 {
-    vtkRenderWindow *renWin = m_VTKWidget ? m_VTKWidget->GetRenderWindow() : 0;
-    if (renWin && m_axisRenderer) {
-        renWin->RemoveRenderer(m_axisRenderer);
+    for (int i = 0; i < 3; i++) {
+        if (m_axisLabels[i]) {
+            render_->RemoveActor(m_axisLabels[i]);
+            m_axisLabels[i]->Delete();
+            m_axisLabels[i] = 0;
+        }
     }
     if (m_axisActor) {
+        render_->RemoveActor(m_axisActor);
         m_axisActor->Delete();
         m_axisActor = 0;
     }
@@ -220,54 +231,81 @@ void QMyVTK::ViewChange(int index)
 void QMyVTK::Orient()
 {
     vtkRenderWindow *renWin = m_VTKWidget ? m_VTKWidget->GetRenderWindow() : 0;
-    if (!renWin) return;
+    vtkRenderer *renderer = render_;
+    if (!renWin || !renderer) return;
 
-    if (m_axisRenderer == 0) {
-        renWin->SetNumberOfLayers(2);
-
-        m_axisRenderer = vtkRenderer::New();
-        m_axisRenderer->SetLayer(1);
-        m_axisRenderer->SetViewport(0.015, 0.015, 0.18, 0.18);
-        m_axisRenderer->InteractiveOff();
-        m_axisRenderer->SetBackground(1.0, 1.0, 1.0);
-        renWin->AddRenderer(m_axisRenderer);
-
+    if (m_axisActor == 0) {
         m_axisActor = vtkAxesActor::New();
-        m_axisActor->SetTotalLength(1.0, 1.0, 1.0);
-        m_axisActor->SetNormalizedShaftLength(0.72, 0.72, 0.72);
-        m_axisActor->SetNormalizedTipLength(0.28, 0.28, 0.28);
-        m_axisActor->SetNormalizedLabelPosition(1.25, 1.25, 1.25);
         m_axisActor->SetShaftTypeToCylinder();
         m_axisActor->SetTipTypeToCone();
-        m_axisActor->SetCylinderRadius(0.035);
-        m_axisActor->SetConeRadius(0.12);
-        m_axisActor->SetXAxisLabelText("X");
-        m_axisActor->SetYAxisLabelText("Y");
-        m_axisActor->SetZAxisLabelText("Z");
-
+        m_axisActor->SetXAxisLabelText("");
+        m_axisActor->SetYAxisLabelText("");
+        m_axisActor->SetZAxisLabelText("");
         m_axisActor->GetXAxisShaftProperty()->SetColor(1.0, 0.0, 0.0);
         m_axisActor->GetXAxisTipProperty()->SetColor(1.0, 0.0, 0.0);
         m_axisActor->GetYAxisShaftProperty()->SetColor(0.0, 0.65, 0.0);
         m_axisActor->GetYAxisTipProperty()->SetColor(0.0, 0.65, 0.0);
         m_axisActor->GetZAxisShaftProperty()->SetColor(0.0, 0.2, 1.0);
         m_axisActor->GetZAxisTipProperty()->SetColor(0.0, 0.2, 1.0);
+        renderer->AddActor(m_axisActor);
 
-        m_axisActor->GetXAxisCaptionActor2D()->GetCaptionTextProperty()->SetColor(1.0, 0.0, 0.0);
-        m_axisActor->GetYAxisCaptionActor2D()->GetCaptionTextProperty()->SetColor(0.0, 0.65, 0.0);
-        m_axisActor->GetZAxisCaptionActor2D()->GetCaptionTextProperty()->SetColor(0.0, 0.2, 1.0);
-        m_axisActor->GetXAxisCaptionActor2D()->GetCaptionTextProperty()->BoldOn();
-        m_axisActor->GetYAxisCaptionActor2D()->GetCaptionTextProperty()->BoldOn();
-        m_axisActor->GetZAxisCaptionActor2D()->GetCaptionTextProperty()->BoldOn();
-
-        m_axisRenderer->AddActor(m_axisActor);
-        m_axisRenderer->ResetCamera();
+        // Vector text labels for X,Y,Z at axis tips
+        const char *labels[3] = {"X", "Y", "Z"};
+        double lclr[3][3] = {{1,0,0},{0,0.65,0},{0,0.2,1}};
+        for (int i = 0; i < 3; i++) {
+            vtkVectorText *vt = vtkVectorText::New();
+            vt->SetText(labels[i]);
+            vtkPolyDataMapper *pm = vtkPolyDataMapper::New();
+            pm->SetInputConnection(vt->GetOutputPort());
+            m_axisLabels[i] = vtkActor::New();
+            m_axisLabels[i]->SetMapper(pm);
+            m_axisLabels[i]->GetProperty()->SetColor(lclr[i]);
+            renderer->AddActor(m_axisLabels[i]);
+            pm->Delete();
+            vt->Delete();
+        }
     } else {
-        if (m_axisRenderer->GetDraw()) {
-            m_axisRenderer->DrawOff();
-        } else {
-            m_axisRenderer->DrawOn();
+        int vis = !m_axisActor->GetVisibility();
+        m_axisActor->SetVisibility(vis);
+        for (int i = 0; i < 3; i++) {
+            if (m_axisLabels[i]) m_axisLabels[i]->SetVisibility(vis);
         }
     }
+
+    if (m_axisActor->GetVisibility()) {
+        double bounds[6] = {-1.0, 1.0, -1.0, 1.0, -1.0, 1.0};
+        renderer->ComputeVisiblePropBounds(bounds);
+        double dx = bounds[1] - bounds[0];
+        double dy = bounds[3] - bounds[2];
+        double dz = bounds[5] - bounds[4];
+        double len = dx;
+        if (dy > len) len = dy;
+        if (dz > len) len = dz;
+        if (!(len > 0.0) || len > 1.0e100) len = 1.0;
+        double axisLen = len * 0.12;
+        double bx = bounds[0], by = bounds[2], bz = bounds[4];
+
+        m_axisActor->SetTotalLength(axisLen, axisLen, axisLen);
+        m_axisActor->SetPosition(bx, by, bz);
+
+        double ls = axisLen * 0.3;
+        double off = axisLen + ls * 0.8;
+        double lblPos[3][3] = {
+            {bx + off, by, bz},
+            {bx, by + off, bz},
+            {bx, by, bz + off}
+        };
+        for (int i = 0; i < 3; i++) {
+            if (m_axisLabels[i]) {
+                m_axisLabels[i]->SetPosition(lblPos[i]);
+                m_axisLabels[i]->SetScale(ls, ls, ls);
+            }
+        }
+
+        vtkCamera *cam = renderer->GetActiveCamera();
+        if (cam) renderer->ResetCameraClippingRange();
+    }
+
     renWin->Render();
 }
     //vtkRenderer *renderer_=QMyVTK::GetInstance(0)->GetRenderer();
@@ -435,3 +473,4 @@ void Dialog_BG::ModifyBackground(vtkRenderer *renderer, bool isGradient, double 
         renWin->Render();
    
 }
+

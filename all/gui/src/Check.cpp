@@ -1,64 +1,67 @@
 #include "Check.h"
+#include <QVBoxLayout>
 
 Check::Check(QWidget *parent1)
     : QDialog(parent1)
 {
-    setWindowTitle(tr("Check"));
+    setWindowTitle(tr("检查"));
+    setAttribute(Qt::WA_DeleteOnClose, false);
 
     CheckItemTree = new QTreeWidget(this);
     CheckItemTree->setHeaderHidden(true);
 
     PartItem = new QTreeWidgetItem(CheckItemTree);
-    PartItem->setText(0, tr("Part"));
+    PartItem->setText(0, tr("部件"));
 
     NodeSetItem = new QTreeWidgetItem(CheckItemTree);
-    NodeSetItem->setText(0, tr("Node Set"));
+    NodeSetItem->setText(0, tr("节点集"));
 
     ElementSetItem = new QTreeWidgetItem(CheckItemTree);
-    ElementSetItem->setText(0, tr("Element Set"));
+    ElementSetItem->setText(0, tr("单元集"));
 
     SurfaceSetItem = new QTreeWidgetItem(CheckItemTree);
-    SurfaceSetItem->setText(0, tr("Surface Set"));
+    SurfaceSetItem->setText(0, tr("面集"));
 
     MaterialItem = new QTreeWidgetItem(CheckItemTree);
-    MaterialItem->setText(0, tr("Material"));
+    MaterialItem->setText(0, tr("材料"));
 
     BoundaryItem = new QTreeWidgetItem(CheckItemTree);
-    BoundaryItem->setText(0, tr("Boundary"));
+    BoundaryItem->setText(0, tr("边界条件"));
 
     ContactItem = new QTreeWidgetItem(CheckItemTree);
-    ContactItem->setText(0, tr("Contact"));
+    ContactItem->setText(0, tr("接触"));
 
     InitializationItem = new QTreeWidgetItem(CheckItemTree);
-    InitializationItem->setText(0, tr("Initialization"));
+    InitializationItem->setText(0, tr("初始化"));
 
     ThermalItem = new QTreeWidgetItem(CheckItemTree);
-    ThermalItem->setText(0, tr("Thermal Boundary"));
+    ThermalItem->setText(0, tr("热边界"));
 
     LodingItem = new QTreeWidgetItem(CheckItemTree);
-    LodingItem->setText(0, tr("Loading"));
+    LodingItem->setText(0, tr("载荷"));
 
     MotionItem = new QTreeWidgetItem(CheckItemTree);
-    MotionItem->setText(0, tr("Motion"));
+    MotionItem->setText(0, tr("运动"));
 
     CastingSystemItem = new QTreeWidgetItem(CheckItemTree);
-    CastingSystemItem->setText(0, tr("Casting System"));
+    CastingSystemItem->setText(0, tr("铸造系统"));
+    CastingSystemItem->setHidden(true);
 
     HPSystemItem = new QTreeWidgetItem(CheckItemTree);
-    HPSystemItem->setText(0, tr("Heat Treatment"));
+    HPSystemItem->setText(0, tr("热处理"));
 
     HIPSystemItem = new QTreeWidgetItem(CheckItemTree);
-    HIPSystemItem->setText(0, tr("HIP System"));
+    HIPSystemItem->setText(0, tr("HIP系统"));
 
     VariableOutputItem = new QTreeWidgetItem(CheckItemTree);
-    VariableOutputItem->setText(0, tr("Variable Output"));
+    VariableOutputItem->setText(0, tr("变量输出"));
 
     StepItem = new QTreeWidgetItem(CheckItemTree);
-    StepItem->setText(0, tr("Step"));
+    StepItem->setText(0, tr("分析步"));
 
-    QHBoxLayout *VLayout1 = new QHBoxLayout();
-    VLayout1->addWidget(CheckItemTree);
-    setLayout(VLayout1);
+    QVBoxLayout *mainLayout = new QVBoxLayout();
+    mainLayout->addWidget(CheckItemTree);
+    setLayout(mainLayout);
 
     QDesktopWidget *desktopWidget = QApplication::desktop();
     QRect screwnRect = desktopWidget->screenGeometry();
