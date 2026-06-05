@@ -8,6 +8,27 @@ all/gui/tmp/
 all/gui/WeICME
 all/gui/Makefile
 
+# Solver build artifacts
+*.o
+*.dat
+*.frd
+*.sta
+*.cvg
+all/solver/libaesim_solver_ext.a
+all/solver/AESim-FM
+all/solver/AESim-FM_split
+all/solver/spooles.out
+all/components/open_source/calculix/libcalculix_base.a
+
+# Temp and backup files
+*.bak
+*~
+all/gui/logs/
+all/gui/import_trace.log
+all/gui/launch_xvfb.sh
+all/gui/run_gui_test.sh
+all/gui/src/CRWManage.cpp.bak
+
 # Backups of replaced commercial-dependent source files
 *.disabled
 
