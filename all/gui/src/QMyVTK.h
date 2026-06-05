@@ -15,9 +15,11 @@
 #include "QVTKWidget.h"
 #include "vtkActor.h"
 #include "vtkAxesActor.h"
+#include "vtkPropAssembly.h"
 #include "vtkRenderer.h"
 #include "vtkRenderWindow.h"
 #include "vtkRenderWindowInteractor.h"
+#include "vtkOrientationMarkerWidget.h"
 #include "vtkProperty.h"
 
 #include "vtkUnstructuredGrid.h"
@@ -110,6 +112,8 @@ private:
     vtkUnstructuredGrid *m_unGrid_;
     vtkRenderer *render_;
     vtkRenderer *m_axisRenderer;
+    vtkOrientationMarkerWidget *m_axisWidget;
+    vtkPropAssembly *m_axisAssembly;
     vtkAxesActor *m_axisActor;
     vtkActor *m_axisLabels[3];
 };

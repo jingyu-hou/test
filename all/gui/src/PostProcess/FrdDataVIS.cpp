@@ -7,6 +7,7 @@
 #include "FrdDataSource.h"
 #include "FrdDataVIS.h"
 #include "Information_Widget.h"
+#include "AppLog.h"
 #include <vtkCallbackCommand.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
@@ -48,7 +49,11 @@ vtkRenderer* FrdDataVIS::GetBindedRenderer()
 
 void FrdDataVIS::Update()
 {
-    if (renderer_ && renWin_)  renWin_->Render();
+    if (loading_) return;
+    if (!renderer_ || !renWin_) return;
+    AppLog::Write("FRD", "FrdDataVIS::Update BEFORE Render");
+    renWin_->Render();
+    AppLog::Write("FRD", "FrdDataVIS::Update AFTER Render");
 }
 
 void FrdDataVIS::Reset()
@@ -204,7 +209,7 @@ void FrdDataVIS::ShallowCopyFrdData(FrdDataVIS *source)
 }
 void FrdDataVIS::SetShadeVisible(int gridId, bool visible, VTKColorS tmpClr)
 {
-    if (loading_ || frdSource_ == 0) return;
+    if (frdSource_ == 0) return;
     if (shadeMap_.find(gridId) == shadeMap_.end())
     {
         vtkVISUnShadeMesh *shade = CreateShadeMeshObject(gridId, 1);
@@ -312,7 +317,7 @@ vtkVISUnShadeMesh* FrdDataVIS::CreateShadeMeshObject(int gridId, int type)
 
 void FrdDataVIS::SetMeshVisible(int gridId, bool visible, VTKColorS tmpClr)
 {
-    if (loading_ || frdSource_ == 0) return;
+    if (frdSource_ == 0) return;
     if (meshMap_.find(gridId) == meshMap_.end())
     {
         vtkVISUnShadeMesh *mesh = CreateShadeMeshObject(gridId, 0);

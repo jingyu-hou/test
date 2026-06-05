@@ -17,7 +17,7 @@ vtkStandardNewMacro(PointInteractorStyle);
 PElSfSetDlg::PElSfSetDlg(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle(QString::fromUtf8("创建集合"));
+    setWindowTitle("Create Set");
     m_gpbox1=new QGroupBox(tr("创建类型"));
     m_PSetBtn = new QRadioButton(tr("点集合"),m_gpbox1);
     m_ElSetBtn = new QRadioButton(tr("单元集合"),m_gpbox1);

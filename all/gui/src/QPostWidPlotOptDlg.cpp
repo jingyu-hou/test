@@ -1,4 +1,4 @@
-﻿#include "QPostWidPlotOptDlg.h"
+#include "QPostWidPlotOptDlg.h"
 #include <QPainter>
 #include <QAbstractItemDelegate>
 #include <QColorDialog>
@@ -9,7 +9,7 @@ using namespace std;
 QPostWidPlotOptDlg::QPostWidPlotOptDlg(QWidget *parent)
 	: QDialog(parent)
 {
-	setWindowTitle(QString::fromUtf8("绘图选项"));
+	setWindowTitle("Postprocess Properties");
     m_TabWig = new QTabWidget(this);
     TabPage1 = new QPostWidPlotOpt_Basic(m_TabWig);
 	TabPage2 = new QPostWidPlotOpt_Color(m_TabWig);

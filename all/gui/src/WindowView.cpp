@@ -100,9 +100,11 @@ void QWindowView::TabViewSlot()
         AppLog::Write("VIEW", "tab switch ignored: tabView is null");
         return;
     }
+    AppLog::Write("VIEW", QString("TabViewSlot BEFORE: current=%1 m_CurrentIndex=%2")
+                  .arg(tabView_->currentIndex()).arg(m_CurrentIndex));
     tabView_->setTabEnabled(0,true);
     tabView_->setTabEnabled(1,true);
-    AppLog::Write("VIEW", QString("tab switched index=%1").arg(tabView_->currentIndex()));
+    AppLog::Write("VIEW", QString("TabViewSlot AFTER: current=%1").arg(tabView_->currentIndex()));
 }
 
 void QWindowView::RenderCurrentTabSlot()
@@ -112,6 +114,7 @@ void QWindowView::RenderCurrentTabSlot()
 //--center window change tab hide/shown
 void QWindowView::TabView(int index)
 {
+    AppLog::Write("VIEW", QString("TabView(%1) ENTER current=%2").arg(index).arg(tabView_ ? tabView_->currentIndex() : -1));
     tabView_->setTabEnabled(0,true);
     tabView_->setTabEnabled(1,true);
 	switch (index)
@@ -124,9 +127,12 @@ void QWindowView::TabView(int index)
 		}break;
 		default:	break;
 	}
+    AppLog::Write("VIEW", QString("TabView(%1) AFTER setCurrentIndex").arg(index));
     tabView_->setTabEnabled(0,true);
     tabView_->setTabEnabled(1,true);
+    AppLog::Write("VIEW", QString("TabView(%1) BEFORE TabViewSlot").arg(index));
     TabViewSlot();
+    AppLog::Write("VIEW", QString("TabView(%1) EXIT").arg(index));
 }
 
 //--Inp File Mesh Show
@@ -134,7 +140,7 @@ void QWindowView::ShowCurPreData(ReadInpResultS InpData)
 {
     tabView_->setTabEnabled(0,true);
     tabView_->setTabEnabled(1,true);
-    inpVIS_.InitRenderer(QMyVTK::GetInstance(1)->GetRenderer());
+    inpVIS_.InitRenderer(QMyVTK::GetInstance(m_CurrentIndex + 1)->GetRenderer());
     inpVIS_.LoadInpData(&InpData);
     VTKColorS m_ClrInit;
     m_ClrInit.r=0;m_ClrInit.g=1;m_ClrInit.b=0;

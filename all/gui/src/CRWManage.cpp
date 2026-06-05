@@ -3,6 +3,21 @@
 #include <QDateTime>
 #include <QCoreApplication>
 
+static int expectedInpElementFields(QString eType)
+{
+    eType = eType.toLower();
+    if (eType=="c3d20" || eType=="c3d20r") return 21;
+    if (eType=="c3d15") return 16;
+    if (eType=="c3d10" || eType=="c3d10t") return 11;
+    if (eType=="c3d8" || eType=="c3d8r") return 9;
+    if (eType=="c3d6") return 7;
+    if (eType=="c3d4" || eType=="c3d4t") return 5;
+    if (eType=="cax8" || eType=="cax8r" || eType=="cps8" || eType=="cps8r" || eType=="cpe8" || eType=="cpe8r") return 9;
+    if (eType=="cax6" || eType=="cps6" || eType=="cpe6") return 7;
+    if (eType=="cax4" || eType=="cax4r" || eType=="cps4" || eType=="cps4r" || eType=="cpe4" || eType=="cpe4r") return 5;
+    if (eType=="cax3" || eType=="cps3" || eType=="cpe3") return 4;
+    return 0;
+}
 CRWManage::CRWManage(void)
 {
 
@@ -1589,11 +1604,23 @@ bool CRWManage::ReadSectionInpFile(QFile *file,QString FileName)
                     }
                 }
                 ret=ReadNextLine(inText, line);
+                int expectedFields = expectedInpElementFields(tmpEl.strELType);
+                QString mergedElementLine;
                 while(0==ret||ret==-1){
-                    tmpEl.strData.push_back(line);
+                    if (expectedFields > 0) {
+                        if (mergedElementLine.isEmpty()) mergedElementLine = line;
+                        else mergedElementLine += "," + line;
+                        if (mergedElementLine.split(",", QString::SkipEmptyParts).size() >= expectedFields || ret==-1) {
+                            tmpEl.strData.push_back(mergedElementLine);
+                            mergedElementLine.clear();
+                        }
+                    } else {
+                        tmpEl.strData.push_back(line);
+                    }
 					if(ret==-1)break;
                     ret = ReadNextLine(inText, line); 
                 }
+                if (!mergedElementLine.isEmpty()) tmpEl.strData.push_back(mergedElementLine);
 				tmpEl.PartName=PartName;
                 TmpGmshInps.gmshELData.append(tmpEl);
             }else if(strList.at(0)=="*elset"){//ELSET
@@ -1681,10 +1708,26 @@ bool CRWManage::ReadSectionInpFile(QFile *file,QString FileName)
 				   if(strTmp.contains("type="))TmpElInpS.strELType=strTmp.remove("type=", Qt::CaseInsensitive).simplified();
 			   }
                ret=ReadNextLine(inText, line);
+               int expectedFields = expectedInpElementFields(TmpElInpS.strELType);
+               QString mergedElementLine;
                while(0==ret){
+                   if (expectedFields > 0) {
+                       if (mergedElementLine.isEmpty()) mergedElementLine = line;
+                       else mergedElementLine += "," + line;
+                       if (mergedElementLine.split(",", QString::SkipEmptyParts).size() < expectedFields) {
+                           ret = ReadNextLine(inText, line);
+                           continue;
+                       }
+                       line = mergedElementLine;
+                       mergedElementLine.clear();
+                   }
                    NumberEl=NumberEl+1;
                    TmpElInpS.strData.push_back(line);
                    ret = ReadNextLine(inText, line); 
+               }
+               if (!mergedElementLine.isEmpty()) {
+                   NumberEl=NumberEl+1;
+                   TmpElInpS.strData.push_back(mergedElementLine);
                }
 			   
 			   if(NumberEl!=0){
@@ -2527,7 +2570,7 @@ bool CRWManage::ReadSectionInpFile(QFile *file,QString FileName)
      strTime=date.toString("hh:mm:ss yy.MM.dd");
      infoW->ShowInformation("End Time: "+strTime);
 
-    if (TmpNodeInpS.strData.isEmpty() || TmpElInpS.strData.isEmpty()) {
+    if (m_ReadInpResult.TmpNodeInpS.strData.isEmpty() || m_ReadInpResult.TmpElInpS.strData.isEmpty()) {
         infoW->ShowInformation("Read inp file Failed: missing required node/element data.");
         return false;
     }
@@ -2590,11 +2633,23 @@ bool CRWManage::ReadSectionInpFile02(QFile *file,int NodeNumber,int ElementNumbe
 						}
 					}
 					ret=ReadNextLine(inText, line);
+					int expectedFields = expectedInpElementFields(tmpEl.strELType);
+					QString mergedElementLine;
 					while(0==ret||ret==-1){
-						tmpEl.strData.push_back(line);
+						if (expectedFields > 0) {
+							if (mergedElementLine.isEmpty()) mergedElementLine = line;
+							else mergedElementLine += "," + line;
+							if (mergedElementLine.split(",", QString::SkipEmptyParts).size() >= expectedFields || ret==-1) {
+								tmpEl.strData.push_back(mergedElementLine);
+								mergedElementLine.clear();
+							}
+						} else {
+							tmpEl.strData.push_back(line);
+						}
 						if(ret==-1)break;
 						ret = ReadNextLine(inText, line); 
 					}
+					if (!mergedElementLine.isEmpty()) tmpEl.strData.push_back(mergedElementLine);
 					tmpEl.PartName=PartName;
 					TmpGmshInps.gmshELData.append(tmpEl);
 				}else if(strList.at(0)=="*elset"){//ELSET
@@ -2690,7 +2745,19 @@ bool CRWManage::ReadSectionInpFile02(QFile *file,int NodeNumber,int ElementNumbe
 				   if(strTmp.contains("type="))TmpElInpS.strELType=strTmp.remove("type=").simplified();
 			   }
                ret=ReadNextLine(inText, line);
+               int expectedFields = expectedInpElementFields(TmpElInpS.strELType);
+               QString mergedElementLine;
 			   while(0==ret){
+                    if (expectedFields > 0) {
+                        if (mergedElementLine.isEmpty()) mergedElementLine = line;
+                        else mergedElementLine += "," + line;
+                        if (mergedElementLine.split(",", QString::SkipEmptyParts).size() < expectedFields) {
+                            ret = ReadNextLine(inText, line);
+                            continue;
+                        }
+                        line = mergedElementLine;
+                        mergedElementLine.clear();
+                    }
 				    QStringList line2=line.split(",");
 					int ElementID=line2.at(0).toInt()+ElementNumber;
 					QString j33=QString::number(ElementID,10);
@@ -3091,10 +3158,15 @@ bool CRWManage::changeGmshToNormal(NodeELSetInps &saveData,GmshInpS &curData)
 			else Str2+=","+Str.at(j);
 		}
 		QString StrLL=FaceNumber(tmpELdata1.ElementType.at(IJKL),j33,Str);//找出每个单元的面且进行面编号显示
+		if (StrLL.isEmpty()) {
+			tmpELdata1.strData.push_back(Str2);
+			continue;
+		}
 		//QString StrLL=FaceNumber(tmpELdata1.strELType,j33,Str);//找出每个单元的面且进行面编号显示
 		Str=StrLL.split("==");
 		for(int ij=0;ij<Str.size();ij++){
 			QStringList Str21=Str.at(ij).split("=",QString::SkipEmptyParts);
+			if (Str21.size() < 2) continue;
 			if(SurfElement.contains(Str21.at(1)))SurfElement.remove(Str21.at(1));
 			else SurfElement.insert(Str21.at(1),Str21.at(0));//保存每个单元的面编号
 		}
@@ -3370,31 +3442,29 @@ QString CRWManage::sort(int number,QString Str)
 
 QString CRWManage::FaceNumber(QString EType,QString ENumber,QStringList NnodeNumber)
 {
-	QString SurfElement;
-    int iBaseNum=0;
-    if (EType=="c3d6"){iBaseNum = 4;//3个或者4个
-    }else if(EType=="c3d15"){iBaseNum = 8;//6个或8
-    }else if(EType=="c3d8"||EType=="c3d8r"){//4个点
-        iBaseNum = 4;
-       SurfElement=CalcSn2(iBaseNum,EType,ENumber,NnodeNumber);
-    }else if(EType=="c3d20"||EType=="c3d20r"){iBaseNum = 8;
-    }else if(EType=="cps3"||EType=="cpe3"||EType=="cax3"){//三角形（三个点，每个面2个点）
-        iBaseNum = 2;
-       SurfElement=CalcSn2(iBaseNum,EType,ENumber,NnodeNumber);
-    }else if(EType=="cps6"||EType=="cpe6"||EType=="cax6"){iBaseNum = 3;
-    }else if(EType=="cps4"||EType=="cps4r"||EType=="cpe4"||EType=="cpe4r"||EType=="cax4"||EType=="cax4r"){//4变形
-        iBaseNum = 2;
-        SurfElement=CalcSn2(iBaseNum,EType,ENumber,NnodeNumber);
-    }else if (EType=="cps8"||EType=="cps8r"||EType=="cpe8"||EType=="cpe8r"||
-        EType=="cax8"||EType=="cax8r"){iBaseNum = 3;
-    }else if(EType=="c3d4"||EType=="c3d4T"||EType=="c3d10"){
-        iBaseNum = 3;
-        SurfElement=CalcSn2(iBaseNum,EType,ENumber,NnodeNumber);
-    }else if(EType=="c3d10"||EType=="c3d10t"){iBaseNum = 6;
-	} 
-	return SurfElement;
-}	
-
+    QString SurfElement;
+    EType = EType.toLower();
+    int expectedFields = expectedInpElementFields(EType);
+    if (expectedFields > 0 && NnodeNumber.size() < expectedFields) return SurfElement;
+    if (EType=="c3d6" || EType=="c3d15") {
+        SurfElement=CalcSn2(5,EType,ENumber,NnodeNumber);
+    } else if(EType=="c3d8" || EType=="c3d8r") {
+        SurfElement=CalcSn2(4,EType,ENumber,NnodeNumber);
+    } else if(EType=="c3d20" || EType=="c3d20r") {
+        SurfElement=CalcSn2(4,EType,ENumber,NnodeNumber);
+    } else if(EType=="cps3" || EType=="cpe3" || EType=="cax3") {
+        SurfElement=CalcSn2(2,EType,ENumber,NnodeNumber);
+    } else if(EType=="cps6" || EType=="cpe6" || EType=="cax6") {
+        SurfElement=CalcSn2(6,EType,ENumber,NnodeNumber);
+    } else if(EType=="cps4" || EType=="cps4r" || EType=="cpe4" || EType=="cpe4r" || EType=="cax4" || EType=="cax4r") {
+        SurfElement=CalcSn2(2,EType,ENumber,NnodeNumber);
+    } else if (EType=="cps8" || EType=="cps8r" || EType=="cpe8" || EType=="cpe8r" || EType=="cax8" || EType=="cax8r") {
+        SurfElement=CalcSn2(7,EType,ENumber,NnodeNumber);
+    } else if(EType=="c3d4" || EType=="c3d4t" || EType=="c3d10" || EType=="c3d10t") {
+        SurfElement=CalcSn2(3,EType,ENumber,NnodeNumber);
+    }
+    return SurfElement;
+}
 QString CRWManage::CalcSn2(int Num,QString strType,QString ENumber,QStringList NnodeNumber)
 {
 	QString SurfElement="";
@@ -3495,6 +3565,60 @@ QString CRWManage::CalcSn2(int Num,QString strType,QString ENumber,QStringList N
 		Str=ENumber+"_6";
 		SurfElement+="=="+Str+"="+Str3;
 			}break;
+    case 5: {//c3d6/c3d15 wedge, use corner nodes for five faces
+        Str3=ENumber+","+NnodeNumber.at(1)+","+NnodeNumber.at(2)+","+NnodeNumber.at(3);
+        Str3=sort(Str3.split(",").size(),Str3);
+        Str=ENumber+"_1";
+        SurfElement=Str+"="+Str3;
+        Str3=ENumber+","+NnodeNumber.at(4)+","+NnodeNumber.at(6)+","+NnodeNumber.at(5);
+        Str3=sort(Str3.split(",").size(),Str3);
+        Str=ENumber+"_2";
+        SurfElement+="=="+Str+"="+Str3;
+        Str3=ENumber+","+NnodeNumber.at(1)+","+NnodeNumber.at(4)+","+NnodeNumber.at(5)+","+NnodeNumber.at(2);
+        Str3=sort(Str3.split(",").size(),Str3);
+        Str=ENumber+"_3";
+        SurfElement+="=="+Str+"="+Str3;
+        Str3=ENumber+","+NnodeNumber.at(2)+","+NnodeNumber.at(5)+","+NnodeNumber.at(6)+","+NnodeNumber.at(3);
+        Str3=sort(Str3.split(",").size(),Str3);
+        Str=ENumber+"_4";
+        SurfElement+="=="+Str+"="+Str3;
+        Str3=ENumber+","+NnodeNumber.at(3)+","+NnodeNumber.at(6)+","+NnodeNumber.at(4)+","+NnodeNumber.at(1);
+        Str3=sort(Str3.split(",").size(),Str3);
+        Str=ENumber+"_5";
+        SurfElement+="=="+Str+"="+Str3;
+            }break;
+    case 6: {//cps6/cpe6/cax6, use corner nodes for three edges
+        Str3=ENumber+","+NnodeNumber.at(1)+","+NnodeNumber.at(2);
+        Str3=sort(Str3.split(",").size(),Str3);
+        Str=ENumber+"_1";
+        SurfElement=Str+"="+Str3;
+        Str3=ENumber+","+NnodeNumber.at(2)+","+NnodeNumber.at(3);
+        Str3=sort(Str3.split(",").size(),Str3);
+        Str=ENumber+"_2";
+        SurfElement+="=="+Str+"="+Str3;
+        Str3=ENumber+","+NnodeNumber.at(3)+","+NnodeNumber.at(1);
+        Str3=sort(Str3.split(",").size(),Str3);
+        Str=ENumber+"_3";
+        SurfElement+="=="+Str+"="+Str3;
+            }break;
+    case 7: {//cps8/cpe8/cax8, use corner nodes for four edges
+        Str3=ENumber+","+NnodeNumber.at(1)+","+NnodeNumber.at(2);
+        Str3=sort(Str3.split(",").size(),Str3);
+        Str=ENumber+"_1";
+        SurfElement=Str+"="+Str3;
+        Str3=ENumber+","+NnodeNumber.at(2)+","+NnodeNumber.at(3);
+        Str3=sort(Str3.split(",").size(),Str3);
+        Str=ENumber+"_2";
+        SurfElement+="=="+Str+"="+Str3;
+        Str3=ENumber+","+NnodeNumber.at(3)+","+NnodeNumber.at(4);
+        Str3=sort(Str3.split(",").size(),Str3);
+        Str=ENumber+"_3";
+        SurfElement+="=="+Str+"="+Str3;
+        Str3=ENumber+","+NnodeNumber.at(4)+","+NnodeNumber.at(1);
+        Str3=sort(Str3.split(",").size(),Str3);
+        Str=ENumber+"_4";
+        SurfElement+="=="+Str+"="+Str3;
+            }break;
 	default:break;
 	}
 	return SurfElement;

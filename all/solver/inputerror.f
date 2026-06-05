@@ -16,7 +16,7 @@
       character*(*) text
 !
       character*1 inpc(*)
-      character*132 textpart(16)
+      character*132 textpart(26)
 !
       integer ipoinpc(0:*),iline,i,ier
 !

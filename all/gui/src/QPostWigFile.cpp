@@ -167,6 +167,7 @@ bool QPostWigFile::readOpenFrd(QString fileName)
         }
         frdVIS_.Swap(tmpVIS);
     } else {
+        frdVIS_.SetLoading(true);
         bool ret = m_FrdDataPro.ReadFileData(frdVIS_, fileName, m_resultFrd);
         if (!ret) {
             frdVIS_.Reset();
@@ -192,8 +193,20 @@ bool QPostWigFile::readOpenFrd(QString fileName)
     } else {
         AppLog::Write("FRD", "no grid ids after FRD setup");
     }
+    frdVIS_.SetLoading(false);
     if (frdVIS_.GetBindedRenderer()) {
-        AppLog::Write("FRD", "FRD import complete; reset camera/render deferred");
+        vtkRenderer *renderer = frdVIS_.GetBindedRenderer();
+        AppLog::Write("FRD", "readOpenFrd BEFORE ResetCamera");
+        renderer->ResetCamera();
+        vtkRenderWindow *renWin = renderer->GetRenderWindow();
+        if (renWin) {
+            AppLog::Write("FRD", "readOpenFrd BEFORE Render (after ResetCamera)");
+            renWin->Render();
+            AppLog::Write("FRD", "readOpenFrd AFTER Render");
+        }
+        AppLog::Write("FRD", "FRD import complete; renderer updated");
+    } else {
+        AppLog::Write("FRD", "FRD import complete; no bound renderer, render skipped");
     }
     return true;
 }

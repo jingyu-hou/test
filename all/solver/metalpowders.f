@@ -16,7 +16,7 @@
       implicit none
 !
       character*1 inpc(*)
-      character*132 textpart(16)
+      character*132 textpart(26)
 !
       integer nelcon(2,*),nmat,ntmat,ntmat_,istep,istat,ier,
      &  n,key,i,iperturb(2),ncmat_,irstrt(*),iline,ipol,inl,

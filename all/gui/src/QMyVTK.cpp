@@ -21,25 +21,13 @@ QMyVTK::QMyVTK()
     m_VTKWidget = new QSafeVTKWidget();
     render_= vtkRenderer::New();
     m_axisRenderer=0;
+    m_axisWidget=0;
+    m_axisAssembly=0;
     m_axisActor=0;
     m_axisLabels[0]=0;
     m_axisLabels[1]=0;
     m_axisLabels[2]=0;
     BackColor();
-    //vtkTextActor *m_vtkTextActor= vtkTextActor::New();
-    //m_vtkTextActor->SetTextScaleModeToProp();
-    //m_vtkTextActor->SetDisplayPosition(90,50);
-    //m_vtkTextActor->SetInput("vtk text displayed");
-    //m_vtkTextActor->GetActualPosition2Coordinate()->SetCoordinateSystemToNormalizedViewport();
-    //m_vtkTextActor->GetPosition2Coordinate()->SetValue(0.6,0.1);
-    //m_vtkTextActor->GetTextProperty()->SetFontSize(18);
-    //m_vtkTextActor->GetTextProperty()->SetFontFamilyToArial();
-    //m_vtkTextActor->GetTextProperty()->SetJustificationToCentered();
-    //m_vtkTextActor->GetTextProperty()->BoldOn();
-    //m_vtkTextActor->GetTextProperty()->ItalicOn();
-    //m_vtkTextActor->GetTextProperty()->ShadowOn();
-    //m_vtkTextActor->GetTextProperty()->SetColor(0,0,1);
-    //render_->AddViewProp(m_vtkTextActor);
 
     vtkRenderWindow *renWin = m_VTKWidget->GetRenderWindow();
     renWin->AddRenderer(render_);
@@ -48,6 +36,15 @@ QMyVTK::QMyVTK()
 
 QMyVTK::~QMyVTK()
 {
+    if (m_axisWidget) {
+        m_axisWidget->SetEnabled(0);
+        m_axisWidget->Delete();
+        m_axisWidget = 0;
+    }
+    if (m_axisAssembly) {
+        m_axisAssembly->Delete();
+        m_axisAssembly = 0;
+    }
     for (int i = 0; i < 3; i++) {
         if (m_axisLabels[i]) {
             m_axisLabels[i]->Delete();
@@ -58,14 +55,9 @@ QMyVTK::~QMyVTK()
         m_axisActor->Delete();
         m_axisActor = 0;
     }
-    if (m_axisRenderer) {
-        m_axisRenderer->Delete();
-        m_axisRenderer = 0;
-    }
     render_->Delete();
     instance = 0;
 }
-
 QMyVTK* QMyVTK::GetInstance(int id)
 {
     if(m_QVTKWidgetObjectMap.find(id) != m_QVTKWidgetObjectMap.end())
@@ -91,21 +83,24 @@ QMyVTK* QMyVTK::GetInstance()
 
 void QMyVTK::clear()
 {
+    if (m_axisWidget) {
+        m_axisWidget->SetEnabled(0);
+        m_axisWidget->Delete();
+        m_axisWidget = 0;
+    }
+    if (m_axisAssembly) {
+        m_axisAssembly->Delete();
+        m_axisAssembly = 0;
+    }
     for (int i = 0; i < 3; i++) {
         if (m_axisLabels[i]) {
-            render_->RemoveActor(m_axisLabels[i]);
             m_axisLabels[i]->Delete();
             m_axisLabels[i] = 0;
         }
     }
     if (m_axisActor) {
-        render_->RemoveActor(m_axisActor);
         m_axisActor->Delete();
         m_axisActor = 0;
-    }
-    if (m_axisRenderer) {
-        m_axisRenderer->Delete();
-        m_axisRenderer = 0;
     }
     render_->Delete();
     instance = 0;
@@ -119,6 +114,7 @@ vtkRenderer* QMyVTK::GetRenderer()
 {
     return render_;
 }
+
 
 void QMyVTK::ChangeViewDirection(const QString &direction)
 {
@@ -231,27 +227,28 @@ void QMyVTK::ViewChange(int index)
 void QMyVTK::Orient()
 {
     vtkRenderWindow *renWin = m_VTKWidget ? m_VTKWidget->GetRenderWindow() : 0;
-    vtkRenderer *renderer = render_;
-    if (!renWin || !renderer) return;
+    vtkRenderWindowInteractor *interactor = renWin ? renWin->GetInteractor() : 0;
+    if (!renWin || !interactor) return;
 
-    if (m_axisActor == 0) {
+    if (m_axisWidget == 0) {
+        m_axisAssembly = vtkPropAssembly::New();
+
         m_axisActor = vtkAxesActor::New();
         m_axisActor->SetShaftTypeToCylinder();
         m_axisActor->SetTipTypeToCone();
-        m_axisActor->SetXAxisLabelText("");
-        m_axisActor->SetYAxisLabelText("");
-        m_axisActor->SetZAxisLabelText("");
+        m_axisActor->AxisLabelsOff();
+        m_axisActor->SetTotalLength(1.0, 1.0, 1.0);
         m_axisActor->GetXAxisShaftProperty()->SetColor(1.0, 0.0, 0.0);
         m_axisActor->GetXAxisTipProperty()->SetColor(1.0, 0.0, 0.0);
         m_axisActor->GetYAxisShaftProperty()->SetColor(0.0, 0.65, 0.0);
         m_axisActor->GetYAxisTipProperty()->SetColor(0.0, 0.65, 0.0);
         m_axisActor->GetZAxisShaftProperty()->SetColor(0.0, 0.2, 1.0);
         m_axisActor->GetZAxisTipProperty()->SetColor(0.0, 0.2, 1.0);
-        renderer->AddActor(m_axisActor);
+        m_axisAssembly->AddPart(m_axisActor);
 
-        // Vector text labels for X,Y,Z at axis tips
         const char *labels[3] = {"X", "Y", "Z"};
-        double lclr[3][3] = {{1,0,0},{0,0.65,0},{0,0.2,1}};
+        double colors[3][3] = {{1.0, 0.0, 0.0}, {0.0, 0.65, 0.0}, {0.0, 0.2, 1.0}};
+        double pos[3][3] = {{1.15, -0.06, 0.0}, {-0.06, 1.15, 0.0}, {-0.06, 0.0, 1.15}};
         for (int i = 0; i < 3; i++) {
             vtkVectorText *vt = vtkVectorText::New();
             vt->SetText(labels[i]);
@@ -259,73 +256,28 @@ void QMyVTK::Orient()
             pm->SetInputConnection(vt->GetOutputPort());
             m_axisLabels[i] = vtkActor::New();
             m_axisLabels[i]->SetMapper(pm);
-            m_axisLabels[i]->GetProperty()->SetColor(lclr[i]);
-            renderer->AddActor(m_axisLabels[i]);
+            m_axisLabels[i]->SetScale(0.18, 0.18, 0.18);
+            m_axisLabels[i]->SetPosition(pos[i]);
+            m_axisLabels[i]->GetProperty()->SetColor(colors[i]);
+            m_axisAssembly->AddPart(m_axisLabels[i]);
             pm->Delete();
             vt->Delete();
         }
+
+        m_axisWidget = vtkOrientationMarkerWidget::New();
+        m_axisWidget->SetOrientationMarker(m_axisAssembly);
+        m_axisWidget->SetInteractor(interactor);
+        m_axisWidget->SetViewport(0.02, 0.02, 0.16, 0.16);
+        m_axisWidget->SetOutlineColor(0.6, 0.6, 0.6);
+        m_axisWidget->SetEnabled(1);
+        m_axisWidget->InteractiveOff();
     } else {
-        int vis = !m_axisActor->GetVisibility();
-        m_axisActor->SetVisibility(vis);
-        for (int i = 0; i < 3; i++) {
-            if (m_axisLabels[i]) m_axisLabels[i]->SetVisibility(vis);
-        }
-    }
-
-    if (m_axisActor->GetVisibility()) {
-        double bounds[6] = {-1.0, 1.0, -1.0, 1.0, -1.0, 1.0};
-        renderer->ComputeVisiblePropBounds(bounds);
-        double dx = bounds[1] - bounds[0];
-        double dy = bounds[3] - bounds[2];
-        double dz = bounds[5] - bounds[4];
-        double len = dx;
-        if (dy > len) len = dy;
-        if (dz > len) len = dz;
-        if (!(len > 0.0) || len > 1.0e100) len = 1.0;
-        double axisLen = len * 0.12;
-        double bx = bounds[0], by = bounds[2], bz = bounds[4];
-
-        m_axisActor->SetTotalLength(axisLen, axisLen, axisLen);
-        m_axisActor->SetPosition(bx, by, bz);
-
-        double ls = axisLen * 0.3;
-        double off = axisLen + ls * 0.8;
-        double lblPos[3][3] = {
-            {bx + off, by, bz},
-            {bx, by + off, bz},
-            {bx, by, bz + off}
-        };
-        for (int i = 0; i < 3; i++) {
-            if (m_axisLabels[i]) {
-                m_axisLabels[i]->SetPosition(lblPos[i]);
-                m_axisLabels[i]->SetScale(ls, ls, ls);
-            }
-        }
-
-        vtkCamera *cam = renderer->GetActiveCamera();
-        if (cam) renderer->ResetCameraClippingRange();
+        m_axisWidget->SetEnabled(!m_axisWidget->GetEnabled());
     }
 
     renWin->Render();
 }
-    //vtkRenderer *renderer_=QMyVTK::GetInstance(0)->GetRenderer();
-    //vtkRenderer *renderer = GetRenderer();
-    
-    //QMapIterator<int,QMyVTK*> it(m_QVTKWidgetObjectMap);
-
-    //while (it.hasNext()){
-    //    it.next();
-    //    vtkRenderer *renderer = it.value()->GetRenderer();
-    //    vtkRenderWindow *renWin = renderer->GetRenderWindow();
-    //   
-    //    if (it.value()->m_staticMarker == 0){
-    //        it.value()->m_staticMarker =vtkVISOrientationMarker::New();//QMyVtkOrienMarker::GetInstance();
-    //        (it.value()->m_staticMarker )->SetRenderTo(renderer,renWin);
-    //        (it.value()->m_staticMarker )->CreateOMDisplay_FD();
-    //    }else{
-    //        (it.value()->m_staticMarker )->ToggleAxesDisplay();
-    //    }  
-    /*
+/*
     backgroundColor
 */
 void QMyVTK::BackColor()
@@ -452,8 +404,8 @@ void Dialog_BG::UpdateBG()
 
         if (color1_.isValid() == false)  return;
         double rgb1[3] = {color1_.red()/255.0, color1_.green()/255.0, color1_.blue()/255.0};
-     
-        if (radioButton_singleColor->isChecked()){   
+
+        if (radioButton_singleColor->isChecked()){
             ModifyBackground(renderer, false, rgb1, 0);
         }else{
             if (color2_.isValid() == false)  return;
@@ -461,7 +413,7 @@ void Dialog_BG::UpdateBG()
             ModifyBackground(renderer, true, rgb1, rgb2);
         }
     }
-    
+
 }
 void Dialog_BG::ModifyBackground(vtkRenderer *renderer, bool isGradient, double *rgb1, double *rgb2)
 {

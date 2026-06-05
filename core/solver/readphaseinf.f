@@ -7,7 +7,7 @@
 !
       character*1 inpc(*)
       character*8 lakon(*)
-      character*132 textpart(16)
+      character*132 textpart(26)
 
       integer phase_inf(4),phaseinf(3),i,j,indexe,
      &mint3d,ne,nstate_ 

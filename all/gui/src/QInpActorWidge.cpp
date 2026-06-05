@@ -12,7 +12,7 @@ QInpActorWidge::~QInpActorWidge()
 }
 void QInpActorWidge::creatGui()
 {
-	this->setWindowTitle(QString::fromUtf8("部件隐藏/显示"));
+	this->setWindowTitle("Part Display");
 
 	WidgetElSetInpList_ = new QListWidget();
 	BtnOK_=new QPushButton(tr("确定"));

@@ -8,7 +8,7 @@ Assembling::Assembling(QWidget *parent1)
 	setFixedWidth(350);*/
 	/*setMinimumHeight(280);
 	setMinimumWidth(350);*/
-  setWindowTitle(QString::fromUtf8("装配/缩放"));
+  setWindowTitle("Assembly/Scale");
 	  setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
   QLabel *text=new QLabel();
   text->setText("点集合：");

@@ -20,7 +20,7 @@ static void SetPartCellText(QTableWidget *table, int row, int column, const QStr
 QHPPartDlg::QHPPartDlg(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle(QString::fromUtf8("部件"));
+    setWindowTitle("Part");
 	ENumberS=0;
     m_SectionManageDlg = NULL;
     m_MaterManagerDlg  = NULL;
@@ -310,7 +310,7 @@ void QHPPartDlg::SetInpData(ReadInpResultS ReadInpData)
 
 void QHPPartDlg::ShowPartDlgStyle(int style)
 {
-	setWindowTitle(QString::fromUtf8("部件"));
+	setWindowTitle("Part");
     QStringList strList;
 	strList.clear();
 	strList<<"部件"<<"部件类型"<<"材料"<<"单元集合"<<"TTT/CCT";

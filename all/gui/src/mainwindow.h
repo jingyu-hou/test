@@ -423,6 +423,7 @@ private:
 public slots:
 	 void ForceShowMainWindow();
      void LogActionTriggered();
+     void RefreshProcessDialogTitlesSlot();
 	 void ViewDirectionChangedSlot(QString direction);
      void ViewSizeChangedSlot(int factor);
      void ViewChangedSlot(int factor);
@@ -464,6 +465,7 @@ public slots:
      void MainSaveHPInpSlot();
      void ShowStdOutput();
 	     void GmshProcessErrorSlot();
+	     void GmshProcessFinishedSlot(int exitCode, QProcess::ExitStatus exitStatus);
 	     void SolverProcessErrorSlot();
      void updataStepPlayCombox(ResultOutputS ResultO);
      void updataStepPlayParam(ResultVisS visParam);

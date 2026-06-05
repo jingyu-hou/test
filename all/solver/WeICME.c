@@ -51,7 +51,7 @@ ITG *kon=NULL, *nodeboun=NULL, *ndirboun=NULL, *ipompc=NULL,
     *ipoinpc=NULL,icfd=0,mt,nxstate,nload0,iload,*iuel=NULL,*nmpcon=NULL,
     *nflcon=NULL,*ipairmat=NULL;
      
-ITG nk,ne,nboun,nmpc,nforc,nload,nprint=0,nset,nalset,nentries=17,
+ITG nk,ne,nboun,nmpc,nforc,nload,nprint=0,nset,nalset,nentries=22,
   nmethod,neq[3]={0,0,0},i,mpcfree=1,mei[4],j,nzl,nam,nbounold=0,
   nforcold=0,nloadold=0,nbody,nbody_=0,nbodyold=0,network=0,nheading_=0,
   k,nzs[3],nmpc_=0,nload_=0,nforc_=0,istep,istat,nboun_=0,nintpoint=0,
@@ -132,7 +132,7 @@ FORTRAN(openfile,(jobnamef,output));
 printf("\n************************************************************\n\n");
 printf("WeICME Version 2020.0, Copyright(C) 2019-2023 Wedge\n\n");
 printf("************************************************************\n\n");
-printf("You are using an executable made on Fri May 22 10:28:51 EDT 2026\n");
+printf("You are using an executable made on Thu Jun  4 23:44:15 EDT 2026\n");
 fflush(stdout);
 
 istep=0;
@@ -198,7 +198,7 @@ while(istat>=0) {
      into the real sizes */
 
   nzs[1]=nzs_;
-//  nprint=nprint_;
+  nprint=0;
 
   if((istep==0)||(irstrt[0]<0)) {
     ne=ne_;

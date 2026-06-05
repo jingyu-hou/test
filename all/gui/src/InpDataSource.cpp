@@ -113,6 +113,41 @@ bool InpDataSource::InitGridFromFrd(ReadInpResultS *Inp)
     wholeGrid_ = vtkUnstructuredGrid::New();
     wholeGrid_->Allocate(nCell);
     QList<QString> cellPointsList = Inp->TmpElInpS.strData;
+
+    // Merge multi-line element definitions into single lines.
+    // Solver uses <=16 entries per line; elements with >15 nodes span
+    // continuation lines that carry node IDs without an element ID prefix.
+    {
+        QList<QString> merged;
+        QString accumulated;
+        int expectedNextElId = -1;
+        for (int i = 0; i < cellPointsList.size(); ++i) {
+            QString line = cellPointsList.at(i).trimmed();
+            if (line.isEmpty()) continue;
+            QStringList parts = line.split(",", QString::SkipEmptyParts);
+            if (parts.isEmpty()) continue;
+            int firstVal = parts.at(0).simplified().toInt();
+
+            if (accumulated.isEmpty()) {
+                accumulated = line;
+                expectedNextElId = firstVal + 1;
+            } else if (firstVal == expectedNextElId && parts.size() >= 4) {
+                // Starts with the next expected element ID + enough nodes → new element
+                merged.append(accumulated);
+                accumulated = line;
+                expectedNextElId = firstVal + 1;
+            } else {
+                // Continuation line (no element ID)
+                accumulated += "," + line;
+            }
+        }
+        if (!accumulated.isEmpty()) {
+            merged.append(accumulated);
+        }
+        cellPointsList = merged;
+        nCell = cellPointsList.size();
+    }
+
     QStringList firstCell = cellPointsList.at(0).split(",", QString::SkipEmptyParts);
     CellBaseId_ = firstCell.size() > 0 ? firstCell.at(0).simplified().toInt() - 1 : 0;
 
@@ -316,7 +351,7 @@ int InpDataSource::getInpCellType(QString strType)
     }else if(strType=="cps3"||strType=="cpe3"||strType=="cax3"){intCellType = 7;
     }else if(strType=="cps6"||strType=="cpe6"||strType=="cax6"){intCellType = 8;
     }else if(strType=="cps4"||strType=="cps4r"||strType=="cpe4"||strType=="cpe4r"||
-        strType=="cax4"||strType=="cax4Rr"){intCellType = 9;
+        strType=="cax4"||strType=="cax4r"){intCellType = 9;
     }else if (strType=="cps8"||strType=="cps8r"||strType=="cpe8"||strType=="cpe8r"||
         strType=="cax8"||strType=="cax8r"){intCellType = 10;
     }else if(strType=="c3d4"||strType=="c3d4t"){intCellType = 3;
@@ -959,12 +994,43 @@ bool InpDataSource::InpRowDataToSurf(ReadInpResultS *Inp)
     }
 
     int nCell = Inp->TmpElInpS.strData.size();//Inp->elemBlock.nNum;
-   
+
     QList<QString> cellPointsList=Inp->TmpElInpS.strData;//单元编号和单元节点号
+
+    // Merge multi-line element definitions into single lines
+    {
+        QList<QString> merged;
+        QString accumulated;
+        int expectedNextElId = -1;
+        for (int i = 0; i < cellPointsList.size(); ++i) {
+            QString line = cellPointsList.at(i).trimmed();
+            if (line.isEmpty()) continue;
+            QStringList parts = line.split(",", QString::SkipEmptyParts);
+            if (parts.isEmpty()) continue;
+            int firstVal = parts.at(0).simplified().toInt();
+
+            if (accumulated.isEmpty()) {
+                accumulated = line;
+                expectedNextElId = firstVal + 1;
+            } else if (firstVal == expectedNextElId && parts.size() >= 4) {
+                merged.append(accumulated);
+                accumulated = line;
+                expectedNextElId = firstVal + 1;
+            } else {
+                accumulated += "," + line;
+            }
+        }
+        if (!accumulated.isEmpty()) {
+            merged.append(accumulated);
+        }
+        cellPointsList = merged;
+        nCell = cellPointsList.size();
+    }
+
     int inpCellType=9;
 
     for(int i = 0; i < nCell; ++i){
-        QStringList DataType=Inp->TmpElInpS.strData.at(i).split(",");
+        QStringList DataType=cellPointsList.at(i).split(",");
         int NodeNumber=DataType.size()-1;
         if(n2D3D==2){
             switch(NodeNumber){

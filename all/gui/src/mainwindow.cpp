@@ -2170,25 +2170,43 @@ bool MainWindow::IsImporting() const
 void MainWindow::ApplyInpDataToUi(const ReadInpResultS &data)
 {
     ImportTrace("ApplyInpDataToUi: begin");
+    ImportTrace("  SetInpData HIPSystemDlg...");
     m_HIPSystemDlg->SetInpData(data);
+    ImportTrace("  SetInpData VariableOutputDlg...");
     m_VariableOutputDlg->SetInpData(data);
+    ImportTrace("  SetInpData QStatisticsDlg...");
     m_QStatisticsDlg->SetInpData(data);
+    ImportTrace("  SetInpData HpPartDlg...");
     m_HpPartDlg->SetInpData(data);
+    ImportTrace("  SetInpData HpBCDlg...");
     m_HpBCDlg->SetInpData(data);
+    ImportTrace("  SetInpData ForgingContactDlg...");
     m_ForgingContactDlg->SetInpData(data);
+    ImportTrace("  SetInpData ThermalBoundaryDlg...");
     m_ThermalBoundaryDlg->SetInpDataHB(data);
+    ImportTrace("  SetInpData ForgingSystemDlg...");
     m_ForgingSystemDlg->SetInpData(data);
+    ImportTrace("  SetInpData HpInitDlg...");
     m_HpInitDlg->SetInpData(data);
+    ImportTrace("  SetInpData GravityAct...");
     m_GravityAct_->SetInpData(data);
+    ImportTrace("  SetInpData HpSystemDlg...");
     m_HpSystemDlg->SetInpData(data);
+    ImportTrace("  SetInpData HpSolveSetDlg...");
     m_HpSolveSetDlg->SetInpData(data);
+    ImportTrace("  SetInpData AssemblingAct...");
     m_AssemblingAct_->SetInpData(data);
+    ImportTrace("  SetInpData WidgetInpElsetDlg...");
     m_WidgetInpElsetDlg->SetInpData(data.TmpElSetInps);
+    ImportTrace("  TreeModel setInpData...");
     PreHIPPro_->m_TreeModel->setInpData(data);
+    ImportTrace("  RefreshTree...");
     PreHIPPro_->RefreshTree();
     ImportTrace("ApplyInpDataToUi: dialogs updated");
     if (viewWindow_) {
+        ImportTrace("  TabView(1)...");
         viewWindow_->TabView(1);
+        ImportTrace("  ShowCurPreData...");
         for (int i = 0; i < m_MdiArea->subWindowList().size(); i++) {
             QMdiSubWindow *TmpWindow = m_MdiArea->subWindowList().at(i);
             if (TmpWindow == TmpWindow) {
@@ -2727,17 +2745,21 @@ bool MainWindow::StartGmshProcess(bool restart)
     }
 
     if (GmshProcess != NULL) {
-        if (!restart) {
+        if (GmshProcess->state() != QProcess::Running) {
+            delete GmshProcess;
+            GmshProcess = NULL;
+        } else if (!restart) {
             Information_Widget::GetInstance()->ShowInformation(tr("Gmsh 已经启动。"));
             return true;
+        } else {
+            GmshProcess->close();
+            if (!GmshProcess->waitForFinished(1500)) {
+                GmshProcess->kill();
+                GmshProcess->waitForFinished(1500);
+            }
+            delete GmshProcess;
+            GmshProcess = NULL;
         }
-        GmshProcess->close();
-        if (!GmshProcess->waitForFinished(1500)) {
-            GmshProcess->kill();
-            GmshProcess->waitForFinished(1500);
-        }
-        delete GmshProcess;
-        GmshProcess = NULL;
     }
 
     QStringList args;
@@ -2746,6 +2768,7 @@ bool MainWindow::StartGmshProcess(bool restart)
 
     GmshProcess = new QProcess(this);
     connect(GmshProcess, SIGNAL(error(QProcess::ProcessError)), this, SLOT(GmshProcessErrorSlot()));
+    connect(GmshProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(GmshProcessFinishedSlot(int, QProcess::ExitStatus)));
     GmshProcess->start(gmshPath, args);
     if (!GmshProcess->waitForStarted(3000)) {
         Information_Widget::GetInstance()->ShowInformation(tr("Gmsh 启动失败：") + gmshPath);
@@ -3628,6 +3651,26 @@ void MainWindow::PlayStepPlay(StepPlayVisS stepParam)
 void MainWindow::GmshProcessErrorSlot()
 {
     Information_Widget::GetInstance()->ShowInformation("Gmsh process error occurred");
+}
+
+void MainWindow::GmshProcessFinishedSlot(int exitCode, QProcess::ExitStatus exitStatus)
+{
+    Q_UNUSED(exitCode);
+    Q_UNUSED(exitStatus);
+    // Gmsh exited on its own (user closed the Gmsh window).
+    // Restore GUI if it was hidden by GridDivActPrc().
+    if (GmshWiget && GmshWiget->isVisible()) {
+        GmshWiget->hide();
+        dockInfomation_->show();
+        DockPostPrc_->show();
+        DockPreHIPPrc_->show();
+        if (m_MdiArea && m_MdiArea->subWindowList().count() > 0) {
+            m_MdiArea->show();
+            if (viewWindow_) viewWindow_->show();
+        }
+    }
+    // GmshProcess stays non-NULL so that StartGmshProcess can detect
+    // the stale pointer via state()!=Running and clean it up.
 }
 
 void MainWindow::SolverProcessErrorSlot()

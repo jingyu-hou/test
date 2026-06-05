@@ -1,5 +1,4 @@
 SCCXF = \
-test_tdot_and_g.f \
 bmatrix.f \
 calcgradtemp_cast.f \
 htchart.f \
@@ -54,7 +53,6 @@ closefilefluid.f \
 convert2slapcol.f \
 correctrhoelcomp.f \
 correctvel.f \
-cp_corrected.f \
 createialnk.f \
 damage.f \
 damages.f \
@@ -65,7 +63,6 @@ drx.f \
 drx_hip_weicme.f \
 drx_weicme.f \
 dynamicrecrystallizations.f \
-dynamic_viscosity.f \
 edg.f \
 elemperorien.f \
 eplane.f \
@@ -79,7 +76,6 @@ init.f \
 inputerror.f \
 inputinfo.f \
 inputwarning.f \
-interpol_alfa2.f \
 intersectionpoint.f \
 invariant.f \
 lab_straight_ppkrit.f \
@@ -111,13 +107,10 @@ predir.f \
 push.f \
 randomval.f \
 ratedependentplastics.f \
-rcavi_cp_lt.f \
-rcavi_cp_nt.f \
 rdplas.f \
 reorderampl.f \
 reorderlhs.f \
 reorderrhs.f \
-rimseal_calc.f \
 sensitivity_glob.f \
 stop.f \
 thermmodel.f \

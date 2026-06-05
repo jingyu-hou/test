@@ -2,7 +2,7 @@
 Gravity::Gravity(QWidget *parent1)
       : QDialog(parent1)
 {
-	setWindowTitle(QString::fromUtf8("重力"));
+	setWindowTitle("Gravity");
 	QWidget *Data = new QWidget(this);
 
 	QLabel *text=new QLabel(tr("重力值："),Data);
