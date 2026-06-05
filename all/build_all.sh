@@ -31,12 +31,13 @@ echo ""
 echo "=== Step 2/2: Building GUI ==="
 cd "$SCRIPT_DIR/gui"
 
-# External VTK headers path (WSL mount of D:\ZZKK\externalized_components)
+# Derive externalized components root from script location
 if [ -z "${AESIM_FM_DEPS_ROOT:-}" ]; then
-    if [ -d /mnt/d/ZZKK/externalized_components ]; then
-        export AESIM_FM_DEPS_ROOT=/mnt/d/ZZKK/externalized_components
-    elif [ -d /mnt/c/ZZKK/externalized_components ]; then
-        export AESIM_FM_DEPS_ROOT=/mnt/c/ZZKK/externalized_components
+    PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+    if [ -d "$PROJECT_ROOT/externalized_components" ]; then
+        export AESIM_FM_DEPS_ROOT="$PROJECT_ROOT/externalized_components"
+    elif [ -d /mnt/d/AESimFM/externalized_components ]; then
+        export AESIM_FM_DEPS_ROOT=/mnt/d/AESimFM/externalized_components
     fi
 fi
 echo "AESIM_FM_DEPS_ROOT=${AESIM_FM_DEPS_ROOT:-not set, using .pro default}"

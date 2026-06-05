@@ -1,9 +1,15 @@
-﻿#include "mainwindow.h"
+#include "mainwindow.h"
 #include <QTextCodec>
 #include <QFile>
 #include <QFileInfo>
 #include <QTimer>
 #include <QDesktopWidget>
+#include <QBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QVariant>
+#include <QMouseEvent>
 #include "QMyVTK.h"
 #include "SARibbonApplicationButton.h"
 #include "AppLog.h"
@@ -18,7 +24,7 @@
 static void ImportTrace(const QString &msg)
 {
     AppLog::Write("IMPORT", msg);
-    QFile f("/mnt/d/ZZKK/import_trace.log");
+    QFile f(QCoreApplication::applicationDirPath() + "/import_trace.log");
     if (f.open(QIODevice::Append | QIODevice::Text)) {
         f.write(msg.toUtf8());
         f.write("\n");
@@ -28,37 +34,8 @@ static void ImportTrace(const QString &msg)
 
 static void SetUtf8WindowTitleForWm(QWidget *widget)
 {
-#ifdef Q_WS_X11
-    if (!widget) return;
-    Display *display = QX11Info::display();
-    if (!display) return;
-    const Window window = widget->winId();
-    const QString title = widget->windowTitle();
-
-    // _NET_WM_NAME: always UTF-8 per EWMH spec
-    const QByteArray titleUtf8 = title.toUtf8();
-    const Atom netWmName = XInternAtom(display, "_NET_WM_NAME", False);
-    const Atom utf8String = XInternAtom(display, "UTF8_STRING", False);
-    if (netWmName && utf8String) {
-        XChangeProperty(display, window, netWmName, utf8String, 8, PropModeReplace,
-                        reinterpret_cast<const unsigned char *>(titleUtf8.constData()),
-                        titleUtf8.size());
-    }
-
-    // WM_NAME: for WSLg on Chinese Windows, the Windows title bar renders
-    // using the system locale (GBK). Encode as GBK so Windows shows correct text.
-    static QTextCodec *gbk = QTextCodec::codecForName("GBK");
-    const QByteArray titleGbk = gbk ? gbk->fromUnicode(title) : title.toLocal8Bit();
-    XChangeProperty(display, window, XA_WM_NAME, XA_STRING, 8, PropModeReplace,
-                    reinterpret_cast<const unsigned char *>(titleGbk.constData()),
-                    titleGbk.size());
-    XFlush(display);
-#else
     Q_UNUSED(widget);
-#endif
 }
-
-
 static QString FindGmshExecutable()
 {
     QStringList candidates;
@@ -90,12 +67,13 @@ static QString FindGmshExecutable()
 static QString FindGmshStartupGeo()
 {
     QStringList candidates;
+    const QString appDir = QCoreApplication::applicationDirPath();
     const QByteArray envGeo = qgetenv("AESIM_FM_GMSH_GEO");
     if (!envGeo.isEmpty()) candidates << QString::fromLocal8Bit(envGeo);
-    candidates << QCoreApplication::applicationDirPath() + "/t1.geo";
-    candidates << QCoreApplication::applicationDirPath() + "/untitled.geo";
-    candidates << "/mnt/d/ZZKK/inp/t1.geo";
-    candidates << "/mnt/d/ZZKK/inp/untitled.geo";
+    candidates << appDir + "/t1.geo";
+    candidates << appDir + "/untitled.geo";
+    candidates << QDir::cleanPath(appDir + "/../../../../inp/t1.geo");
+    candidates << QDir::cleanPath(appDir + "/../../../../inp/untitled.geo");
 
     for (int i = 0; i < candidates.size(); ++i) {
         const QString path = QDir::cleanPath(candidates.at(i));
@@ -2977,12 +2955,46 @@ static void RaiseDialogNow(QDialog *dlg)
     if (!dlg) return;
     dlg->showNormal();
     dlg->show();
-    SetUtf8WindowTitleForWm(dlg);
     dlg->setFocus(Qt::ActiveWindowFocusReason);
     dlg->raise();
     dlg->activateWindow();
+    qApp->processEvents();
+    SetUtf8WindowTitleForWm(dlg);
 }
 
+
+void MainWindow::RefreshProcessDialogTitlesSlot()
+{
+    QDialog *dialogs[] = {
+        m_PElSfSetDlg,
+        m_HpPartDlg,
+        m_HpBCDlg,
+        m_ForgingContactDlg,
+        m_HpInitDlg,
+        m_ThermalBoundaryDlg,
+        m_ForgingSystemDlg,
+        m_HpSystemDlg,
+        m_HIPSystemDlg,
+        m_HpSolveSetDlg,
+        m_HpSubmissionDlg,
+        m_ForgingSubmissionDlg,
+        m_HipSubmissionDlg,
+        m_CastingGravityDlg,
+        m_VariableOutputDlg,
+        m_AssemblingAct_,
+        m_WidgetInpElsetDlg,
+        m_DistMeasurementAct_,
+        m_GravityAct_,
+        m_QStatisticsDlg,
+        PostPro_ ? PostPro_->xyplotPanel_ : 0,
+        PostPro_ ? PostPro_->m_PostWidPlotOptDlg : 0
+    };
+    const int count = sizeof(dialogs) / sizeof(dialogs[0]);
+    for (int i = 0; i < count; ++i) {
+        if (!dialogs[i] || !dialogs[i]->isVisible()) continue;
+        SetUtf8WindowTitleForWm(dialogs[i]);
+    }
+}
 void MainWindow::ShowProcessDialog(QDialog *dlg)
 {
     if (!dlg) return;
@@ -3004,6 +3016,9 @@ void MainWindow::ShowProcessDialog(QDialog *dlg)
         QTimer::singleShot(50, dlg, SLOT(raise()));
         QTimer::singleShot(100, dlg, SLOT(activateWindow()));
     }
+    QTimer::singleShot(0, this, SLOT(RefreshProcessDialogTitlesSlot()));
+    QTimer::singleShot(50, this, SLOT(RefreshProcessDialogTitlesSlot()));
+    QTimer::singleShot(150, this, SLOT(RefreshProcessDialogTitlesSlot()));
 }
 
 //创建集合

@@ -9,11 +9,10 @@ UI_DIR = $$TMPDIR
 VTK_DIR = $$PWD/../components/open_source/vtk
 FFMPEG_DIR = $$PWD/../components/open_source/ffmpeg
 
-# VTK headers externalized to D:\ZZKK\externalized_components\vtk on 2026-06-03.
-# Use AESIM_FM_DEPS_ROOT env var to override the default path.
+# VTK headers externalized; override via AESIM_FM_DEPS_ROOT env var.
 VTK_INCLUDE_ROOT = $$(AESIM_FM_DEPS_ROOT)/vtk
 isEmpty(VTK_INCLUDE_ROOT) {
-    VTK_INCLUDE_ROOT = D:/ZZKK/externalized_components/vtk
+    VTK_INCLUDE_ROOT = D:/AESimFM/externalized_components/vtk
 }
 INCLUDEPATH += $$VTK_INCLUDE_ROOT/include/vtk-5.4
 LIBS += -L$$VTK_DIR/lib/vtk-5.4 -lQVTK -lvtkGraphics -lvtkQtChart -lvtkHybrid -lvtkRendering \
