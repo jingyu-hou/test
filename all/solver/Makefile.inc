@@ -60,6 +60,7 @@ damagecal.f \
 dattime.f \
 dKdX.f \
 drx.f \
+	srx_mrx_k90.f \
 drx_hip_weicme.f \
 drx_weicme.f \
 dynamicrecrystallizations.f \

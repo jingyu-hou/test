@@ -232,6 +232,13 @@ c
      &        temp+273.d0,dtime,statev,nstatv,kinc,gsloc)
          endif
 c
+c SRX/MRX recrystallization (K90 model, default off)
+c
+         if (gsloc(1,2).ne.0.d0) then
+           call srx_mrx_k90(eqplas,eqplasrt,deqpl,
+     &        temp+273.d0,dtime,time(2),statev,nstatv,kinc,gsloc)
+         endif
+c
 c damage
 c
          if (criteria.ne.0) then

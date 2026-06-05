@@ -69,7 +69,7 @@
             imax=nconstants-8*(j-1)
          endif
          do i=1,imax
-            read(textpart(i)(1:20),'(f20.0)',iostat=istat) 
+            read(textpart(i)(1:20),'(f20.0)',iostat=istat)
      &         gscon(i+(j-1)*8,1,nmat)
             if(istat.gt.0) then
                call inputerror(inpc,ipoinpc,iline,
@@ -77,8 +77,43 @@
                return
             endif
          enddo
-!     
+!
       enddo
+!
+!     Optional column 2: SRX/MRX parameters
+!     Backward compatible — if no extra lines follow, exits on keyword/EOF
+!
+      do j=1,(nconstants)/8+1
+         call getnewline(inpc,textpart,istat,n,key,iline,ipol,
+     &        inl,ipoinp,inp,ipoinpc)
+         if((istat.lt.0).or.(key.eq.1)) then
+            if (j .eq. 1) return
+            exit
+         endif
+         imax=8
+         if(8*j.gt.nconstants) then
+            imax=nconstants-8*(j-1)
+         endif
+         do i=1,imax
+            read(textpart(i)(1:20),'(f20.0)',iostat=istat)
+     &         gscon(i+(j-1)*8,2,nmat)
+            if(istat.gt.0) then
+               call inputerror(inpc,ipoinpc,iline,
+     &              "*DYNAMIC RECRYSTALLIZATION%",ier)
+               return
+            endif
+         enddo
+      enddo
+!
+!     If column 2 is used, reserve enough state variables for SRX/MRX
+!
+      isum = 0
+      do i = 1, nconstants
+         isum = isum + int(abs(gscon(i,2,nmat)))
+      enddo
+      if (isum .gt. 0) then
+         nstate_ = max(nstate_, 43)
+      endif
 !
       return
       end

@@ -59,6 +59,7 @@ damagecal.o \
 damages.o \
 dattime.o \
 drx.o \
+srx_mrx_k90.o \
 drx_hip_weicme.o \
 drx_weicme.o \
 dynamicrecrystallizations.o \
