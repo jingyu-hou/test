@@ -1,9 +1,11 @@
-#ifndef QVTKUNCLIP_H
-#define QVTKUNCLIP_H
+/*============================================================================
+     AESim_FM - Unstructured Grid Clip/Slice Manager for VTK Pipeline
+     Copyright: Shenzhen Wedge Central South Research Institute co., Ltd.
+     Original author: HUANG Jiaqi, 2010-06-01
+============================================================================*/
+#ifndef AESVTKUNCLIP_H
+#define AESVTKUNCLIP_H
 
-
-//#include <iostream>
-//using namespace std;
 
 #include "vtkVISManager.h"
 #include "vtkVISUnstructuredGridManager.h"
@@ -32,27 +34,16 @@
 #include "vtkFloatArray.h"
 #include "vtkClipDataSet.h"
 #include "vtkClipPolyData.h"
-//#include "vtkVISUnPFrontAndPBehindSource.h"
-// --------------------------------------------------------------------------
-/// Class that manage slice rendering
-/// 
-/// To CreateSliceDisplay(), you need to do these first \n
-/// SetDataSource(), then SetSliceSource(),CreateSliceWidget() 
-/// 
-/// @author HUANG Jiaqi
-/// @date 2010-06-01
-/// @reviser 
-class QVTKUnClip : public vtkVISUnstructuredGridManager
+
+class AesVtkUnClip : public vtkVISUnstructuredGridManager
 {
 public:
 
-	static QVTKUnClip *New();
-	//vtkTypeRevisionMacro(QVTKUnClip, vtkVISUnstructuredGridManager);
+	static AesVtkUnClip *New();
 
-	QVTKUnClip();
-	~QVTKUnClip();
+	AesVtkUnClip();
+	~AesVtkUnClip();
 
-	//void SetSliceSource(char* scalar, char* vector);
 	void ModifySliceSourceScalar(char* scalar);
 	void ModifySliceSourceVector(char* vector);
 
@@ -76,10 +67,6 @@ public:
 	void SetSlicePlaneOrigin(double ox, double oy, double oz);
 	double* GetSlicePlaneOrigin();
 
-	//--------------------------------------------
-	// 
-
-	//void CreateSliceDisplay();
 	void CreateUnSliceContourDisplay();
 	void ShowOnUnSliceContourDisplay();
 	void ShowOffUnSliceContourDisplay();
@@ -139,42 +126,22 @@ public:
 
 	void WriteScalarVectorData(const char* FileName);
 	vtkFloatArray* GetCutScalarData(void);
-	/*
-	* cutVector[index]
-	* 0    v0
-	* 1    v1
-	* 2    v2
-	*/
-	//vtkFloatArray* GetCutVectorData(int index);
-	//vtkFloatArray* GetCutVectorData(void);
-	/*
-	* cutPointData[index]
-	* 0    x
-	* 1    y
-	* 2    z
-	*/
+
 	vtkFloatArray* GetCutPointData(int index);
 
-	//ZHUQin 2011.03.24
 	void ModifyDisplayScalarRange(double min,double max);
 	void ClippingOnSliceContourDisplay();
 	void ClippingOffSliceContourDisplay();
-	//add by HaoJingjing 2015.12.11 begin.
-	//bool SetBoundSliceSource(vtkUnstructuredGrid* uGrid,double y);
-	//bool GetXMaxPointData(double *xMax,vtkPoints* Points);
-	//add by HaoJingjing 2015.12.11 end.
 
-	///////
 	void SetSliceSource_FD(char* scalar, char* vector,bool bInsideOut);
 	void CreateSliceWidget_FD();
 	static void GenerateSliceProData_FD(vtkObject *caller, unsigned long, void *, void *);
 	void CreateUnSliceContourDisplay_FD();
 	void CreateUnSliceContourLinesDisplay_FD();
-	//void CreateUnSliceContourLinesLabelDisplay_FD();
 	void ModifyDisplayScalarRange_FD(double min,double max);
 	void ModifySliceSourceScalar_FD(char* scalar);
 	bool GetSourceBounds_FD(double *bounds);
-	///////
+
 protected:
 
 	double planeNormal_[3];
@@ -185,24 +152,12 @@ protected:
 	int usedVectorIndex_;
 
 	vtkUnstructuredGrid* gridSource_;
-	//vtkCutter* cutSource_;
-	//vtkClipPolyData *cutSource_;
 	vtkClipDataSet *cutSource_;
 	vtkActor* cutActor_;
-	//vtkDataSetMapper* cutMapper_;
 
 	double scalarRange_[2];
 	vtkBandedPolyDataContourFilter* bandedContourFilter_;
 
-	/*
-	* sliceActor[blockIndex]
-	* 0 contour
-	* 1 contourlines
-	* 2 contourlineslabel
-	* 3 vector
-	* 4 shade
-	* 5 mesh
-	*/
 	vtkActor** sliceActors_;
 	vtkCollection* sliceMapper_;
 	vtkLookupTable** sliceTable_;
@@ -221,14 +176,9 @@ protected:
 	vtkPlane* slicePlane_;
 	vtkImplicitPlaneWidget* planeWidget_;
 	static void GenerateSliceProData(vtkObject *caller, unsigned long, void *, void *);
-	
 
 private:
 	vtkDoubleArray *scalarSource_;
 };
 
-//vtkPlane *vtkVISUnSlice::slicePlane_ = NULL;
-//vtkImplicitPlaneWidget *vtkVISUnSlice::planeWidget_ = NULL;
-
-#endif 
-
+#endif

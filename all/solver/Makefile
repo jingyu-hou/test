@@ -5,7 +5,8 @@ SPOOLES_DIR = $(COMP_DIR)/spooles
 ARPACK_DIR = $(COMP_DIR)/arpack
 LAPACK_DIR = $(COMP_DIR)/lapack_blas
 
-CFLAGS = -Wall -O3 -fopenmp -DARCH="Linux" -DSPOOLES -DARPACK -DMATRIXSTORAGE -DUSE_MT=1
+EXTERNAL_HEADERS = ../../../../externalized_components
+CFLAGS = -Wall -O3 -fopenmp -DARCH="Linux" -DSPOOLES -DARPACK -DMATRIXSTORAGE -DUSE_MT=1 -I$(EXTERNAL_HEADERS)/calculix_headers
 FFLAGS = -Wall -O3 -fopenmp
 
 CC=cc

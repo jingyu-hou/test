@@ -1,46 +1,24 @@
-/*=================================================================================
+/*============================================================================
+     AESim_FM - Unstructured Grid Clip/Slice Manager for VTK Pipeline
 
-! Module name = Visualization
-!
-! File name = QVTKUnClip.cxx
-!
-! Version: ASTE-P 2.0
-!
-! Time of release: 
-!
-!       All rights reserved by Advanced Dynamics Corporation, any person or organization
-!       must get written permission from Advanced Dynamics Corporation to copy a part or
-!       whole of this code except US Army, all NASA Centers and Governmental Agencies 
-!       such as USAF, Navy, and DARPA etc. The code is provided as it is and Advanced 
-!       Dynamics Corporation will not be responsible for any liability for usage of the 
-!       code and any technical support, including the loss of any kind due to the use of 
-!       this code, and the user uses it at your own risk.
-!
-!                            Copyright is protected from 2009-2030
-!--------------------------------------------------------------------------------------
-! Modified records:
-! Date            reviser 
-! YYYY/MM/DD      XXXX
-!  
-! -------------------------------------------------------------------------------------
-! Indentation:
-!   tab = 4
-!
-=====================================================================================*/
-#include "QVTKUnClip.h"
-//#include "vtkVISUnSlice.h"
-//add by HaoJingjing 2015.12.11 begin.
+     Convenience wrapper around standard VTK classes (vtkPlane, vtkClipDataSet,
+     vtkImplicitPlaneWidget, vtkContourFilter).  Provides cut-plane creation,
+     contour/shade/mesh/vector display, and scalar/vector data extraction.
+
+     Copyright: Shenzhen Wedge Central South Research Institute co., Ltd.
+
+     Original author: HUANG Jiaqi, 2010-06-01
+     Modifications: see Git history
+============================================================================*/
+#include "AesVtkUnClip.h"
 #include "vtkCellArray.h"
 #include "vtkSortDataArray.h"
 #include "vtkDataSetSurfaceFilter.h"
 #include <algorithm>
-//----------------------------------------------------------------------------
 
-//vtkCxxRevisionMacro(QVTKUnClip, "$Revision: 1.4 $");
-vtkStandardNewMacro(QVTKUnClip);
-	
-//----------------------------------------------------------------------------
-QVTKUnClip::QVTKUnClip()
+vtkStandardNewMacro(AesVtkUnClip);
+
+AesVtkUnClip::AesVtkUnClip()
 {
 
 	sliceActors_ = new vtkActor*[6];
@@ -55,7 +33,6 @@ QVTKUnClip::QVTKUnClip()
 		sliceTable_[i] = NULL;
 	}
 
-	//sliceMapper_ = new vtkDataSetMapper*[6];
 	sliceMapper_ = vtkCollection::New();
 	sliceMapper_ = NULL;
 
@@ -88,16 +65,14 @@ QVTKUnClip::QVTKUnClip()
 	usedScalarIndex_ = -1;
 	usedVectorIndex_ = -1;
 
-	for (int i=0; i<3; i++) 
+	for (int i=0; i<3; i++)
 	{
 		planeOrigin_[i] = 0;
-	}  
+	}
 
 	cutSource_ = NULL;
 	cutActor_ = NULL;
 	gridSource_ = NULL;
-
-	//cutMapper_ = NULL;
 
 	slicePlane_ = NULL;
 	planeWidget_ = NULL;
@@ -110,14 +85,14 @@ QVTKUnClip::QVTKUnClip()
 	contourLabelFilter_ = 0;
 	scalarSource_ = 0;
 }
-QVTKUnClip::~QVTKUnClip()
+AesVtkUnClip::~AesVtkUnClip()
 {
 	ErrorInfo(0, "destructure func 0");
-	if (cutActor_ != NULL) 
+	if (cutActor_ != NULL)
 	{
-		if (_renderer != NULL) 
-		{    
-			_renderer->RemoveActor(cutActor_);     
+		if (_renderer != NULL)
+		{
+			_renderer->RemoveActor(cutActor_);
 		}
 		cutActor_->Delete();
 		cutActor_ = NULL;
@@ -126,23 +101,18 @@ QVTKUnClip::~QVTKUnClip()
 
 	if(planeWidget_ != NULL)
 	{
-		//if(_renWin != NULL)
-		//{
-		//    planeWidget->SetInteractor(_renWin->GetInteractor());
-		//}
-		// planeWidget_->EnabledOff();
 		planeWidget_->Delete();
 		planeWidget_ = NULL;
 	}
 	ErrorInfo(0, "destructure func 2");
 
-	if (cutSource_ != NULL) 
+	if (cutSource_ != NULL)
 	{
 		cutSource_->Delete();
 		cutSource_ = NULL;
-	}	
+	}
 	ErrorInfo(0, "destructure func 3");
-	if (gridSource_ != NULL) 
+	if (gridSource_ != NULL)
 	{
 		gridSource_->Delete();
 		gridSource_ = NULL;
@@ -156,18 +126,13 @@ QVTKUnClip::~QVTKUnClip()
 	}
 	ErrorInfo(0, "destructure func 5");
 
-	/*if(cutMapper_ != NULL)
-	{
-	cutMapper_->Delete();
-	cutMapper_ = NULL;
-	}*/
 	for (int i=0;i<6;i++)
 	{
-		if (_renderer != NULL) 
-		{    
+		if (_renderer != NULL)
+		{
 			if (sliceActors_[i] != NULL)
 			{
-				_renderer->RemoveActor(sliceActors_[i]); 
+				_renderer->RemoveActor(sliceActors_[i]);
 				sliceActors_[i]->Delete();
 				sliceActors_[i] = NULL;
 			}
@@ -176,12 +141,12 @@ QVTKUnClip::~QVTKUnClip()
 	delete [] sliceActors_;
 
 	for (int i=0;i<6;i++)
-	{   
+	{
 		if (sliceTable_[i] != NULL)
 		{
 			sliceTable_[i]->Delete();
 			sliceTable_[i] = NULL;
-		}	
+		}
 	}
 	delete [] sliceTable_;
 
@@ -211,21 +176,16 @@ QVTKUnClip::~QVTKUnClip()
 	{
 		sliceGlyph3D_->Delete();
 		sliceGlyph3D_ = NULL;
-	}	
-	if (scalarSource_ != 0) 
+	}
+	if (scalarSource_ != 0)
 	{
 		scalarSource_->Delete();
 		scalarSource_ = 0;
-	}	
+	}
 	ErrorInfo(0, "destructure func 7 end.");
 }
-// --------------------------------------------------------------------------
-/// Write point,scalar and vector data to file. 
-/// 
-/// @param FileName the filename to be wrote.
-/// 
-void QVTKUnClip::WriteScalarVectorData(const char* FileName)
-{    
+void AesVtkUnClip::WriteScalarVectorData(const char* FileName)
+{
 	cutSource_->Update();
 
 	vtkFloatArray* cutScalar = vtkFloatArray::New();
@@ -276,7 +236,7 @@ void QVTKUnClip::WriteScalarVectorData(const char* FileName)
 		return;
 	}
 	double value;
-	double* v; 
+	double* v;
 	double p[3];
 
 	ofstream f(FileName);
@@ -312,13 +272,8 @@ void QVTKUnClip::WriteScalarVectorData(const char* FileName)
 	}
 	f.close();
 }
-// --------------------------------------------------------------------------
-/// Get cut scalar data.
-/// 
-/// @return 
-/// 
-vtkFloatArray* QVTKUnClip::GetCutScalarData(void)
-{    
+vtkFloatArray* AesVtkUnClip::GetCutScalarData(void)
+{
 	if(usedScalarIndex_ == -1)
 	{
 		return NULL;
@@ -347,14 +302,7 @@ vtkFloatArray* QVTKUnClip::GetCutScalarData(void)
 
 	return cutScalar;
 }
-// --------------------------------------------------------------------------
-/// Get cut point data by index.
-/// 
-/// @param index Indicate the coordinate.
-/// @li 0   x
-/// @li 1   y
-/// @li 2   z
-vtkFloatArray* QVTKUnClip::GetCutPointData(int index)
+vtkFloatArray* AesVtkUnClip::GetCutPointData(int index)
 {
 	if (index < 0 || index > 2)
 	{
@@ -384,20 +332,13 @@ vtkFloatArray* QVTKUnClip::GetCutPointData(int index)
 
 	return cutPointData;
 }
-// --------------------------------------------------------------------------
-/// Change slice scalar/vector data source
-/// 
-/// @param scalar
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ModifySliceSourceScalar(char* scalar)
+void AesVtkUnClip::ModifySliceSourceScalar(char* scalar)
 {
 	if (gridSource_ == NULL)
 	{
 		ErrorInfo(1,"Grid Source are not Setted!");
-		return;     
-	}  
+		return;
+	}
 
 	int index = -1;
 	if(scalar != NULL)
@@ -413,7 +354,7 @@ void QVTKUnClip::ModifySliceSourceScalar(char* scalar)
 	{
 		(gridSource_->GetPointData())->SetScalars(_source->scalarSource[index]);
 	}
-	else 
+	else
 	{
 		(gridSource_->GetCellData())->SetScalars(_source->cellScalarSource_[index]);
 	}
@@ -421,7 +362,6 @@ void QVTKUnClip::ModifySliceSourceScalar(char* scalar)
 
 	usedScalarIndex_ = index;
 
-	//2011-05-10 zhuqin add begin.
 	if(bandedContourFilter_ != NULL)
 	{
 		bandedContourFilter_->GenerateValues(conLevel_, _source->scalarRange[usedScalarIndex_][0],_source->scalarRange[usedScalarIndex_][1]);
@@ -438,7 +378,6 @@ void QVTKUnClip::ModifySliceSourceScalar(char* scalar)
 		contourLabelFilter_->GenerateValues(conLevel_, _source->scalarRange[usedScalarIndex_][0],_source->scalarRange[usedScalarIndex_][1]);
 		contourLabelFilter_->Modified();
 	}
-	//2011-05-10 zhuqin add end.
 
 
 	for (int i= 0; i<6; i++)
@@ -469,20 +408,13 @@ void QVTKUnClip::ModifySliceSourceScalar(char* scalar)
 	}
 
 }
-// --------------------------------------------------------------------------
-/// Change slice scalar/vector data source
-/// 
-/// @param vector
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ModifySliceSourceVector(char* vector)
+void AesVtkUnClip::ModifySliceSourceVector(char* vector)
 {
 	if (gridSource_ == NULL)
 	{
 		ErrorInfo(1,"Grid Source are not Setted!");
-		return;     
-	} 
+		return;
+	}
 
 	int index = -1;
 
@@ -494,7 +426,7 @@ void QVTKUnClip::ModifySliceSourceVector(char* vector)
 	{
 		ErrorInfo(1,"Vector data are not existed!");
 		return;
-	}       
+	}
 
 	usedVectorIndex_ = index;
 
@@ -502,20 +434,13 @@ void QVTKUnClip::ModifySliceSourceVector(char* vector)
 	{
 		(gridSource_->GetPointData())->SetVectors(_source->vectorSource[index]);
 	}
-	else 
+	else
 	{
 		(gridSource_->GetCellData())->SetVectors(_source->cellVectorSource_[index]);
 	}
 	gridSource_->Modified();
-}      
-// --------------------------------------------------------------------------
-/// Create slice plane widget
-/// 
-/// @param 
-/// 
-/// @return 
-/// 
-void QVTKUnClip::CreateSliceWidget()
+}
+void AesVtkUnClip::CreateSliceWidget()
 {
 	if (cutSource_ == NULL)
 	{
@@ -539,11 +464,10 @@ void QVTKUnClip::CreateSliceWidget()
 	planeWidget->GetOutlineProperty()->SetOpacity(0.0);
 	planeWidget->GetEdgesProperty()->SetOpacity(0.0);
 
-	planeWidget->GetPlane(slicePlane_);      
+	planeWidget->GetPlane(slicePlane_);
 	planeWidget->SetInput(cutSource_->GetOutput());
 
 	planeWidget->TubingOff();
-	//planeWidget->OutsideBoundsOff();
 	planeWidget->SetOrigin(planeOrigin_[0], planeOrigin_[1], planeOrigin_[2]);
 	planeWidget->PlaceWidget(bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
 	planeWidget->On();
@@ -558,9 +482,9 @@ void QVTKUnClip::CreateSliceWidget()
 
 	ShowOffSlicePlane();
 }
-void QVTKUnClip::GenerateSliceProData(vtkObject *caller, unsigned long, void* obj, void *)
+void AesVtkUnClip::GenerateSliceProData(vtkObject *caller, unsigned long, void* obj, void *)
 {
-	QVTKUnClip* usObj = (QVTKUnClip*)obj;
+	AesVtkUnClip* usObj = (AesVtkUnClip*)obj;
 
 	if (usObj->planeWidget_ == NULL)
 	{
@@ -568,91 +492,51 @@ void QVTKUnClip::GenerateSliceProData(vtkObject *caller, unsigned long, void* ob
 		return;
 	}
 	usObj->planeWidget_->GetPlane(usObj->slicePlane_);
-
-	//int num;
-	//num = cutSource_->GetOutput()->GetNumberOfPoints();
 }
-// --------------------------------------------------------------------------
-/// Show the slice plane
-/// 
-/// @param 
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOnSlicePlane()
+void AesVtkUnClip::ShowOnSlicePlane()
 {
 	if (planeWidget_ != NULL)
 	{
-		planeWidget_->DrawPlaneOn(); 
-		planeWidget_->UpdatePlacement(); 
-	}
-
-}
-// --------------------------------------------------------------------------
-/// Hide the slice plane
-/// 
-/// @param 
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOffSlicePlane()
-{
-	if (planeWidget_ != NULL)
-	{
-		planeWidget_->DrawPlaneOff();    
+		planeWidget_->DrawPlaneOn();
 		planeWidget_->UpdatePlacement();
 	}
 
 }
-// --------------------------------------------------------------------------
-/// Show the widget
-/// 
-/// @param 
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOnSlicePlaneWidget()
+void AesVtkUnClip::ShowOffSlicePlane()
+{
+	if (planeWidget_ != NULL)
+	{
+		planeWidget_->DrawPlaneOff();
+		planeWidget_->UpdatePlacement();
+	}
+
+}
+void AesVtkUnClip::ShowOnSlicePlaneWidget()
 {
 	if (planeWidget_ != NULL)
 	{
 		planeWidget_->On();
 	}
 
-	if (cutActor_) 
+	if (cutActor_)
 	{
 		cutActor_->VisibilityOn();
 	}
 }
 
-// --------------------------------------------------------------------------
-/// Hide the widget
-/// 
-/// @param 
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOffSlicePlaneWidget()
+void AesVtkUnClip::ShowOffSlicePlaneWidget()
 {
 	if (planeWidget_ != NULL)
 	{
 		planeWidget_->Off();
 	}
 
-	if (cutActor_) 
+	if (cutActor_)
 	{
 		cutActor_->VisibilityOff();
 	}
 }
-// --------------------------------------------------------------------------
-/// Set the normal of the slice plane
-/// 
-/// @param nx
-/// @param ny
-/// @param nz
-/// 
-/// @return 
-/// 
-void QVTKUnClip::SetSlicePlaneNormal(double nx, double ny, double nz)
+void AesVtkUnClip::SetSlicePlaneNormal(double nx, double ny, double nz)
 {
 	if (nx == 0 && ny == 0 && nz == 0) {
 		return;
@@ -665,17 +549,10 @@ void QVTKUnClip::SetSlicePlaneNormal(double nx, double ny, double nz)
 		planeNormal_[2] = nz;
 
 		slicePlane_->SetNormal(nx, ny, nz);
-		planeWidget_->SetNormal(nx, ny, nz);	
-	} 
+		planeWidget_->SetNormal(nx, ny, nz);
+	}
 }
-// --------------------------------------------------------------------------
-/// Set the normal of the slice plane
-/// 
-/// @param 
-/// 
-/// @return 
-/// 
-void QVTKUnClip::SetSlicePlaneNormalToX()
+void AesVtkUnClip::SetSlicePlaneNormalToX()
 {
 	if (planeWidget_ != NULL)
 	{
@@ -685,16 +562,9 @@ void QVTKUnClip::SetSlicePlaneNormalToX()
 		planeNormal_[0] = 1.0;
 		planeNormal_[1] = 0;
 		planeNormal_[2] = 0;
-	} 
+	}
 }
-// --------------------------------------------------------------------------
-/// Set the normal of the slice plane
-/// 
-/// @param 
-/// 
-/// @return 
-/// 
-void QVTKUnClip::SetSlicePlaneNormalToY()
+void AesVtkUnClip::SetSlicePlaneNormalToY()
 {
 	if (planeWidget_ == NULL)
 	{
@@ -708,14 +578,7 @@ void QVTKUnClip::SetSlicePlaneNormalToY()
 	planeNormal_[1] = 1.0;
 	planeNormal_[2] = 0;
 }
-// --------------------------------------------------------------------------
-/// Set the normal of the slice plane
-/// 
-/// @param 
-/// 
-/// @return 
-/// 
-void QVTKUnClip::SetSlicePlaneNormalToZ()
+void AesVtkUnClip::SetSlicePlaneNormalToZ()
 {
 	if (planeWidget_ == NULL)
 	{
@@ -730,28 +593,11 @@ void QVTKUnClip::SetSlicePlaneNormalToZ()
 	planeNormal_[2] = 1.0;
 }
 
-// --------------------------------------------------------------------------
-/// Get the normal direction of the slice plane
-/// 
-/// @param 
-///
-/// @return double[3] contains the normal direction
-/// 
-
-double* QVTKUnClip::GetSlicePlaneNormal()
+double* AesVtkUnClip::GetSlicePlaneNormal()
 {
 	return this->planeNormal_;
 }
-// --------------------------------------------------------------------------
-/// Set the slice plane origin
-/// 
-/// @param ox
-/// @param oy
-/// @param oz
-/// 
-/// @return 
-/// 
-void QVTKUnClip::SetSlicePlaneOrigin(double ox, double oy, double oz)
+void AesVtkUnClip::SetSlicePlaneOrigin(double ox, double oy, double oz)
 {
 	if (planeWidget_ == NULL)
 	{
@@ -766,26 +612,12 @@ void QVTKUnClip::SetSlicePlaneOrigin(double ox, double oy, double oz)
 	planeOrigin_[0] = oz;
 
 }
-// --------------------------------------------------------------------------
-/// Get the slice plane origin
-/// 
-/// @param 
-/// 
-/// @return double[3] contains the origin
-/// 
-double* QVTKUnClip::GetSlicePlaneOrigin()
+double* AesVtkUnClip::GetSlicePlaneOrigin()
 {
 	return this->planeOrigin_;
 }
-// --------------------------------------------------------------------------
-/// Create UnSlice display pipeline
-/// 
-/// @param 
-/// 
-/// @return 
-/// 
-void QVTKUnClip::CreateUnSliceContourDisplay()
-{    
+void AesVtkUnClip::CreateUnSliceContourDisplay()
+{
 	if (cutSource_ == NULL)
 	{
 		ErrorInfo(1,"Slice Source Not Set");
@@ -794,26 +626,20 @@ void QVTKUnClip::CreateUnSliceContourDisplay()
 
 	double range[2];
 	if (usedScalarIndex_ != -1)
-	{     
+	{
 		range[0] = _source->scalarRange[usedScalarIndex_][0];
 		range[1]  = _source->scalarRange[usedScalarIndex_][1];
 	}
-	else 
+	else
 	{
 		range[0] = 0;
 		range[1] = 0;
 	}
 	cutSource_->Update();
 
-	//cout<<range[0]<<" "<<range[1]<<endl;
-
-	//cout<<"cut  num:  "<<(cutSource_->GetOutput())->GetNumberOfPoints()<<endl;
-
 	vtkGeometryFilter *geoFilter = vtkGeometryFilter::New();
 	geoFilter->SetInput(cutSource_->GetOutput());
 	geoFilter->Update();
-
-	//cout<<"geo num: "<<(geoFilter->GetOutput())->GetNumberOfPoints()<<endl;
 
 	vtkBandedPolyDataContourFilter *conFilter = vtkBandedPolyDataContourFilter::New();
 	conFilter->SetInput(geoFilter->GetOutput());
@@ -822,16 +648,11 @@ void QVTKUnClip::CreateUnSliceContourDisplay()
 	conFilter->Modified();
 	conFilter->Update();
 
-	//cout<<"con num: "<<(conFilter->GetOutput())->GetNumberOfPoints()<<endl;
-
-
 	vtkDataSetMapper *mapper = vtkDataSetMapper::New();
 	mapper->InterpolateScalarsBeforeMappingOn();
 
 	if(_source->scalarSource[usedScalarIndex_]->GetDataSize() != 0)
 	{
-		//cout<<"test here 3333"<<endl;
-
 		mapper->SetInputConnection(conFilter->GetOutputPort());
 	}
 	else
@@ -852,65 +673,41 @@ void QVTKUnClip::CreateUnSliceContourDisplay()
 		}
 	}
 
-	vtkLookupTable *table = (vtkLookupTable*)mapper->GetLookupTable(); 
+	vtkLookupTable *table = (vtkLookupTable*)mapper->GetLookupTable();
 	table->GetHueRange(range);
 	table->SetHueRange(range[1],range[0]);
 	table->SetNumberOfColors(conLevel_);
 
 	vtkActor *actor = vtkActor::New();
-	actor->SetMapper(mapper);    
+	actor->SetMapper(mapper);
 
-	if (_renderer != NULL) 
-	{    
-		_renderer->AddActor(actor);     
+	if (_renderer != NULL)
+	{
+		_renderer->AddActor(actor);
 	}
-	//actor->GetProperty()->SetRepresentationToSurface();
 	sliceActors_[0] = actor;
 
 	sliceTable_[0] = table;
 
 	bandedContourFilter_ = conFilter;
 }
-// --------------------------------------------------------------------------
-/// Show On UnSlice Display 
-/// 
-/// @param 
-/// 
-/// @return 
-void QVTKUnClip::ShowOnUnSliceContourDisplay()
+void AesVtkUnClip::ShowOnUnSliceContourDisplay()
 {
 	if (sliceActors_[0] != NULL)
 	{
-		//ClippingOffSliceContourDisplay();
-		//sliceActors_[0]->GetProperty()->SetRepresentationToSurface();
 		sliceActors_[0]->VisibilityOn();
-		//sliceActors_[0]->GetProperty()->SetRepresentationToSurface();
-	}      
+	}
 }
-// --------------------------------------------------------------------------
-/// Show Off UnSlice Display 
-/// 
-/// @param 
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOffUnSliceContourDisplay()
+void AesVtkUnClip::ShowOffUnSliceContourDisplay()
 {
 	if (sliceActors_[0] != NULL)
 	{
 
 		sliceActors_[0]->VisibilityOff();
 
-	} 
+	}
 }
-// --------------------------------------------------------------------------
-///Delete UnSlice Display 
-/// 
-/// @param 
-/// 
-/// @return g
-/// 
-void QVTKUnClip::DeleteUnSliceContourDisplay()
+void AesVtkUnClip::DeleteUnSliceContourDisplay()
 {
 	if (sliceActors_[0] != NULL)
 	{
@@ -922,16 +719,9 @@ void QVTKUnClip::DeleteUnSliceContourDisplay()
 		}
 
 		sliceActors_[0]->Delete();
-	} 
+	}
 }
-// --------------------------------------------------------------------------
-/// Create UnSlice Contour Lines Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::CreateUnSliceContourLinesDisplay()
+void AesVtkUnClip::CreateUnSliceContourLinesDisplay()
 {
 	if (cutSource_ == NULL)
 	{
@@ -941,11 +731,11 @@ void QVTKUnClip::CreateUnSliceContourLinesDisplay()
 
 	double range[2];
 	if (usedScalarIndex_ != -1)
-	{     
+	{
 		range[0] = _source->scalarRange[usedScalarIndex_][0];
 		range[1] = _source->scalarRange[usedScalarIndex_][1];
 	}
-	else 
+	else
 	{
 		range[0] = 0;
 		range[1] = 0;
@@ -973,7 +763,7 @@ void QVTKUnClip::CreateUnSliceContourLinesDisplay()
 		}
 	}
 
-	vtkLookupTable *table = (vtkLookupTable*)mapper->GetLookupTable(); 
+	vtkLookupTable *table = (vtkLookupTable*)mapper->GetLookupTable();
 	table->GetHueRange(range);
 	table->SetHueRange(range[1],range[0]);
 	table->SetNumberOfColors(conLevel_);
@@ -981,55 +771,30 @@ void QVTKUnClip::CreateUnSliceContourLinesDisplay()
 	vtkActor *actor = vtkActor::New();
 	actor->SetMapper(mapper);
 
-	if (_renderer != NULL) 
-	{    
-		_renderer->AddActor(actor);   
+	if (_renderer != NULL)
+	{
+		_renderer->AddActor(actor);
 	}
 
 	contourLinesFilter_ = conFilter;
-	/*if (sliceMapper_ != NULL)
-	{
-	sliceMapper_->AddItem (mapper);
-	}*/
 	sliceActors_[1] = actor;
-	sliceTable_[1] = table; 
+	sliceTable_[1] = table;
 }
-// --------------------------------------------------------------------------
-/// Show On UnSlice Contour Lines Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOnUnSliceContourLinesDisplay()
+void AesVtkUnClip::ShowOnUnSliceContourLinesDisplay()
 {
 	if(sliceActors_[1] != NULL)
 	{
 		sliceActors_[1]->VisibilityOn();
 	}
 }
-// --------------------------------------------------------------------------
-/// Show Off UnSlice Contour Lines Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOffUnSliceContourLinesDisplay()
+void AesVtkUnClip::ShowOffUnSliceContourLinesDisplay()
 {
 	if(sliceActors_[1] != NULL)
 	{
 		sliceActors_[1]->VisibilityOff();
 	}
 }
-// --------------------------------------------------------------------------
-/// Delete UnSlice Contour Lines Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::DeleteUnSliceCOntourLinesDisplay()
+void AesVtkUnClip::DeleteUnSliceCOntourLinesDisplay()
 {
 	if (sliceActors_[1] != NULL)
 	{
@@ -1041,16 +806,9 @@ void QVTKUnClip::DeleteUnSliceCOntourLinesDisplay()
 		}
 
 		sliceActors_[1]->Delete();
-	} 
+	}
 }
-// --------------------------------------------------------------------------
-/// Create UnSlice Contour Lines Label Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::CreateUnSliceContourLinesLabelDisplay()
+void AesVtkUnClip::CreateUnSliceContourLinesLabelDisplay()
 {
 	if (cutSource_ == NULL)
 	{
@@ -1060,11 +818,11 @@ void QVTKUnClip::CreateUnSliceContourLinesLabelDisplay()
 
 	double range[2];
 	if (usedScalarIndex_ != -1)
-	{     
+	{
 		range[0] = _source->scalarRange[usedScalarIndex_][0];
 		range[1] = _source->scalarRange[usedScalarIndex_][1];
 	}
-	else 
+	else
 	{
 		range[0] = 0;
 		range[1] = 0;
@@ -1105,48 +863,24 @@ void QVTKUnClip::CreateUnSliceContourLinesLabelDisplay()
 
 	contourLabelFilter_ = labelFilter;
 	sliceActors_[2] = (vtkActor*) actor;
-	/*if (sliceMapper_ != NULL)
-	{
-	sliceMapper_->AddItem (mapper);
-	}*/
-	sliceTable_[2] = NULL; 
+	sliceTable_[2] = NULL;
 
 }
-// --------------------------------------------------------------------------
-/// Show On UnSlice Contour Lines Label Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOnUnSliceContourLinesLabelDisplay()
+void AesVtkUnClip::ShowOnUnSliceContourLinesLabelDisplay()
 {
 	if(sliceActors_[2] != NULL)
 	{
 		sliceActors_[2]->VisibilityOn();
 	}
 }
-// --------------------------------------------------------------------------
-/// Show Off UnSlice Contour Lines Display
-/// 
-/// @param
-/// 
-/// @return 
-void QVTKUnClip::ShowOffUnSliceContourLinesLabelDisplay()
+void AesVtkUnClip::ShowOffUnSliceContourLinesLabelDisplay()
 {
 	if(sliceActors_[2] != NULL)
 	{
 		sliceActors_[2]->VisibilityOff();
 	}
 }
-// --------------------------------------------------------------------------
-/// Delete UnSlice Contour Lines Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::DeleteUnSliceContourLinesLabelDisplay()
+void AesVtkUnClip::DeleteUnSliceContourLinesLabelDisplay()
 {
 	if (sliceActors_[2] != NULL)
 	{
@@ -1158,17 +892,10 @@ void QVTKUnClip::DeleteUnSliceContourLinesLabelDisplay()
 		}
 
 		sliceActors_[2]->Delete();
-	} 
+	}
 }
 
-// --------------------------------------------------------------------------
-/// Create UnSlice Vector Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::CreateUnSliceVectorDisplay()
+void AesVtkUnClip::CreateUnSliceVectorDisplay()
 {
 	if (cutSource_ == NULL)
 	{
@@ -1178,11 +905,11 @@ void QVTKUnClip::CreateUnSliceVectorDisplay()
 
 	double range[2];
 	if (usedScalarIndex_ != -1)
-	{     
+	{
 		range[0] = _source->scalarRange[usedScalarIndex_][0];
 		range[1] = _source->scalarRange[usedScalarIndex_][1];
 	}
-	else 
+	else
 	{
 		range[0] = 0;
 		range[1] = 0;
@@ -1222,7 +949,7 @@ void QVTKUnClip::CreateUnSliceVectorDisplay()
 		}
 	}
 
-	vtkLookupTable *table = (vtkLookupTable*)mapper->GetLookupTable(); 
+	vtkLookupTable *table = (vtkLookupTable*)mapper->GetLookupTable();
 	table->GetHueRange(range);
 	table->SetHueRange(range[1], range[0]);
 	table->SetNumberOfColors(conLevel_);
@@ -1232,54 +959,29 @@ void QVTKUnClip::CreateUnSliceVectorDisplay()
 
 	if (_renderer != NULL)
 	{
-		_renderer->AddActor(actor);  
+		_renderer->AddActor(actor);
 	}
-	/*if (sliceMapper_ != NULL)
-	{
-	sliceMapper_->AddItem (mapper);
-	}*/
 	sliceActors_[3] = actor;
-	sliceTable_[3] = table; 
+	sliceTable_[3] = table;
 	sliceGlyph2D_ = glyph2D;
 	sliceGlyph3D_ = glyph3D;
 
 }
-// --------------------------------------------------------------------------
-/// Show On UnSlice Vector Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOnUnSliceVectorDisplay()
-{
-	if(sliceActors_[3] != NULL)
-	{	
-		sliceActors_[3]->VisibilityOn();
-	}
-}
-// --------------------------------------------------------------------------
-/// Show Off UnSlice Vector Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOffUnSliceVectorDisplay()
+void AesVtkUnClip::ShowOnUnSliceVectorDisplay()
 {
 	if(sliceActors_[3] != NULL)
 	{
-		sliceActors_[3]->VisibilityOff();	
+		sliceActors_[3]->VisibilityOn();
 	}
 }
-// --------------------------------------------------------------------------
-/// Delete UnSlice Vector Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::DeleteUnSliceVectorDisplay()
+void AesVtkUnClip::ShowOffUnSliceVectorDisplay()
+{
+	if(sliceActors_[3] != NULL)
+	{
+		sliceActors_[3]->VisibilityOff();
+	}
+}
+void AesVtkUnClip::DeleteUnSliceVectorDisplay()
 {
 	if (sliceActors_[3] != NULL)
 	{
@@ -1291,16 +993,9 @@ void QVTKUnClip::DeleteUnSliceVectorDisplay()
 		}
 
 		sliceActors_[3]->Delete();
-	} 
+	}
 }
-// --------------------------------------------------------------------------
-/// Create UnSlice Shade Display
-/// 
-/// @param 
-/// 
-/// @return 
-/// 
-void QVTKUnClip::CreateUnSliceShadeDisplay()
+void AesVtkUnClip::CreateUnSliceShadeDisplay()
 {
 	if (cutSource_ == NULL)
 	{
@@ -1309,7 +1004,7 @@ void QVTKUnClip::CreateUnSliceShadeDisplay()
 	}
 
 	vtkGeometryFilter *geoFilter=vtkGeometryFilter::New();
-	geoFilter->SetInput(cutSource_->GetOutput()); 
+	geoFilter->SetInput(cutSource_->GetOutput());
 
 	vtkDataSetMapper *mapper=vtkDataSetMapper::New();
 	mapper->SetInputConnection(geoFilter->GetOutputPort());
@@ -1333,17 +1028,8 @@ void QVTKUnClip::CreateUnSliceShadeDisplay()
 	sliceActors_[4] = actor;
 
 }
-// --------------------------------------------------------------------------
-/// Modify UnSlice Shade Color
-/// 
-/// @param c0 -- color r
-/// @param c1 -- color g
-/// @param c2 -- color b
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ModifyUnSliceShadeColor(double c0, double c1, double c2)
-{    
+void AesVtkUnClip::ModifyUnSliceShadeColor(double c0, double c1, double c2)
+{
 	if (sliceActors_[4]!=NULL)
 	{
 		shadeColor_[0] = c0;
@@ -1353,43 +1039,21 @@ void QVTKUnClip::ModifyUnSliceShadeColor(double c0, double c1, double c2)
 		(sliceActors_[4]->GetProperty())->SetColor(c0, c1, c2);
 	}
 }
-// --------------------------------------------------------------------------
-/// Show On UnSlice Shade Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOnUnSliceShade()
+void AesVtkUnClip::ShowOnUnSliceShade()
 {
 	if(sliceActors_[4] != NULL)
 	{
 		sliceActors_[4]->VisibilityOn();
-		//sliceActors_[4]->GetProperty()->SetRepresentationToSurface();
 	}
 }
-// --------------------------------------------------------------------------
-/// Show Off UnSlice Shade Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOffUnSliceShade()
+void AesVtkUnClip::ShowOffUnSliceShade()
 {
 	if(sliceActors_[4] != NULL)
 	{
 		sliceActors_[4]->VisibilityOff();
 	}
 }
-// --------------------------------------------------------------------------
-/// Create UnSlice Mesh Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::CreateUnSliceMeshDisplay()
+void AesVtkUnClip::CreateUnSliceMeshDisplay()
 {
 	if (cutSource_ == NULL)
 	{
@@ -1398,7 +1062,7 @@ void QVTKUnClip::CreateUnSliceMeshDisplay()
 	}
 
 	vtkGeometryFilter *geoFilter=vtkGeometryFilter::New();
-	geoFilter->SetInput(cutSource_->GetOutput()); 
+	geoFilter->SetInput(cutSource_->GetOutput());
 
 	vtkDataSetMapper *mapper=vtkDataSetMapper::New();
 	mapper->SetInputConnection(geoFilter->GetOutputPort());
@@ -1406,8 +1070,7 @@ void QVTKUnClip::CreateUnSliceMeshDisplay()
 
 	vtkActor *actor=vtkActor::New();
 	actor->SetMapper(mapper);
-	actor->GetProperty()->SetColor(meshColor_[0], meshColor_[1], meshColor_[2]);  
-	//(actor->GetProperty())->SetRepresentationToSurface();
+	actor->GetProperty()->SetColor(meshColor_[0], meshColor_[1], meshColor_[2]);
 
 	if (_renderer != NULL)
 	{
@@ -1421,17 +1084,8 @@ void QVTKUnClip::CreateUnSliceMeshDisplay()
 	sliceTable_[5] = NULL;
 	sliceActors_[5] = actor;
 }
-// --------------------------------------------------------------------------
-/// Modify UnSlice Mesh Color
-/// 
-/// @param c0 -- color r
-/// @param c1 -- color g
-/// @param c2 -- color b
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ModifyUnSliceMeshColor(double c0, double c1, double c2)
-{    
+void AesVtkUnClip::ModifyUnSliceMeshColor(double c0, double c1, double c2)
+{
 	if (sliceActors_[5]!=NULL)
 	{
 		shadeColor_[0] = c0;
@@ -1441,57 +1095,28 @@ void QVTKUnClip::ModifyUnSliceMeshColor(double c0, double c1, double c2)
 		(sliceActors_[5]->GetProperty())->SetColor(c0, c1, c2);
 	}
 }
-// --------------------------------------------------------------------------
-/// Show On UnSlice Mesh Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOnUnSliceMesh()
+void AesVtkUnClip::ShowOnUnSliceMesh()
 {
 	if(sliceActors_[5] != NULL)
 	{
 		sliceActors_[5]->VisibilityOn();
-		//sliceActors_[5]->GetProperty()->SetRepresentationToSurface();
 	}
 }
-// --------------------------------------------------------------------------
-/// Show Off UnSlice Mesh Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ShowOffUnSliceMesh()
+void AesVtkUnClip::ShowOffUnSliceMesh()
 {
 	if(sliceActors_[5] != NULL)
 	{
 		sliceActors_[5]->VisibilityOff();
 	}
 }
-// --------------------------------------------------------------------------
-/// Set UnSlice Contour Opacity
-/// 
-/// @param value -- opacity value
-/// 
-/// @return 
-/// 
-void QVTKUnClip::SetUnSliceContourOpacity(double value)
+void AesVtkUnClip::SetUnSliceContourOpacity(double value)
 {
 	if (sliceActors_[0] != NULL)
 	{
 		(sliceActors_[0]->GetProperty())->SetOpacity(value);
 	}
 }
-// --------------------------------------------------------------------------
-/// Get UnSlice Contour Opacity
-/// 
-/// @param blockIndex
-/// 
-/// @return opacity value
-/// 
-double QVTKUnClip::GetUnSliceContourOpacity()
+double AesVtkUnClip::GetUnSliceContourOpacity()
 {
 	if (sliceActors_[0] != NULL)
 	{
@@ -1499,16 +1124,7 @@ double QVTKUnClip::GetUnSliceContourOpacity()
 	}
 	return NULL;
 }
-// --------------------------------------------------------------------------
-/// Modify UnSlice Vector Color Mode
-/// 
-/// @param mode -- color mode
-/// @li "ColorByScale";
-/// @li "ColorByScalar";
-/// @li "ColorByVector";
-///
-/// @return 
-void QVTKUnClip::ModifyUnSliceVectorColorMode(char* mode)
+void AesVtkUnClip::ModifyUnSliceVectorColorMode(char* mode)
 {
 
 	if (sliceGlyph3D_ != NULL)
@@ -1525,24 +1141,13 @@ void QVTKUnClip::ModifyUnSliceVectorColorMode(char* mode)
 		{
 			sliceGlyph3D_->SetColorModeToColorByVector();
 		}
-		else 
+		else
 		{
 			sliceGlyph3D_->SetColorModeToColorByScalar();
 		}
 	}
 }
-// --------------------------------------------------------------------------
-/// Modify UnSlice Vector Scale Mode
-/// 
-/// @param mode -- Scale mode
-/// @li "ScaleByScalar"
-/// @li "ScaleByVector"
-/// @li "ScaleByVectorComponents"
-/// @li "DataScalingOff"
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ModifyUnSliceVectorScaleMode(char* mode)
+void AesVtkUnClip::ModifyUnSliceVectorScaleMode(char* mode)
 {
 
 	if (sliceGlyph3D_ != NULL)
@@ -1563,20 +1168,13 @@ void QVTKUnClip::ModifyUnSliceVectorScaleMode(char* mode)
 		{
 			sliceGlyph3D_->SetScaleModeToDataScalingOff ();
 		}
-		else 
+		else
 		{
 			sliceGlyph3D_->SetScaleModeToScaleByScalar();
 		}
 	}
 }
-// --------------------------------------------------------------------------
-/// Modify UnSlice Vector Scale factor
-/// 
-/// @param scale -- Scale factor
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ModifyUnSliceVectorScaleFactor(double scaleFactor)
+void AesVtkUnClip::ModifyUnSliceVectorScaleFactor(double scaleFactor)
 {
 
 	if (sliceGlyph3D_ != NULL)
@@ -1584,76 +1182,39 @@ void QVTKUnClip::ModifyUnSliceVectorScaleFactor(double scaleFactor)
 		sliceGlyph3D_->SetScaleFactor(scaleFactor);
 	}
 }
-// --------------------------------------------------------------------------
-/// Set UnSlice Vector Filled On
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::SetUnSliceVectorFilledOn()
+void AesVtkUnClip::SetUnSliceVectorFilledOn()
 {
 	if (sliceGlyph2D_ != NULL)
 	{
 		sliceGlyph2D_->FilledOn();
 	}
 }
-// --------------------------------------------------------------------------
-/// Set UnSlice Vector Filled Off
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::SetUnSliceVectorFilledOff()
-{   
+void AesVtkUnClip::SetUnSliceVectorFilledOff()
+{
 	if (sliceGlyph2D_ != NULL)
 	{
 		sliceGlyph2D_->FilledOff();
 	}
 }
-// --------------------------------------------------------------------------
-/// Modify UnSlice Vector Position
-/// 
-/// @param p0 -- position x
-/// @param p1 -- position y
-/// @param p2 -- position z
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ModifyUnSliceVectorPosition(double p0, double p1, double p2)
+void AesVtkUnClip::ModifyUnSliceVectorPosition(double p0, double p1, double p2)
 {
 
 	if (sliceGlyph2D_ != NULL)
 	{
 		sliceGlyph2D_->SetCenter(p0, p1, p2);
-	}    
+	}
 }
-// --------------------------------------------------------------------------
-/// Modify UnSlice Shade
-/// 
-/// @param value -- opacity value
-///
-/// @return 
-/// 
-void QVTKUnClip::ModifyUnSliceShadeOpacity(double value)
+void AesVtkUnClip::ModifyUnSliceShadeOpacity(double value)
 {
 	if (sliceActors_[4] != NULL)
 	{
 		(sliceActors_[4]->GetProperty())->SetOpacity(value);
 	}
 }
-// --------------------------------------------------------------------------
-/// Modify UnSlice Contour Level
-/// 
-/// @param level 
-/// 
-/// @return 
-/// 
 
-void QVTKUnClip::ModifyUnSliceContourLevel(int level)
-{      
-	if (level < 2) 
+void AesVtkUnClip::ModifyUnSliceContourLevel(int level)
+{
+	if (level < 2)
 	{
 		ErrorInfo(0, "Contour Level must be within range: 2 to 50!, Using the Min Level 2 insteading!");
 
@@ -1666,7 +1227,7 @@ void QVTKUnClip::ModifyUnSliceContourLevel(int level)
 		level = MAXLEVEL;
 	}
 
-	conLevel_ = level; 
+	conLevel_ = level;
 
 	if (sliceTable_[0] != NULL)
 	{
@@ -1695,41 +1256,21 @@ void QVTKUnClip::ModifyUnSliceContourLevel(int level)
 	}
 
 }
-// --------------------------------------------------------------------------
-/// Modify UnSlice Vector Position
-/// 
-/// @param lineWidth -- line width
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ModifyUnSliceMeshLineWidth(double lineWidth)
+void AesVtkUnClip::ModifyUnSliceMeshLineWidth(double lineWidth)
 {
 	if (sliceActors_[5]!=NULL)
 	{
 		(sliceActors_[5]->GetProperty())->SetLineWidth(lineWidth);
 	}
 }
-// --------------------------------------------------------------------------
-/// Modify UnSlice Contou rLines Width
-/// 
-/// @param lineWidth
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ModifyUnSliceContourLinesWidth(double lineWidth)
+void AesVtkUnClip::ModifyUnSliceContourLinesWidth(double lineWidth)
 {
 	if (sliceActors_[1]!=NULL)
 	{
 		(sliceActors_[1]->GetProperty())->SetLineWidth(lineWidth);
 	}
 }
-// --------------------------------------------------------------------------
-/// Get slice plane widget
-/// 
-/// @param 
-/// 1
-/// @return vtkImplicitPlaneWidget
-vtkImplicitPlaneWidget* QVTKUnClip::GetSlicePlaneWidget()
+vtkImplicitPlaneWidget* AesVtkUnClip::GetSlicePlaneWidget()
 {
 	if (planeWidget_ != NULL)
 	{
@@ -1739,14 +1280,7 @@ vtkImplicitPlaneWidget* QVTKUnClip::GetSlicePlaneWidget()
 	return NULL;
 }
 
-// --------------------------------------------------------------------------
-/// Get slice plane
-/// 
-/// @param 
-/// 
-/// @return vtkPlane
-/// 
-vtkPlane* QVTKUnClip::GetSlicePlane()
+vtkPlane* AesVtkUnClip::GetSlicePlane()
 {
 	if(slicePlane_ != NULL)
 	{
@@ -1755,13 +1289,7 @@ vtkPlane* QVTKUnClip::GetSlicePlane()
 
 	return NULL;
 }
-// --------------------------------------------------------------------------
-/// Set Slice PlaneWidget Handle Size
-/// 
-/// @param size
-/// 
-/// @return 
-void QVTKUnClip::ModifySlicePlaneWidgetHandleSize(double size)
+void AesVtkUnClip::ModifySlicePlaneWidgetHandleSize(double size)
 {
 	if (planeWidget_ != NULL)
 	{
@@ -1769,15 +1297,7 @@ void QVTKUnClip::ModifySlicePlaneWidgetHandleSize(double size)
 		planeWidget_->UpdatePlacement();
 	}
 }
-// --------------------------------------------------------------------------
-/// Modify Display Scalar Range 
-/// 
-/// @param min -- min Scalar
-/// @param max -- max Scalar
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ModifyDisplayScalarRange(double min,double max)
+void AesVtkUnClip::ModifyDisplayScalarRange(double min,double max)
 {
 	scalarRange_[0] = min;
 	scalarRange_[1] = max;
@@ -1787,8 +1307,6 @@ void QVTKUnClip::ModifyDisplayScalarRange(double min,double max)
 
 	if(bandedContourFilter_ != NULL)
 	{
-		//cout<<"test here 4444"<<endl;
-
 		bandedContourFilter_->GenerateValues(conLevel_, min, max);
 		bandedContourFilter_->Modified();
 	}
@@ -1804,23 +1322,15 @@ void QVTKUnClip::ModifyDisplayScalarRange(double min,double max)
 				(sliceActors_[i]->GetMapper())->GetLookupTable()->SetRange(min, max);
 				(sliceActors_[i]->GetMapper())->GetLookupTable()->Modified();
 
-				(sliceActors_[i]->GetMapper())->SetScalarRange(min, max);				
+				(sliceActors_[i]->GetMapper())->SetScalarRange(min, max);
 				(sliceActors_[i]->GetMapper())->Modified();
 
 				sliceActors_[i]->Modified();
-				//sliceActors_[i]->GetProperty()->SetRepresentationToSurface();
 			}
 		}
 	}
 }
-// --------------------------------------------------------------------------
-/// Clipping On Slice Contour Display
-/// 
-/// @param 
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ClippingOnSliceContourDisplay()
+void AesVtkUnClip::ClippingOnSliceContourDisplay()
 {
 
 	if(bandedContourFilter_ != NULL)
@@ -1834,29 +1344,21 @@ void QVTKUnClip::ClippingOnSliceContourDisplay()
 	for (int i= 0; i<6; i++)
 	{
 		if (i == 0 || i== 1 || i == 3)
-		{			
+		{
 			if(sliceActors_[i] != NULL)
 			{
 				(sliceActors_[i]->GetMapper())->GetLookupTable()->SetRange(scalarRange_[0], scalarRange_[1]);
 				(sliceActors_[i]->GetMapper())->GetLookupTable()->Modified();
 
-				(sliceActors_[i]->GetMapper())->SetScalarRange(scalarRange_[0], scalarRange_[1]);				
+				(sliceActors_[i]->GetMapper())->SetScalarRange(scalarRange_[0], scalarRange_[1]);
 				(sliceActors_[i]->GetMapper())->Modified();
 
 				sliceActors_[i]->Modified();
-				//sliceActors_[i]->GetProperty()->SetRepresentationToSurface();
 			}
 		}
 	}
 }
-// --------------------------------------------------------------------------
-/// Clipping Off Slice Contour Display
-/// 
-/// @param
-/// 
-/// @return 
-/// 
-void QVTKUnClip::ClippingOffSliceContourDisplay()
+void AesVtkUnClip::ClippingOffSliceContourDisplay()
 {
 
 	if(bandedContourFilter_ != NULL)
@@ -1869,13 +1371,13 @@ void QVTKUnClip::ClippingOffSliceContourDisplay()
 	for (int i= 0; i<6; i++)
 	{
 		if (i == 0 || i== 1 || i == 3)
-		{			
+		{
 			if(sliceActors_[i] != NULL)
 			{
 				(sliceActors_[i]->GetMapper())->GetLookupTable()->SetRange(scalarRange_[0], scalarRange_[1]);
 				(sliceActors_[i]->GetMapper())->GetLookupTable()->Modified();
 
-				(sliceActors_[i]->GetMapper())->SetScalarRange(scalarRange_[0], scalarRange_[1]);				
+				(sliceActors_[i]->GetMapper())->SetScalarRange(scalarRange_[0], scalarRange_[1]);
 				(sliceActors_[i]->GetMapper())->Modified();
 
 				sliceActors_[i]->Modified();
@@ -1884,11 +1386,7 @@ void QVTKUnClip::ClippingOffSliceContourDisplay()
 	}
 }
 
-//////////////////////////////////////////////////////
-//#include "vtkIdFilter.h"
-//#include "vtkCellCenters.h"
-//#include "vtkVertexGlyphFilter.h"
-void QVTKUnClip::SetSliceSource_FD(char* scalar, char* vector, bool bInsideOut)
+void AesVtkUnClip::SetSliceSource_FD(char* scalar, char* vector, bool bInsideOut)
 {
 	int index1 = -1;
 	int index2 = -1;
@@ -1903,7 +1401,6 @@ void QVTKUnClip::SetSliceSource_FD(char* scalar, char* vector, bool bInsideOut)
 	}
 
 	vtkUnstructuredGrid *unGrid = vtkUnstructuredGrid::New();
-	//vtkPolyData *unGrid = vtkPolyData::New();
 	unGrid->DeepCopy(_source->unstruGrid);
 
 	if (index1 != -1)
@@ -1931,7 +1428,7 @@ void QVTKUnClip::SetSliceSource_FD(char* scalar, char* vector, bool bInsideOut)
 		{
 			(unGrid->GetPointData())->SetVectors(_source->vectorSource[index2]);
 		}
-		else 
+		else
 		{
 			(unGrid->GetCellData())->SetVectors(_source->cellVectorSource_[index2]);
 		}
@@ -1941,60 +1438,25 @@ void QVTKUnClip::SetSliceSource_FD(char* scalar, char* vector, bool bInsideOut)
 	vtkPlane *plane = vtkPlane::New();
 	plane->SetNormal(planeNormal_[0], planeNormal_[1], planeNormal_[2]);
 
-/*	vtkCutter *cutter = vtkCutter::New();
-	cutter->SetInput(unGrid);
-	cutter->SetCutFunction(plane);
-	cutter->GenerateCutScalarsOff();
-	cutter->SetSortByToSortByCell();
-	cutter->Update();*/
-
 	vtkDataSetSurfaceFilter *surf=vtkDataSetSurfaceFilter::New();
 	surf->SetInput(unGrid);
 	surf->Update();
-	/*vtkPolyData *m_unGrid_=surf->GetOutput();
-	vtkExtractEdges *surf=vtkExtractEdges::New();
-	surf->SetInput(unGrid);
-	surf->Update();
-	vtkGeometryFilter *surf = vtkGeometryFilter::New();
-	surf->SetInput(unGrid);
-	surf->Update();
-	vtkExtractEdges *surf=vtkExtractEdges::New();
-	surf->SetInput(unGrid);
-	surf->Update();*/
-	/*vtkIdFilter *idFilter= vtkIdFilter::New();
-	idFilter->SetInput(unGrid);
-	idFilter->PointIdsOn();
-	idFilter->FieldDataOn();
-	idFilter->CellIdsOn();
-	idFilter->Update();
-	vtkCellCenters *surf = vtkCellCenters::New();
-	 surf->SetInputConnection(idFilter->GetOutputPort());
-	 surf->VertexCellsOn();
-	 surf->Update();*/
 	vtkPolyData *m_unGrid_=surf->GetOutput();
-	
-	//vtkClipPolyData *cutter=vtkClipPolyData::New();
+
 	vtkClipDataSet*cutter=vtkClipDataSet::New();
-	cutter->SetInput(unGrid);//(m_unGrid_);
-	cutter->SetClipFunction(plane);//CutFunction(plane);
+	cutter->SetInput(unGrid);
+	cutter->SetClipFunction(plane);
 	cutter->GenerateClipScalarsOff();
 	cutter->GenerateClippedOutputOn();
-	//cutter->SetGenerateClippedOutput(false);//(true);////
 	cutter->SetInsideOut(bInsideOut);
-	//cutter->SetValue(0.0);
-	//cutter->GenerateClipScalarsOff();//GenerateCutScalarsOff();
-	//cutter->SetSortByToSortByCell();
 	cutter->Update();
 
-	//cout<<"test here 1111"<<(cutter->GetOutput())->GetNumberOfPoints()<<endl;
-
 	gridSource_ = unGrid;
-	//gridSource_ ->DeepCopy(unGrid);
 	cutSource_ = cutter;
-	slicePlane_ =  plane;    
+	slicePlane_ =  plane;
 }
 
-void QVTKUnClip::CreateSliceWidget_FD()
+void AesVtkUnClip::CreateSliceWidget_FD()
 {
 	if (cutSource_ == NULL)
 	{
@@ -2015,11 +1477,10 @@ void QVTKUnClip::CreateSliceWidget_FD()
 	planeWidget->SetHandleSize(0.005);
 	planeWidget->SetDiagonalRatio(0.2);
 
-	planeWidget->GetPlane(slicePlane_);      
+	planeWidget->GetPlane(slicePlane_);
 	planeWidget->SetInput(cutSource_->GetOutput());
 
 	planeWidget->TubingOff();
-	//add begin
 	planeWidget->GetEdgesProperty()->SetLineWidth(2.0);
 	planeWidget->GetPlaneProperty()->SetColor(0.5, 0.5, 0.5);
 	planeWidget->GetPlaneProperty()->SetOpacity(1);
@@ -2030,9 +1491,8 @@ void QVTKUnClip::CreateSliceWidget_FD()
 	planeWidget->SetOrigin(planeOrigin_[0], planeOrigin_[1], planeOrigin_[2]);
 	slicePlane_->SetOrigin(planeOrigin_[0], planeOrigin_[1], planeOrigin_[2]);
 	vtkFloatArray *arry = GetCutScalarData();
-	if (arry)  
+	if (arry)
 		arry->GetRange(scalarRange_);
-	//add end
 	planeWidget->On();
 
 	planeWidget_ = planeWidget;
@@ -2043,31 +1503,28 @@ void QVTKUnClip::CreateSliceWidget_FD()
 
 	planeWidget->AddObserver(vtkCommand::InteractionEvent, cc);
 }
-//#include "vtkVISUnSlice.h"
-void QVTKUnClip::GenerateSliceProData_FD(vtkObject *caller, unsigned long, void* obj, void *)
+void AesVtkUnClip::GenerateSliceProData_FD(vtkObject *caller, unsigned long, void* obj, void *)
 {
-	QVTKUnClip* usObj = (QVTKUnClip*)obj;
+	AesVtkUnClip* usObj = (AesVtkUnClip*)obj;
 	if (usObj->planeWidget_ == NULL)
 	{
 		usObj->ErrorInfo(1,"Plane Widget Not Created");
 		return;
 	}
 	usObj->planeWidget_->GetPlane(usObj->slicePlane_);
-	//add begin. when cut plane moving, update the cut plane's scalar range
 	double r[2];r[0]=0;r[1]=0;
 	vtkFloatArray *arry = usObj->GetCutScalarData();
-	if (arry)  
+	if (arry)
 		arry->GetRange(r);
 	if (r[0]==0&&r[1]==0)
 	{
 		return;
 	}
 	usObj->ModifyDisplayScalarRange_FD(r[0], r[1]);
-	//add end
 }
 
-void QVTKUnClip::CreateUnSliceContourDisplay_FD()
-{    
+void AesVtkUnClip::CreateUnSliceContourDisplay_FD()
+{
 	if (cutSource_ == NULL)
 	{
 		ErrorInfo(1,"Slice Source Not Set");
@@ -2076,13 +1533,11 @@ void QVTKUnClip::CreateUnSliceContourDisplay_FD()
 
 	double range[2];
 	if (usedScalarIndex_ != -1)
-	{     
-		//range[0] = _source->scalarRange[usedScalarIndex_][0];
-		//range[1]  = _source->scalarRange[usedScalarIndex_][1];
-		range[0]  = scalarRange_[0];   //use current cut plane's scalar range,
-		range[1]  = scalarRange_[1];   //instead of the whole input's scalar range.
+	{
+		range[0]  = scalarRange_[0];
+		range[1]  = scalarRange_[1];
 	}
-	else 
+	else
 	{
 		range[0] = 0;
 		range[1] = 0;
@@ -2126,7 +1581,7 @@ void QVTKUnClip::CreateUnSliceContourDisplay_FD()
 		}
 	}
 
-	vtkLookupTable *table = (vtkLookupTable*)mapper->GetLookupTable(); 
+	vtkLookupTable *table = (vtkLookupTable*)mapper->GetLookupTable();
 	table->GetHueRange(range);
 	table->SetHueRange(range[1],range[0]);
 	table->SetNumberOfColors(conLevel_);
@@ -2135,9 +1590,9 @@ void QVTKUnClip::CreateUnSliceContourDisplay_FD()
 	actor->SetMapper(mapper);
 	actor->GetProperty()->SetRepresentationToSurface();
 
-	if (_renderer != NULL) 
-	{    
-		_renderer->AddActor(actor);     
+	if (_renderer != NULL)
+	{
+		_renderer->AddActor(actor);
 	}
 
 	sliceActors_[0] = actor;
@@ -2147,7 +1602,7 @@ void QVTKUnClip::CreateUnSliceContourDisplay_FD()
 	bandedContourFilter_ = conFilter;
 }
 
-void QVTKUnClip::CreateUnSliceContourLinesDisplay_FD()
+void AesVtkUnClip::CreateUnSliceContourLinesDisplay_FD()
 {
 	if (cutSource_ == NULL)
 	{
@@ -2157,13 +1612,11 @@ void QVTKUnClip::CreateUnSliceContourLinesDisplay_FD()
 
 	double range[2];
 	if (usedScalarIndex_ != -1)
-	{     
-		//range[0] = _source->scalarRange[usedScalarIndex_][0];
-		//range[1] = _source->scalarRange[usedScalarIndex_][1];
-		range[0]  = scalarRange_[0];   //use current cut plane's scalar range,
-		range[1]  = scalarRange_[1];   //instead of the whole input's scalar range.
+	{
+		range[0]  = scalarRange_[0];
+		range[1]  = scalarRange_[1];
 	}
-	else 
+	else
 	{
 		range[0] = 0;
 		range[1] = 0;
@@ -2192,7 +1645,7 @@ void QVTKUnClip::CreateUnSliceContourLinesDisplay_FD()
 		}
 	}
 
-	vtkLookupTable *table = (vtkLookupTable*)mapper->GetLookupTable(); 
+	vtkLookupTable *table = (vtkLookupTable*)mapper->GetLookupTable();
 	table->GetHueRange(range);
 	table->SetHueRange(range[1],range[0]);
 	table->SetNumberOfColors(conLevel_);
@@ -2201,16 +1654,16 @@ void QVTKUnClip::CreateUnSliceContourLinesDisplay_FD()
 	actor->SetMapper(mapper);
 	actor->GetProperty()->SetRepresentationToSurface();
 
-	if (_renderer != NULL) 
-	{    
-		_renderer->AddActor(actor);   
+	if (_renderer != NULL)
+	{
+		_renderer->AddActor(actor);
 	}
 
 	contourLinesFilter_ = conFilter;
 	sliceActors_[1] = actor;
-	sliceTable_[1] = table; 
+	sliceTable_[1] = table;
 }
-void QVTKUnClip::ModifyDisplayScalarRange_FD(double min,double max)
+void AesVtkUnClip::ModifyDisplayScalarRange_FD(double min,double max)
 {
 	scalarRange_[0] = min;
 	scalarRange_[1] = max;
@@ -2223,7 +1676,6 @@ void QVTKUnClip::ModifyDisplayScalarRange_FD(double min,double max)
 		bandedContourFilter_->GenerateValues(conLevel_, min, max);
 		bandedContourFilter_->Modified();
 	}
-	//add begin. update contour lines/labels values
 	if (contourLinesFilter_ != NULL)
 	{
 		contourLinesFilter_->GenerateValues(conLevel_, min, max);
@@ -2234,7 +1686,6 @@ void QVTKUnClip::ModifyDisplayScalarRange_FD(double min,double max)
 		contourLabelFilter_->GenerateValues(conLevel_, min, max);
 		contourLabelFilter_->Modified();
 	}
-	//add end
 
 	for (int i= 0; i<6; i++)
 	{
@@ -2246,7 +1697,7 @@ void QVTKUnClip::ModifyDisplayScalarRange_FD(double min,double max)
 				(sliceActors_[i]->GetMapper())->GetLookupTable()->SetRange(min, max);
 				(sliceActors_[i]->GetMapper())->GetLookupTable()->Modified();
 
-				(sliceActors_[i]->GetMapper())->SetScalarRange(min, max);				
+				(sliceActors_[i]->GetMapper())->SetScalarRange(min, max);
 				(sliceActors_[i]->GetMapper())->Modified();
 
 				sliceActors_[i]->Modified();
@@ -2256,13 +1707,13 @@ void QVTKUnClip::ModifyDisplayScalarRange_FD(double min,double max)
 	}
 }
 
-void QVTKUnClip::ModifySliceSourceScalar_FD(char* scalar)
+void AesVtkUnClip::ModifySliceSourceScalar_FD(char* scalar)
 {
 	if (gridSource_ == NULL)
 	{
 		ErrorInfo(1,"Grid Source are not Setted!");
-		return;     
-	}  
+		return;
+	}
 
 	int index = -1;
 	if(scalar != NULL)
@@ -2285,7 +1736,7 @@ void QVTKUnClip::ModifySliceSourceScalar_FD(char* scalar)
 		scalarSource_->DeepCopy(_source->scalarSource[index]);
 		(gridSource_->GetPointData())->SetScalars(scalarSource_);
 	}
-	else 
+	else
 	{
 		scalarSource_->DeepCopy(_source->cellScalarSource_[index]);
 		(gridSource_->GetCellData())->SetScalars(scalarSource_);
@@ -2296,7 +1747,6 @@ void QVTKUnClip::ModifySliceSourceScalar_FD(char* scalar)
 
 	vtkFloatArray *arry = GetCutScalarData();
 	if (arry)  arry->GetRange(scalarRange_);
-	//2011-05-10 zhuqin add begin.
 	if(bandedContourFilter_ != NULL)
 	{
 		bandedContourFilter_->GenerateValues(conLevel_, scalarRange_[0],scalarRange_[1]);
@@ -2313,7 +1763,6 @@ void QVTKUnClip::ModifySliceSourceScalar_FD(char* scalar)
 		contourLabelFilter_->GenerateValues(conLevel_, scalarRange_[0],scalarRange_[1]);
 		contourLabelFilter_->Modified();
 	}
-	//2011-05-10 zhuqin add end.
 
 
 	for (int i= 0; i<6; i++)
@@ -2344,7 +1793,7 @@ void QVTKUnClip::ModifySliceSourceScalar_FD(char* scalar)
 	}
 
 }
-bool QVTKUnClip::GetSourceBounds_FD(double *bounds)
+bool AesVtkUnClip::GetSourceBounds_FD(double *bounds)
 {
 	if (cutSource_=NULL)
 	{

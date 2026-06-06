@@ -60,14 +60,11 @@
 !
       nstate_=max(nstate_,15)
 !
-      do j=1,(nconstants)/8+1
+      do j=1,3
          call getnewline(inpc,textpart,istat,n,key,iline,ipol,
      &        inl,ipoinp,inp,ipoinpc)
          if((istat.lt.0).or.(key.eq.1)) exit
          imax=8
-         if(8*j.gt.nconstants) then
-            imax=nconstants-8*(j-1)
-         endif
          do i=1,imax
             read(textpart(i)(1:20),'(f20.0)',iostat=istat)
      &         gscon(i+(j-1)*8,1,nmat)
@@ -81,7 +78,7 @@
       enddo
 !
 !     Optional column 2: SRX/MRX parameters
-!     Backward compatible — if no extra lines follow, exits on keyword/EOF
+!     Backward compatible: if no extra lines follow, exits on keyword/EOF
 !
       do j=1,(nconstants)/8+1
          call getnewline(inpc,textpart,istat,n,key,iline,ipol,
@@ -117,4 +114,3 @@
 !
       return
       end
-

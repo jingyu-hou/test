@@ -132,7 +132,7 @@ FORTRAN(openfile,(jobnamef,output));
 printf("\n************************************************************\n\n");
 printf("WeICME Version 2020.0, Copyright(C) 2019-2023 Wedge\n\n");
 printf("************************************************************\n\n");
-printf("You are using an executable made on Fri Jun  5 10:29:22 EDT 2026\n");
+printf("You are using an executable made on Sat Jun  6 01:01:55 EDT 2026\n");
 fflush(stdout);
 
 istep=0;

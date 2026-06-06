@@ -106,7 +106,7 @@ C
       real*8 MRX_sign, SRX_sign, UNDEFORM_sign
       real*8 N3, N4, t_Deform, D_GROWTH0_MRX, D_GROWTH0_SRX
       real*8 t_GROWTH0_MRX, t_GROWTH0_SRX
-      real*8 tempk_safe, t_total, rate_safe
+      real*8 tempk_safe, t_total, t_hold, rate_safe
       real*8 q_drx, q_mrx_srx, q_gg, a_ec, avrami_mrx, avrami_srx
       real*8 gg_exp, temp_hold, gsloc_switch
 C
@@ -122,6 +122,7 @@ C     Read enable switch
 C
       gsloc_switch = gsloc(1,2)
       if (gsloc_switch .eq. ZERO) return
+
 C
 C     Read parameters from gsloc(1..,2), falling back to [HARDCODED] defaults
 C
@@ -149,10 +150,10 @@ C
       D_AVE = statev(13)
 C
 C     ————————————————————————————————————————————————————————
-C     First-call initialisation (kinc == 1)
+C     First-call initialisation (once per simulation, not per step)
 C     ————————————————————————————————————————————————————————
 C
-      if (kinc .eq. 1) then
+      if (statev(I_D0_K90) .le. ZERO) then
 C         Seed D0 from existing D_AVE (drx.f output) or gsloc override
           if (gsloc(2,2) .ne. ZERO) then
             D0 = gsloc(2,2)
@@ -265,10 +266,14 @@ C
 C         Update deformation timer
           t_Deform = t_total
 C
+C         Propagate residual strain for next increment
+          EQUE_RE0 = EQUE_RE
+C
 C         Save current state
           statev(I_MRX_SIGN)      = MRX_sign
           statev(I_UNDEFORM_SIGN) = ZERO
           statev(I_EQUE_RE)       = EQUE_RE
+          statev(I_EQUE_RE0)      = EQUE_RE0
           statev(I_EQUER_MEAN)    = EQUER_mean
           statev(I_EQUE05_DRX)    = EQUE05_DRX
           statev(I_T_DEFORM)      = t_Deform
@@ -321,6 +326,11 @@ C     Guard EQUER_mean for Z computation in holding
       if (rate_safe .lt. 1.d-20) rate_safe = 1.d-20
       Z = rate_safe * dexp(q_drx / R / tempk_safe)
 C
+C     Holding time for SRX/MRX kinetics: time since deformation ended
+C
+      t_hold = t_total - t_Deform
+      if (t_hold .lt. ZERO) t_hold = ZERO
+C
 C     ============================================
 C     MRX: metadynamic recrystallization
 C     ============================================
@@ -331,7 +341,7 @@ C
      &            * dexp(q_mrx_srx / R / tempk_safe)
           if (t05_MRX .lt. 1.d-30) t05_MRX = 1.d-30
 C
-          X_MRX = ONE - dexp(-BETA * (t_total / t05_MRX) ** avrami_mrx)
+          X_MRX = ONE - dexp(-BETA * (t_hold / t05_MRX) ** avrami_mrx)
           X_MRX = dmax1(ZERO, dmin1(ONE, X_MRX))
 C
           D_MRX = 2.6d4 * (Z ** (-0.23d0))
@@ -383,7 +393,7 @@ C
      &            * dexp(q_mrx_srx / R / tempk_safe)
           if (t05_SRX .lt. 1.d-30) t05_SRX = 1.d-30
 C
-          X_SRX = ONE - dexp(-BETA * (t_total / t05_SRX) ** avrami_srx)
+          X_SRX = ONE - dexp(-BETA * (t_hold / t05_SRX) ** avrami_srx)
           X_SRX = dmax1(ZERO, dmin1(ONE, X_SRX))
 C
           D_SRX = 343.d0 * (EQUE_RE0 ** (-0.5d0))

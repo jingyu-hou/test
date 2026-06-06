@@ -1534,10 +1534,10 @@ void MainWindow::createDockWindows()
 	areaPostPrc_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	DockPostPrc_->setWidget(areaPostPrc_);
 	areaPostPrc_->setWidgetResizable(true);
-	DockPostPrc_->setMinimumWidth(200);
+	DockPostPrc_->setMinimumWidth(320);
 	DockPostPrc_->setMaximumWidth(1000);
 	DockPostPrc_->setMinimumHeight(500);
-    DockPostPrc_->resize(100,300);
+	DockPostPrc_->resize(320,500);
 	PostPro_ = new QPostPrc(this);
 	areaPostPrc_->setWidget(PostPro_);
 	PostPro_->setAutoFillBackground(true);
@@ -3677,4 +3677,3 @@ void MainWindow::SolverProcessErrorSlot()
 {
     Information_Widget::GetInstance()->ShowInformation("solver process error occurred");
 }
-

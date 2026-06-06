@@ -73,6 +73,7 @@ void QPostPrc::setStyle()
     MainLayout->addWidget(m_StackedWidget);
     MainLayout->addStretch();
     this->setLayout(MainLayout);
+    this->setMinimumWidth(300);
 
     //m_TreeModel->item(0,0)->child(0,0)->setEnabled(false);
 	connect(m_TreeView,SIGNAL(EmitChangeModelIndex(const QModelIndex &)),this,

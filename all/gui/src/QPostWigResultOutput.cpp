@@ -8,6 +8,7 @@
 QPostWigResultOutput::QPostWigResultOutput(QWidget *parent)
 	: QWidget(parent)
 {
+    frdVISObj_ = 0;
     m_gbBox0= new QGroupBox(this);
     m_gbBox0->setStyleSheet(QString::fromUtf8("::title{color:blue}"));
     m_gbBox0->setTitle(tr("类型"));
@@ -130,6 +131,9 @@ QPostWigResultOutput::QPostWigResultOutput(QWidget *parent)
     cutIdCnt=0;
     m_tabView->hide();
     m_gbBox3->hide();
+    m_gbBox0->setEnabled(false);
+    m_gbBox1->setEnabled(false);
+    m_gbBox3->setEnabled(false);
 }
 
 QPostWigResultOutput::~QPostWigResultOutput()
@@ -251,8 +255,13 @@ initfrd
 void QPostWigResultOutput::InitSectionDataSlot(FrdDataVIS *frdObj)
 {
     frdVISObj_ = frdObj;
+    if (!frdVISObj_) return;
     const map<QString, QStringList>*varMap =frdVISObj_->GetScalarInfo();
+    if (!varMap) return;
 	if(varMap->size()<=0)return;
+    m_gbBox0->setEnabled(true);
+    m_gbBox1->setEnabled(true);
+    m_gbBox3->setEnabled(true);
     QString header(varMap->begin()->first+":"+varMap->begin()->second.at(0));
     m_Var = header;
     //--clear

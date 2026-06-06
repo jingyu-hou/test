@@ -41,7 +41,7 @@ class vtkCallbackCommand;
 #include <vtkTransform.h>
 #include <vtkTransformFilter.h>
 #include <vtkVectorText.h>
-#include "QVTKUnClip.h"
+#include "AesVtkUnClip.h"
 //#include "qvtkavi.h"
 //#include <vtkFFMPEWriter.h>
 typedef struct _HIS_POINT_S_{
@@ -173,7 +173,7 @@ private:
         map<QString, map<int, vtkVISUnShadeMesh*> > headerDisplacementsMap_;  //header fmt = L101-DISP
         map<QString, map<int, vtkVISUnContour*> > headerContoursMap_;  //contour on original-grid and deformed-grids.  key= "original" or "Lnnn-DISP"
         //map<int, map<int, vtkVISUnSlice*> >GridcutIdMap_;//gridId,cutId,vtkVISUnSlice
-		map<int, map<int, QVTKUnClip*> >GridcutIdMap_;//gridId,cutId,vtkVISUnSlice
+		map<int, map<int, AesVtkUnClip*> >GridcutIdMap_;//gridId,cutId,AesVtkUnClip
 		//map<int, QVTKUnClip*> cutMap_;
         map<int, QString> cutZoneHeaderMap_;
         //--size color

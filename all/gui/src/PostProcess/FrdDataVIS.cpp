@@ -1105,7 +1105,7 @@ void FrdDataVIS::CreateCutObjects(int gridId,int cutId, bool bInsideOut,QString 
     SetShadeOpacity(0.5, header);
 		
 	//vtkVISUnSlice *obj2 = vtkVISUnSlice::New();
-	QVTKUnClip *obj2=QVTKUnClip::New();//new QVTKUnClip();
+	AesVtkUnClip *obj2=AesVtkUnClip::New();//new AesVtkUnClip();
 	obj2->SetRenderTo(renderer_, renWin_);
 	obj2->SetDataSource(source);
     source->Delete();
