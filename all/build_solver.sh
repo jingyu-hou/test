@@ -16,9 +16,9 @@ done
 
 echo "=== Building solver ==="
 make clean 2>/dev/null || true
-make -j$(nproc) SOLVER_NAME=AESim-FM
+make -j$(nproc)
 
 echo ""
 echo "BUILD SUCCESS"
-echo "Solver binary: $(pwd)/AESim-FM"
-echo "Test: ./AESim-FM -i case.inp"
+echo "Solver binary: $(pwd)/solver"
+echo "Test: ./solver -i case.inp"
