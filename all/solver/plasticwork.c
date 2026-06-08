@@ -2,7 +2,7 @@
 # include <string.h>
 # include <stdlib.h>
 # include <pthread.h>
-#include "WeICME.h"
+#include "solver.h"
 
 
 #define NSTORAGE 20000000

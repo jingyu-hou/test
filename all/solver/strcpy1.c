@@ -9,7 +9,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include "WeICME.h"
+#include "solver.h"
 
 ITG strcpy1(char *s1, const char *s2, ITG length)
 {

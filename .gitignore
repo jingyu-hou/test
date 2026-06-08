@@ -5,18 +5,22 @@
 
 # Build artifacts
 all/gui/tmp/
+all/gui/GUI
 all/gui/WeICME
 all/gui/Makefile
 
 # Solver build artifacts
+all/solver/AESim-FM
+core/solver/AESim-FM
 *.o
 *.dat
 *.frd
 *.sta
 *.cvg
 all/solver/libaesim_solver_ext.a
-all/solver/AESim-FM
-all/solver/AESim-FM_split
+all/solver/solver
+all/solver/solver_split
+core/solver/solver
 all/solver/spooles.out
 all/components/open_source/calculix/libcalculix_base.a
 

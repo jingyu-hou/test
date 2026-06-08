@@ -2,9 +2,9 @@
 
 chomp($date=`date`);
 
-# inserting the date into WeICME.c
+# inserting the date into solver.c
 
-@ARGV="WeICME.c";
+@ARGV="solver.c";
 $^I=".old";
 while(<>){
     s/You are using an executable made on.*/You are using an executable made on $date\\n");/g;
@@ -20,5 +20,5 @@ if(-f "frd.c"){
     }
 }
 
-system "rm -f WeICME.c.old";
+system "rm -f solver.c.old";
 system "rm -f frd.c.old";

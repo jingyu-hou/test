@@ -10,7 +10,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include "WeICME.h"
+#include "solver.h"
 
 #include "readfrd.h"
 

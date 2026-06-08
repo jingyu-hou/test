@@ -47,7 +47,7 @@ SOLVER_DEPS = \
        $(LAPACK_DIR)/liblapack.so \
        $(LAPACK_DIR)/libblas.so
 
-SOLVER_NAME ?= AESim-FM
+SOLVER_NAME ?= solver
 
 $(SOLVER_NAME): $(OCCXMAIN) $(OCCXF) $(OCCXC) $(SOLVER_DEPS)
 	./date.pl; $(CC) $(CFLAGS) -c WeICME.c; $(FC) -fopenmp -Wall -O3 -no-pie -o $@ $(OCCXMAIN) $(OCCXF) $(OCCXC) $(RPATH) $(LIBS)

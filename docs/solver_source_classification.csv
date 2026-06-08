@@ -155,8 +155,8 @@ strcpy1.c,C,B,"CalculiX-derived, modified",Overrides same-named object in WeICME
 v_betrag.c,C,B,"CalculiX-derived, modified",Overrides same-named object in WeICME_MT.a; AESim_FM custom version,Group into libaesim_solver_ext.a,compiled,Modified CalculiX file
 v_prod.c,C,B,"CalculiX-derived, modified",Overrides same-named object in WeICME_MT.a; AESim_FM custom version,Group into libaesim_solver_ext.a,compiled,Modified CalculiX file
 v_result.c,C,B,"CalculiX-derived, modified",Overrides same-named object in WeICME_MT.a; AESim_FM custom version,Group into libaesim_solver_ext.a,compiled,Modified CalculiX file
-WeICME.c,C,B,CalculiX-derived main entry,Main program entry; dispatches solver flow; overrides WeICME.o in WeICME_MT.a,Keep as SOLVER_MAIN_OBJ; do not rename yet,compiled,Solver main entry with AESim_FM customizations
-WeICME.h,C,A,CalculiX original header,Copyright Guido Dhondt 1998-2018; all CalculiX function declarations,Keep as public interface header,compiled,CalculiX core API header
+solver.c,C,B,CalculiX-derived main entry (renamed from WeICME.c 2026-06-07),Main program entry; dispatches solver flow; overrides WeICME.o in WeICME_MT.a,Keep as SOLVER_MAIN_OBJ; renamed per Phase D,compiled,Solver main entry with AESim_FM customizations; renamed to solver.c as part of naming cleanup
+solver.h,C,A,CalculiX original header (renamed from WeICME.h 2026-06-07),Copyright Guido Dhondt 1998-2018; all CalculiX function declarations,Keep as public interface header; renamed per Phase D,compiled,CalculiX core API header; renamed to solver.h as part of naming cleanup; original copyright preserved
 readfrd.h,C,A,CalculiX original (CGX),CGX FRD post-processor reader; Summen/Nodes/Elements/Datasets structs,Keep as FRD reader interface,compiled,"CGX code, unmodified"
 index.h,C,C,AESim_FM self-developed,DRX state variable index constants for drxc.c,Keep,compiled,DRX-specific indices
 appkey.h,C,License,License module,appkey.cpp header; license interface declarations,Mark as license component; do not mix with CalculiX,compiled_in_GUI,Not for open-source component stats
@@ -180,5 +180,6 @@ plastic_disloKM.f,Fortran,C,AESim_FM self-developed,module plastic_disloKM; disl
 plastic_isotropic.f,Fortran,C,AESim_FM self-developed,module plastic_isotropic; isotropic plasticity,Add to Makefile.inc to compile,not_compiled,
 plastic_kmjmak.f,Fortran,C,AESim_FM self-developed,module plastic_kmjmak; dislocation-twin plasticity,Add to Makefile.inc to compile,not_compiled,
 plastic_phenopowerlaw_classic.f,Fortran,C,AESim_FM self-developed,module; phenomenological power-law crystal plasticity,Add to Makefile.inc to compile,not_compiled,
+srx_mrx_k90.f,Fortran,C,AESim_FM self-developed,SRX/MRX recrystallization model extracted from K90DRX.f; internal explicit interface; activated via gsloc(1,2),Compiled into aesim_solver_ext,compiled,New C-class converted model; does not use USDFLD/GETVRM; SDV22-43
 ABA_PARAM.INC,Fortran_INCLUDE,A,CalculiX original,ABAQUS parameter include file; standard implicit type definitions,Keep but only for D-class file use,not_compiled_directly,Included by D-class files
 Makefile.inc,Makefile,Build,Build config for CalculiX-derived solver,Defines SCCXF and SCCXC source file lists for compilation,Keep as build config,active_build_file,143 Fortran + 14 C source files listed; all compiled files are B-class overrides

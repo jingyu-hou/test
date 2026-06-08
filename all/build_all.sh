@@ -23,8 +23,8 @@ for tool in gcc gfortran make; do
 done
 
 make clean 2>/dev/null || true
-make -j$(nproc) SOLVER_NAME=AESim-FM
-echo "Solver built: $(pwd)/AESim-FM"
+make -j$(nproc) SOLVER_NAME=solver
+echo "Solver built: $(pwd)/solver"
 
 # --- Step 2: Build GUI ---
 echo ""
@@ -60,15 +60,15 @@ if [ -d /home/hjy/src/qt-everywhere-opensource-src-4.8.7 ]; then
     sed -i "s#/share/apps/Qt-4.8.7#/home/hjy/src/qt-everywhere-opensource-src-4.8.7#g" Makefile
 fi
 make -j$(nproc)
-echo "GUI built: $(pwd)/WeICME"
+echo "GUI built: $(pwd)/GUI"
 
 # --- Done ---
 echo ""
 echo "============================================"
 echo "  BUILD COMPLETE"
 echo "============================================"
-echo "  Solver: $SCRIPT_DIR/solver/AESim-FM"
-echo "  GUI:    $SCRIPT_DIR/gui/WeICME"
+echo "  Solver: $SCRIPT_DIR/solver/solver"
+echo "  GUI:    $SCRIPT_DIR/gui/GUI"
 echo ""
-echo "  Run: cd $SCRIPT_DIR/gui && ./WeICME"
+echo "  Run: cd $SCRIPT_DIR/gui && ./GUI"
 echo "============================================"

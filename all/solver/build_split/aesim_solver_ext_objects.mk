@@ -13,7 +13,7 @@
 # (except WeICME.o, the main entry). They form the AESim_FM solver
 # extension/override layer.
 #
-# Link order: WeICME.o + libaesim_solver_ext.a + WeICME_MT.a + numerical libs
+# Link order: solver.o + libaesim_solver_ext.a + WeICME_MT.a + numerical libs
 
 # All Fortran objects from SCCXF (overrides WeICME_MT.a)
 AESIM_SOLVER_EXT_F_OBJS = \
@@ -181,4 +181,4 @@ v_result.o
 AESIM_SOLVER_EXT_OBJS = $(AESIM_SOLVER_EXT_F_OBJS) $(AESIM_SOLVER_EXT_C_OBJS)
 
 # Main entry object (kept separate from the library)
-# SOLVER_MAIN_OBJ = WeICME.o
+# SOLVER_MAIN_OBJ = solver.o

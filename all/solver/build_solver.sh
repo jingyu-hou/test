@@ -2,8 +2,8 @@
 # build_solver.sh — AESim-FM solver official build entry point
 #
 # Architecture:
-#   AESim-FM        = WeICME.o + solver/*.o (override layer) + libcalculix_base.a + numerical libs
-#   AESim-FM_split  = WeICME.o + libaesim_solver_ext.a       + libcalculix_base.a + numerical libs
+#   AESim-FM        = solver.o + solver/*.o (override layer) + libcalculix_base.a + numerical libs
+#   AESim-FM_split  = solver.o + libaesim_solver_ext.a       + libcalculix_base.a + numerical libs
 #
 # Both produce identical DAT output; split build makes the open-source boundary explicit.
 #
@@ -118,18 +118,18 @@ build_calculix_base() {
 do_build() {
     echo ""
     echo "=== Traditional build (AESim-FM) ==="
-    echo "    Link: WeICME.o + solver/*.o + libcalculix_base.a + numerical libs"
-    make AESim-FM
-    echo "    -> $(ls -lh AESim-FM | awk '{print $5, $NF}')"
+    echo "    Link: solver.o + solver/*.o + libcalculix_base.a + numerical libs"
+    make solver
+    echo "    -> $(ls -lh solver | awk '{print $5, $NF}')"
 }
 
 do_split() {
     echo ""
     echo "=== Split build (AESim-FM_split) ==="
     echo "    Pack: solver/*.o -> libaesim_solver_ext.a"
-    echo "    Link: WeICME.o + libaesim_solver_ext.a + libcalculix_base.a + numerical libs"
+    echo "    Link: solver.o + libaesim_solver_ext.a + libcalculix_base.a + numerical libs"
     make all_split
-    echo "    -> $(ls -lh AESim-FM_split | awk '{print $5, $NF}')"
+    echo "    -> $(ls -lh solver_split | awk '{print $5, $NF}')"
     echo "    -> $(ls -lh libaesim_solver_ext.a | awk '{print $5, $NF}')"
 }
 
@@ -176,10 +176,10 @@ print_test_hint() {
     echo ""
     echo "── Quick verification ──"
     echo "  cd $(pwd)"
-    echo "  ./AESim-FM -i unit_c3d4"
-    echo "  ./AESim-FM_split -i unit_c3d4"
-    echo "  diff <(./AESim-FM -i unit_c3d8 2>&1 >/dev/null; cat unit_c3d8.dat) \\"
-    echo "       <(./AESim-FM_split -i unit_c3d8 2>&1 >/dev/null; cat unit_c3d8.dat)"
+    echo "  ./solver -i unit_c3d4"
+    echo "  ./solver_split -i unit_c3d4"
+    echo "  diff <(./solver -i unit_c3d8 2>&1 >/dev/null; cat unit_c3d8.dat) \\"
+    echo "       <(./solver_split -i unit_c3d8 2>&1 >/dev/null; cat unit_c3d8.dat)"
     echo "  # DAT output should be identical"
     echo ""
 }

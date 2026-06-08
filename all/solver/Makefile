@@ -21,7 +21,7 @@ include Makefile.inc
 include build_split/calculix_base_objects.mk
 include build_split/aesim_solver_ext_objects.mk
 
-SCCXMAIN = WeICME.c
+SCCXMAIN = solver.c
 
 OCCXF = $(SCCXF:.f=.o)
 OCCXC = $(SCCXC:.c=.o)
@@ -52,10 +52,10 @@ SOLVER_DEPS = \
        $(LAPACK_DIR)/liblapack.so \
        $(LAPACK_DIR)/libblas.so
 
-SOLVER_NAME ?= AESim-FM
+SOLVER_NAME ?= solver
 
 $(SOLVER_NAME): $(OCCXMAIN) $(OCCXF) $(OCCXC) $(SOLVER_DEPS)
-	./date.pl; $(CC) $(CFLAGS) -c WeICME.c; $(FC) -fopenmp -Wall -O3 -no-pie -o $@ $(OCCXMAIN) $(OCCXF) $(OCCXC) $(RPATH) $(LIBS)
+	./date.pl; $(CC) $(CFLAGS) -c solver.c; $(FC) -fopenmp -Wall -O3 -no-pie -o $@ $(OCCXMAIN) $(OCCXF) $(OCCXC) $(RPATH) $(LIBS)
 
 # --- Open-source boundary split: static library targets ---
 # Architecture:
@@ -63,12 +63,12 @@ $(SOLVER_NAME): $(OCCXMAIN) $(OCCXF) $(OCCXC) $(SOLVER_DEPS)
 #   solver/*.f + solver/*.c          = OVERRIDE layer (all B-class: CalculiX-derived,
 #                                      modified by AESim_FM; replace same-named
 #                                      objects in libcalculix_base.a at link time)
-#   WeICME.o                         = Main entry (kept separate)
+#   solver.o                         = Main entry (kept separate)
 #
-# Split link order: WeICME.o + libaesim_solver_ext.a + libcalculix_base.a + numerical libs
+# Split link order: solver.o + libaesim_solver_ext.a + libcalculix_base.a + numerical libs
 
 LIB_AESIM_SOLVER_EXT = libaesim_solver_ext.a
-SOLVER_MAIN_OBJ = WeICME.o
+SOLVER_MAIN_OBJ = solver.o
 
 # Build AESim_FM solver extension library (override layer: all compiled solver/ objects)
 $(LIB_AESIM_SOLVER_EXT): $(AESIM_SOLVER_EXT_OBJS)

@@ -9,7 +9,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include "WeICME.h"
+#include "solver.h"
 
 ITG strcmp2(const char *s1, const char *s2, ITG length)
 {

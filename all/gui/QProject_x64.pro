@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET = WeICME
+TARGET = GUI
 QT += opengl xml widgets sql
 TMPDIR = tmp
 OBJECTS_DIR = $$TMPDIR

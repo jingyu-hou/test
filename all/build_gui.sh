@@ -42,6 +42,6 @@ make -j$(nproc)
 
 echo ""
 echo "BUILD SUCCESS"
-echo "GUI binary: $(pwd)/WeICME"
-echo "Run: ./WeICME"
+echo "GUI binary: $(pwd)/GUI"
+echo "Run: ./GUI"
 

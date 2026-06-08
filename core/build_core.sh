@@ -16,9 +16,9 @@ done
 
 echo "=== Building core solver ==="
 make clean 2>/dev/null || true
-make -j$(nproc) SOLVER_NAME=AESim-FM
+make -j$(nproc) SOLVER_NAME=solver
 
 echo ""
 echo "BUILD SUCCESS"
-echo "Core solver binary: $(pwd)/AESim-FM"
-echo "Test: ./AESim-FM -i case.inp"
+echo "Core solver binary: $(pwd)/solver"
+echo "Test: ./solver -i case.inp"

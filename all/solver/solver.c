@@ -16,7 +16,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include "WeICME.h"
+#include "solver.h"
 #include <time.h>
 
 #ifdef WeICME_MPI
@@ -102,7 +102,7 @@ MPI_Comm_rank(MPI_COMM_WORLD, &myid) ;
 MPI_Comm_size(MPI_COMM_WORLD, &nproc) ;
 #endif
 
-if(argc==1){printf("Usage: WeICME.exe -i jobname\n");FORTRAN(stop,());}
+if(argc==1){printf("Usage: solver -i jobname\n");FORTRAN(stop,());}
 else{
   for(i=1;i<argc;i++){
     if(strcmp1(argv[i],"-i")==0) {
@@ -130,9 +130,9 @@ FORTRAN(uexternaldb,(&lop,&lrestart,time,&dtime,&kstep,&kinc));
 FORTRAN(openfile,(jobnamef,output));
 
 printf("\n************************************************************\n\n");
-printf("WeICME Version 2020.0, Copyright(C) 2019-2023 Wedge\n\n");
+printf("AESim_FM solver\n");
 printf("************************************************************\n\n");
-printf("You are using an executable made on Sat Jun  6 01:01:55 EDT 2026\n");
+printf("You are using an executable made on Sun Jun  7 11:28:46 EDT 2026\n");
 fflush(stdout);
 
 istep=0;
@@ -970,7 +970,7 @@ while(istat>=0) {
   if((nener==1)&&(nenerold==0)){
     NNEW(ener,double,mi[0]*ne*2);
     if((istep>1)&&(iperturb[0]>1)){
-      printf(" *ERROR in WeICME: in nonlinear calculations\n");
+      printf(" *ERROR in AESim_FM solver: in nonlinear calculations\n");
       printf("        energy output must be selected in the first step\n\n");
       FORTRAN(stop,());
     }
@@ -1139,7 +1139,7 @@ while(istat>=0) {
 	mpcinfo[3]=maxlenmpc;
 
 	if(icascade!=0){
-	    printf(" *ERROR in WeICME: the matrix structure may");
+	    printf(" *ERROR in AESim_FM solver: the matrix structure may");
 	    printf("        change due to nonlinear equations;");
 	    printf("        a purely linear calculation is not");
 	    printf("        feasible; use NLGEOM on the *STEP card.");
@@ -1314,7 +1314,7 @@ while(istat>=0) {
 	  for(i=0;i<3;i++){nzsprevstep[i]=nzs[i];}
 
 #else
-	  printf("*ERROR in WeICME: the ARPACK library is not linked\n\n");
+	  printf("*ERROR in AESim_FM solver: the ARPACK library is not linked\n\n");
 	  FORTRAN(stop,());
 #endif
 
@@ -1350,7 +1350,7 @@ while(istat>=0) {
 	  for(i=0;i<3;i++){nzsprevstep[i]=nzs[i];}
 
 #else
-	  printf("*ERROR in WeICME: the ARPACK library is not linked\n\n");
+	  printf("*ERROR in AESim_FM solver: the ARPACK library is not linked\n\n");
 	  FORTRAN(stop,());
 #endif
 
@@ -1374,7 +1374,7 @@ while(istat>=0) {
 	     ibody,xbody,&nbody,thicke,jobnamec,&nmat,ielprop,prop,orname,
 	     mpcon,nmpcon,&nmpmat_,pphase,cphase,phaseother,nphase,phase_inf);
 #else
-            printf("*ERROR in WeICME: the ARPACK library is not linked\n\n");
+            printf("*ERROR in AESim_FM solver: the ARPACK library is not linked\n\n");
             FORTRAN(stop,());
 #endif
     }
