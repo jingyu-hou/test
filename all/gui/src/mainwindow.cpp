@@ -154,6 +154,10 @@ MainWindow::MainWindow(QWidget *par):SARibbonMainWindow(par)
     m_contextCategory_HE_C = 0;
     m_isImporting = false;
     m_CheckDlg = NULL;
+    m_SloverProcess = NULL;
+    m_SolverStatusTimer = new QTimer(this);
+    m_SolverStatusTimer->setInterval(2000);
+    connect(m_SolverStatusTimer, SIGNAL(timeout()), this, SLOT(UpdateSolverStatusFromSta()));
 
     InitDlg();
     createActions();
@@ -308,12 +312,16 @@ void MainWindow::ForceShowMainWindow()
 {
     AppLog::Write("WINDOW", "force show main window");
     QRect screen = QApplication::desktop()->availableGeometry();
+    const int minMainWidth = 1200;
+    const int minMainHeight = 760;
+    setMinimumSize(minMainWidth, minMainHeight);
+
     QRect geom;
-    if (screen.width() < 400 || screen.height() < 300) {
+    if (screen.width() < minMainWidth || screen.height() < minMainHeight) {
         geom = QRect(80, 80, 1400, 850);
     } else {
-        int w = qMin(screen.width() - 120, 1500);
-        int h = qMin(screen.height() - 120, 900);
+        int w = qMax(minMainWidth, qMin(screen.width() - 80, 1600));
+        int h = qMax(minMainHeight, qMin(screen.height() - 80, 950));
         int x = screen.left() + (screen.width() - w) / 2;
         int y = screen.top() + (screen.height() - h) / 2;
         geom = QRect(x, y, w, h);
@@ -2658,7 +2666,7 @@ void MainWindow::ClearSlot()
 void MainWindow::closeEvent(QCloseEvent *ev)
 {
     AppLog::Write("APP", "close requested");
-    QMessageBox::StandardButton bt = QMessageBox::question(this, "Close", "Exit WeICME?", QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
+    QMessageBox::StandardButton bt = QMessageBox::question(this, "Close", "Exit AESim_FM?", QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
     if (bt == QMessageBox::Yes) 
     {
         AppLog::Write("APP", "close accepted");
@@ -3376,10 +3384,12 @@ void MainWindow::HIPSolveActOpenSlot()
 
     QStringList solverCandidates;
 #if _MSC_VER
-    solverCandidates << QDir(allRoot).absoluteFilePath("solver/AESim-FM.exe")
+    solverCandidates << QDir(allRoot).absoluteFilePath("solver/solver.exe")
+                     << QDir(allRoot).absoluteFilePath("solver/AESim-FM.exe")
                      << QDir(allRoot).absoluteFilePath("Solver/WeICME.exe");
 #else
-    solverCandidates << QDir(allRoot).absoluteFilePath("solver/AESim-FM")
+    solverCandidates << QDir(allRoot).absoluteFilePath("solver/solver")
+                     << QDir(allRoot).absoluteFilePath("solver/AESim-FM")
                      << QDir(allRoot).absoluteFilePath("Solver/WeICME");
 #endif
 
@@ -3403,23 +3413,35 @@ void MainWindow::HIPSolveActOpenSlot()
     QProcessEnvironment env02 = QProcessEnvironment::systemEnvironment();
     QString CPUNumber = m_HpSubmissionDlg->m_EditCalcNum->text();
     env02.insert("OMP_NUM_THREADS", CPUNumber);
+    env02.insert("CCX_NPROC_STIFFNESS", CPUNumber);
+    env02.insert("CCX_NPROC_RESULTS", CPUNumber);
+    env02.insert("CCX_NPROC_EQUATION_SOLVER", CPUNumber);
+    env02.insert("CCX_NPROC_VIEWFACTOR", CPUNumber);
+    env02.insert("CCX_NPROC_SENS", CPUNumber);
+    env02.insert("CCX_NPROC_BIOTSAVART", CPUNumber);
     m_SloverProcess->setProcessEnvironment(env02);
     this->connect(m_SloverProcess, SIGNAL(readyReadStandardOutput()), this, SLOT(ShowStdOutput()));
     this->connect(m_SloverProcess, SIGNAL(error(QProcess::ProcessError)), this, SLOT(ShowStdOutput()));
 
     QString solverArg = inputInfo.completeBaseName();
+    m_SolverStaPath = QDir(inputInfo.absolutePath()).absoluteFilePath(solverArg + ".sta");
+    m_LastSolverStaLine.clear();
     Information_Widget::GetInstance()->ShowInformation("Start solver: " + solverPath);
     Information_Widget::GetInstance()->ShowInformation("Working directory: " + inputInfo.absolutePath());
     Information_Widget::GetInstance()->ShowInformation("Input job: " + solverArg);
+    Information_Widget::GetInstance()->ShowInformation("Progress source: " + m_SolverStaPath);
     m_SloverProcess->start(solverPath, QStringList() << "-i" << solverArg);
     if (!m_SloverProcess->waitForStarted(3000)) {
         Information_Widget::GetInstance()->ShowInformation("Failed to start solver: " + solverPath);
+        return;
     }
+    m_SolverStatusTimer->start();
 }
 void MainWindow::HIPSolveActKillSlot()
 {
 	if(m_SloverProcess!=NULL){
 		m_SloverProcess->kill();
+        if (m_SolverStatusTimer) m_SolverStatusTimer->stop();
        Information_Widget::GetInstance()->ShowInformation("终止计算");
 	}
 }
@@ -3578,9 +3600,63 @@ void MainWindow::CastingSubmissonActSlot()
 //--临时添加
 void MainWindow::ShowStdOutput()
 {
-    QByteArray data = m_SloverProcess->readAllStandardOutput();
-    QString str(data);
-    Information_Widget::GetInstance()->ShowInformation(str);
+    if (m_SloverProcess) {
+        m_SloverProcess->readAllStandardOutput();
+        m_SloverProcess->readAllStandardError();
+    }
+    UpdateSolverStatusFromSta();
+}
+
+void MainWindow::UpdateSolverStatusFromSta()
+{
+    if (m_SolverStaPath.isEmpty()) return;
+
+    QFile staFile(m_SolverStaPath);
+    if (!staFile.exists()) return;
+    if (!staFile.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+
+    const qint64 tailBytes = 8192;
+    if (staFile.size() > tailBytes) {
+        staFile.seek(staFile.size() - tailBytes);
+        staFile.readLine();
+    }
+
+    QString lastLine;
+    while (!staFile.atEnd()) {
+        QString line = QString::fromLocal8Bit(staFile.readLine()).trimmed();
+        if (!line.isEmpty()) lastLine = line;
+    }
+    staFile.close();
+
+    if (lastLine.isEmpty() || lastLine == m_LastSolverStaLine) {
+        if (m_SloverProcess && m_SloverProcess->state() == QProcess::NotRunning && m_SolverStatusTimer) {
+            m_SolverStatusTimer->stop();
+        }
+        return;
+    }
+    m_LastSolverStaLine = lastLine;
+
+    QStringList parts = lastLine.simplified().split(' ');
+    QString progress;
+    if (parts.size() >= 8) {
+        progress = QString("Solver progress: step %1, inc %2, attempt %3, iter %4, total time %5, step time %6, dt %7, dof %8")
+            .arg(parts.at(0))
+            .arg(parts.at(1))
+            .arg(parts.at(2))
+            .arg(parts.at(3))
+            .arg(parts.at(4))
+            .arg(parts.at(5))
+            .arg(parts.at(6))
+            .arg(parts.at(7));
+    } else {
+        progress = "Solver progress: " + lastLine;
+    }
+
+    Information_Widget::GetInstance()->ShowInformation(progress);
+
+    if (m_SloverProcess && m_SloverProcess->state() == QProcess::NotRunning && m_SolverStatusTimer) {
+        m_SolverStatusTimer->stop();
+    }
 }
 //--StepPlay播放条1
 void MainWindow::updataStepPlayCombox(ResultOutputS ResultO)

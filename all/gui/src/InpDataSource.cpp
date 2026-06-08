@@ -15,6 +15,7 @@
 #include <vtkUnstructuredGrid.h>
 #include <vtkVISUnstructuredGridSource.h>
 #include <vtkLine.h>//画线
+#include <vtkQuadraticEdge.h>
 #include <vtkPolyLine.h>
 #include "CRWManage.h"
 #include <QDebug>
@@ -208,16 +209,6 @@ bool InpDataSource::InitGridFromFrd(ReadInpResultS *Inp)
             }
             idList->SetId(j, InpPointIdMap_[nodeId]);
         }
-        if (validCell && cellTypeVtk == VTK_QUADRATIC_HEXAHEDRON) {
-            int t12 = idList->GetId(12), t13 = idList->GetId(13), t14 = idList->GetId(14), t15 = idList->GetId(15);
-            idList->SetId(12, idList->GetId(16)); idList->SetId(13, idList->GetId(17));
-            idList->SetId(14, idList->GetId(18)); idList->SetId(15, idList->GetId(19));
-            idList->SetId(16, t12); idList->SetId(17, t13); idList->SetId(18, t14); idList->SetId(19, t15);
-        } else if (validCell && cellTypeVtk == VTK_QUADRATIC_WEDGE) {
-            int t9 = idList->GetId(9), t10 = idList->GetId(10), t11 = idList->GetId(11);
-            idList->SetId(9, idList->GetId(12)); idList->SetId(10, idList->GetId(13)); idList->SetId(11, idList->GetId(14));
-            idList->SetId(12, t9); idList->SetId(13, t10); idList->SetId(14, t11);
-        }
         if (validCell) {
             wholeGrid_->InsertNextCell(cellTypeVtk, idList);
             ++insertedCells;
@@ -240,11 +231,11 @@ vtkVISUnstructuredGridSource* InpDataSource::GetSourceGrid()
 }
 vtkUnstructuredGrid* InpDataSource::GetWholeData(QString str)
 {
-	if (str.isEmpty()){
+	if (str.isEmpty() || str == "hell"){
 		return wholeGrid_;//返回全部
 	}else{
 		if (disSurfSourceMap_.find(str)!=disSurfSourceMap_.end()){//have no
-			return disBCSourceMap_[str];
+			return disSurfSourceMap_[str];
 		}
 		return wholeGrid_;
 	}
@@ -503,33 +494,6 @@ vtkUnstructuredGrid* InpDataSource::ELDisplacementGrid(const QString &header)
 				//idList->SetId(j,itmpStr);
 				int itmpStr=tmpList.at(j+1).simplified().toInt();
                 idList->SetId(j,InpPointIdMap_[itmpStr]);//itmpStr);
-            }
-            if (cellType_vtk == VTK_QUADRATIC_HEXAHEDRON)
-            {
-                int t12 = idList->GetId(12);
-                int t13 = idList->GetId(13);
-                int t14 = idList->GetId(14);
-                int t15 = idList->GetId(15);
-                idList->SetId(12, idList->GetId(16));
-                idList->SetId(13, idList->GetId(17));
-                idList->SetId(14, idList->GetId(18));
-                idList->SetId(15, idList->GetId(19));
-                idList->SetId(16, t12);
-                idList->SetId(17, t13);
-                idList->SetId(18, t14);
-                idList->SetId(19, t15);
-            }
-            else if (cellType_vtk == VTK_QUADRATIC_WEDGE)
-            {
-                int t9 = idList->GetId(9);
-                int t10 = idList->GetId(10);
-                int t11 = idList->GetId(11);
-                idList->SetId(9, idList->GetId(12));
-                idList->SetId(10, idList->GetId(13));
-                idList->SetId(11, idList->GetId(14));
-                idList->SetId(12, t9);
-                idList->SetId(13, t10);
-                idList->SetId(14, t11);
             }
             ungrid->InsertNextCell(cellType_vtk, idList);
             cell->Delete();
@@ -1074,14 +1038,14 @@ bool InpDataSource::InpRowDataToSurf(ReadInpResultS *Inp)
             case 3:{cell = vtkTriangle::New();}break;//ok vtkTetra::New();}break;
             case 4:{cell = vtkQuadraticQuad::New();}break;//(wait data for test) vtkQuadraticHexahedron::New();}break; 
             case 5:{
-                    if ((SnData.size()-3)==4) cell = vtkQuadraticQuad::New();//(wait data for test)
-                    else cell = vtkQuadraticTriangle::New();//(wait data for test)
+                    if ((SnData.size()-3)==8) cell = vtkQuadraticQuad::New();
+                    else cell = vtkQuadraticTriangle::New();
               }break;//vtkQuadraticWedge::New();}break; 
             case 6:{cell = vtkQuadraticTriangle::New();}break;//(wait data for test)vtkQuadraticTetra::New();}break; 
             case 7:{cell = vtkLine::New();}break;//(ok) vtkTriangle::New();}break;
-            case 8:{cell = vtkPolyLine::New();}break;//vtkQuadraticTriangle::New();}break; 
+            case 8:{cell = vtkQuadraticEdge::New();}break;//vtkQuadraticTriangle::New();}break; 
             case 9:{cell = vtkLine::New();}break;//(ok)vtkQuad::New();}break;   
-            case 10:{cell = vtkPolyLine::New();}break;//vtkQuadraticQuad::New();}break;
+            case 10:{cell = vtkQuadraticEdge::New();}break;//vtkQuadraticQuad::New();}break;
             default: qDebug() << "InpRowDataToSurf: unsupported cell type" << inpCellType; break;
 		}
 
@@ -1448,6 +1412,30 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 }
            }break;
         case 4:{//(cps4/cps8r/cpe8/cpe8r.cax8/cax8r)->change ids;
+            const int faces[6][8] = {
+                {1, 2, 3, 4, 9, 10, 11, 12},
+                {5, 8, 7, 6, 16, 15, 14, 13},
+                {1, 5, 6, 2, 17, 13, 18, 9},
+                {2, 6, 7, 3, 18, 14, 19, 10},
+                {3, 7, 8, 4, 19, 15, 20, 11},
+                {4, 8, 5, 1, 20, 16, 17, 12}
+            };
+            for (int face = 0; face < 6; ++face) {
+                QList<int> sortD;
+                for (int k = 0; k < 8; ++k) sortD << tmpStrList.at(faces[face][k]).toInt();
+                qSort(sortD.begin(), sortD.end());
+                QString strSortD = QString("%1").arg(sortD.at(0));
+                for (int kk = 1; kk < sortD.count(); ++kk) strSortD += "," + QString("%1").arg(sortD.at(kk));
+                QString noSorD = tmpStrList.at(0) + "," + QString::number(face + 1) + "," + QString("%1,").arg(iType);
+                noSorD += tmpStrList.at(faces[face][0]);
+                for (int k = 1; k < 8; ++k) noSorD += "," + tmpStrList.at(faces[face][k]);
+                if (m_ElementSurfmap.find(strSortD) == m_ElementSurfmap.end()) {
+                    m_ElementSurfmap.insert(strSortD, noSorD);
+                } else {
+                    m_ElementSurfmap.remove(strSortD);
+                }
+            }
+            break;
            /* QList<int> sortD;
             sortD<<tmpStrList.at(1).toInt();
             sortD<<tmpStrList.at(9).toInt();
@@ -1584,6 +1572,47 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 m_ElementSurfmap.remove(strSortD);
             }*/
            }break;
+        case 5:{// C3D15: two quadratic triangles and three quadratic quads.
+            const int triFaces[2][6] = {
+                {1, 2, 3, 7, 8, 9},
+                {4, 6, 5, 12, 11, 10}
+            };
+            const int quadFaces[3][8] = {
+                {1, 4, 5, 2, 10, 13, 11, 7},
+                {2, 5, 6, 3, 11, 14, 12, 8},
+                {3, 6, 4, 1, 12, 15, 10, 9}
+            };
+            for (int face = 0; face < 2; ++face) {
+                QList<int> sortD;
+                for (int k = 0; k < 6; ++k) sortD << tmpStrList.at(triFaces[face][k]).toInt();
+                qSort(sortD.begin(), sortD.end());
+                QString strSortD = QString("%1").arg(sortD.at(0));
+                for (int kk = 1; kk < sortD.count(); ++kk) strSortD += "," + QString("%1").arg(sortD.at(kk));
+                QString noSorD = tmpStrList.at(0) + "," + QString::number(face + 1) + "," + QString("%1,").arg(iType);
+                noSorD += tmpStrList.at(triFaces[face][0]);
+                for (int k = 1; k < 6; ++k) noSorD += "," + tmpStrList.at(triFaces[face][k]);
+                if (m_ElementSurfmap.find(strSortD) == m_ElementSurfmap.end()) {
+                    m_ElementSurfmap.insert(strSortD, noSorD);
+                } else {
+                    m_ElementSurfmap.remove(strSortD);
+                }
+            }
+            for (int face = 0; face < 3; ++face) {
+                QList<int> sortD;
+                for (int k = 0; k < 8; ++k) sortD << tmpStrList.at(quadFaces[face][k]).toInt();
+                qSort(sortD.begin(), sortD.end());
+                QString strSortD = QString("%1").arg(sortD.at(0));
+                for (int kk = 1; kk < sortD.count(); ++kk) strSortD += "," + QString("%1").arg(sortD.at(kk));
+                QString noSorD = tmpStrList.at(0) + "," + QString::number(face + 3) + "," + QString("%1,").arg(iType);
+                noSorD += tmpStrList.at(quadFaces[face][0]);
+                for (int k = 1; k < 8; ++k) noSorD += "," + tmpStrList.at(quadFaces[face][k]);
+                if (m_ElementSurfmap.find(strSortD) == m_ElementSurfmap.end()) {
+                    m_ElementSurfmap.insert(strSortD, noSorD);
+                } else {
+                    m_ElementSurfmap.remove(strSortD);
+                }
+            }
+            }break;
 		case 6:{//c3d10
 				QList<int> sortD;
 				sortD<<tmpStrList.at(1).toInt();
@@ -1744,7 +1773,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
         case 8:{//(CPS6/CPE6/CAX6)
                 QList<int> sortD;
                 sortD<<tmpStrList.at(1).toInt();
-                sortD<<tmpStrList.at(3).toInt();
+                sortD<<tmpStrList.at(4).toInt();
                 sortD<<tmpStrList.at(2).toInt();
                 qSort(sortD.begin(), sortD.end());
                 QString strSortD=QString("%1").arg(sortD.at(0));
@@ -1754,7 +1783,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 QString noSorD;
                 noSorD =tmpStrList.at(0)+",1,"+QString("%1,").arg(iType)+
                     tmpStrList.at(1)+","+
-                    tmpStrList.at(3)+","+
+                    tmpStrList.at(4)+","+
                     tmpStrList.at(2);
                 if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
                     m_ElementSurfmap.insert(strSortD,noSorD);
@@ -1764,7 +1793,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
 
                 sortD.clear();
                 sortD<<tmpStrList.at(2).toInt();
-                sortD<<tmpStrList.at(8).toInt();
+                sortD<<tmpStrList.at(5).toInt();
                 sortD<<tmpStrList.at(3).toInt();
                 qSort(sortD.begin(),sortD.end());
                 strSortD=QString("%1").arg(sortD.at(0));
@@ -1773,7 +1802,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 }
                 noSorD = tmpStrList.at(0)+",2,"+QString("%1,").arg(iType)+
                     tmpStrList.at(2)+","+
-                    tmpStrList.at(8)+","+
+                    tmpStrList.at(5)+","+
                     tmpStrList.at(3);
                 if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
                     m_ElementSurfmap.insert(strSortD,noSorD);
@@ -1784,7 +1813,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
 
                 sortD.clear();
                 sortD<<tmpStrList.at(3).toInt();
-                sortD<<tmpStrList.at(9).toInt();
+                sortD<<tmpStrList.at(6).toInt();
                 sortD<<tmpStrList.at(1).toInt();
                 qSort(sortD.begin(),sortD.end());
                 strSortD=QString("%1").arg(sortD.at(0));
@@ -1793,7 +1822,7 @@ void InpDataSource::Del3DSameFace(int iType,QStringList tmpStrList)
                 }
                 noSorD = tmpStrList.at(0)+",3,"+QString("%1,").arg(iType)+
                     tmpStrList.at(3)+","+
-                    tmpStrList.at(9)+","+
+                    tmpStrList.at(6)+","+
                     tmpStrList.at(1);
                 if(m_ElementSurfmap.find(strSortD)==m_ElementSurfmap.end()){
                     m_ElementSurfmap.insert(strSortD,noSorD);

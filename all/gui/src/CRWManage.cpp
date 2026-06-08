@@ -3054,7 +3054,7 @@ bool CRWManage::changeGmshToNormal(NodeELSetInps &saveData,GmshInpS &curData)
 		QString str01=str.at(0);
 		int Nu=str01.size()+1;
 		QString wef="";
-		if(styleType==1&&str.at(str.size()-1)!=""){
+		if(styleType==1&&str.size()>3&&str.at(str.size()-1)!=""){
 			QString str02=str.at(str.size()-1);
 			int Num0=str02.size()+1;
 			int Num1=curData.NodeInpData.strData.at(i).size()-Num0-Nu;

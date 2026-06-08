@@ -67,6 +67,7 @@
 #include "appkey.h"//************************
 #include "Check.h"
 //class MainWindow : public QMainWindow
+class QTimer;
 
 
 enum{
@@ -298,6 +299,9 @@ public:
 	QDockWidget *GmshWiget ;
 	QProcess    *GmshProcess;
     QProcess    *m_SloverProcess;
+    QTimer      *m_SolverStatusTimer;
+    QString      m_SolverStaPath;
+    QString      m_LastSolverStaLine;
 //--DLG
     PElSfSetDlg* m_PElSfSetDlg;
     //QPartDlg* m_PartDlg;
@@ -464,6 +468,7 @@ public slots:
      void HPSubmissonActSlot();
      void MainSaveHPInpSlot();
      void ShowStdOutput();
+     void UpdateSolverStatusFromSta();
 	     void GmshProcessErrorSlot();
 	     void GmshProcessFinishedSlot(int exitCode, QProcess::ExitStatus exitStatus);
 	     void SolverProcessErrorSlot();

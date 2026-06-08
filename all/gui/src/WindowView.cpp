@@ -141,7 +141,7 @@ void QWindowView::ShowCurPreData(ReadInpResultS InpData)
     tabView_->setTabEnabled(0,true);
     tabView_->setTabEnabled(1,true);
     inpVIS_.InitRenderer(QMyVTK::GetInstance(m_CurrentIndex + 1)->GetRenderer());
-    inpVIS_.LoadInpData(&InpData);
+    if (!inpVIS_.LoadInpData(&InpData)) return;
     VTKColorS m_ClrInit;
     m_ClrInit.r=0;m_ClrInit.g=1;m_ClrInit.b=0;
     inpVIS_.SetMeshVisible(true,m_ClrInit);
