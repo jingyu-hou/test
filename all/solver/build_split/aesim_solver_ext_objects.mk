@@ -40,6 +40,7 @@ calcumfa.o \
 calcvel.o \
 calcvol.o \
 calcvol2.o \
+calinput.o \
 cd_Mcgreehan_Schotsch.o \
 cd_lichtarowicz.o \
 cd_own_albers.o \
@@ -52,6 +53,8 @@ closefilefluid.o \
 convert2slapcol.o \
 correctrhoelcomp.o \
 correctvel.o \
+creepsoftenings.o \
+creep_softening_model.o \
 createialnk.o \
 dKdX.o \
 damage.o \
@@ -88,6 +91,7 @@ lab_straight_ppkrit.o \
 lump.o \
 materialdata_dtdh.o \
 materialdata_h2temp.o \
+materialdata_me.o \
 materialdata_temp2h.o \
 materialdata_th_h.o \
 materialdata_th_h2.o \
@@ -163,7 +167,8 @@ writevfa.o
 
 # All C objects from SCCXC (overrides WeICME_MT.a)
 AESIM_SOLVER_EXT_C_OBJS = \
-drxc.o \
+	frd.o \
+	drxc.o \
 getSystemCPUs.o \
 itinerate_print.o \
 output_mtx.o \

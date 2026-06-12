@@ -150,7 +150,7 @@
       write(*,*) 'temperature    beta R dens0 d0 d_th'
 !
       nelcon(1,nmat)=-70
-      nstate_=max(nstate_,16)
+      nstate_=max(nstate_,20)
 
       do i=1,nelcon(2,nmat)
          t1l=elcon(0,i,nmat)

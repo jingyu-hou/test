@@ -164,11 +164,14 @@ void QPostPrc::ChangeModelIndexSlot( const QModelIndex & index )
 		QString &cmd = QString("%1//RMesh/RMesh.exe").arg(str);
 		QProcess *RMshProcess= new QProcess;
 		RMshProcess->start(cmd);
-        #else 
-		QString str = QCoreApplication::applicationDirPath(); 
-		QString cmd = str+"/RMesh";
+        #else
+		QString cmd = "/mnt/d/WeICME/WeICMECAE/RMesh/RMesh.exe";
 		QProcess *RMshProcess= new QProcess(this);
-		RMshProcess->start(cmd);
+		RMshProcess->setProcessChannelMode(QProcess::ForwardedChannels);
+		bool ok = RMshProcess->startDetached(cmd);
+		if (!ok) {
+			QMessageBox::warning(0, "RMesh", "Failed to launch: " + cmd);
+		}
         #endif
 	}
 	else if (type == "Other")

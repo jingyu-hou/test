@@ -55,7 +55,7 @@ SOLVER_DEPS = \
 SOLVER_NAME ?= solver
 
 $(SOLVER_NAME): $(OCCXMAIN) $(OCCXF) $(OCCXC) $(SOLVER_DEPS)
-	./date.pl; $(CC) $(CFLAGS) -c solver.c; $(FC) -fopenmp -Wall -O3 -no-pie -o $@ $(OCCXMAIN) $(OCCXF) $(OCCXC) $(RPATH) $(LIBS)
+	./date.pl; $(CC) $(CFLAGS) -c solver.c; $(FC) $(FFLAGS) -no-pie -o $@ $(OCCXMAIN) $(OCCXF) $(OCCXC) $(RPATH) $(LIBS)
 
 # --- Open-source boundary split: static library targets ---
 # Architecture:

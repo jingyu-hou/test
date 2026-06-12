@@ -21,7 +21,7 @@
      &         phase_equilibrium(2*phase_inf(3),phase_inf(1)),
      &         AIncubation_time(phase_inf(3),2,phase_inf(1)),
      &         V_Rate(phase_inf(2)),
-     &         CCTCurve_Equivalenttime(phase_inf(3)*2),
+     &         CCTCurve_Equivalenttime(phase_inf(2)*phase_inf(3)),
      &         Curave_Data2(phase_inf(2)*phase_inf(3),2),
      &         Curave_Data(phase_inf(2)*phase_inf(3),2),
      &         tempzbf_point(phase_inf(4),phase_inf(1)),
@@ -132,9 +132,10 @@ C               IF(NN.lt.5)NN=5
 C***************************************************************************
 C                        开始连续降温多等分相变计算 
 C***************************************************************************
-               DO KK=1,NN,1
-                IF(STATEV1(1).Le.Residual)RETURN
-                holding_temp=holding_temp+TEMPINC
+                DO KK=1,NN,1
+                 IF(STATEV1(1).Le.Residual)RETURN
+                 holding_temp=holding_temp+TEMPINC
+                 ts=0.d0
 C***************************************************************************
 C                以下几行用于计算当前温度下与TTT曲线的交点 
 C***************************************************************************
@@ -148,11 +149,12 @@ C***************************************************************************
      &              (NCurve_Number,holding_temp,TIME_T,
      &               Curave_Data2(1:N1,1:2),
      &               NTTCT_Point(1:NCurve_Number,III1),N1)
-                ELSE
-                  CALL CurveData_Intersection
+                 ELSE
+                   CALL CurveData_Intersection
      &              (NCurve_Number,holding_temp,V_Rate,
-     &                Curave_Data(1:N1,1:2),NTTCT_Point,N1)
-                ENDIF
+     &                Curave_Data(1:N1,1:2),
+     &                NTTCT_Point(1:NCurve_Number,III1),N1)
+                 ENDIF
 C***************************************************************************
 C                以上几行用于计算当前温度下与TTT曲线的交点 
 C***************************************************************************
@@ -183,14 +185,19 @@ C!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 IF(Logi1.and.ts.le.0.d0.or.Logi1.and.ts.gt.
      &           TIME_T(1))THEN
                     ts=TIME_T(1)  
-                ELSEIF (Logi2.and.ts.le.0.d0.or.Logi2.and.ts.gt.
-     &           TIME_T(1))THEN
-                    CALL Incubation_time2(CCTCurve_Equivalenttime
+                ELSEIF (Logi2.and.(ts.le.0.d0.or.
+     &           (Whether_CCTIsothermal.eq.1.and.ts.gt.TIME_T(1))))THEN
+                   IF(Whether_CCTIsothermal.eq.1)THEN
+                     CALL Incubation_time2(CCTCurve_Equivalenttime
      &               (1:NTTCT_Point(1,III1)),holding_temp,
      &               Curave_Data2(1:NTTCT_Point(1,III1),2),
      &               NTTCT_Point(1,III1),ts)
-                ENDIF
-      
+                   ELSE
+                     ts=TIMEINC
+                   ENDIF
+                 ENDIF
+                 IF(NTran_Type.ne.1.and.ts.le.Residual)ts=TIMEINC
+
 C***************************************************************************
 C                          孕育期计算结束 
 C***************************************************************************

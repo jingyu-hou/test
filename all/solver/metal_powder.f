@@ -60,18 +60,29 @@ c      elconloc(5): d0
 c      elconloc(6): d_th
 c      elconloc(7): initial density
 c      statev(1): relative density
-c      statev(2): plastic strain 11
-c      statev(3): plastic strain 22
-c      statev(4): plastic strain 33
-c      statev(5): plastic strain 12
-c      statev(6): plastic strain 13
-c      statev(7): plastic strain 23
-c      statev(8): hydrostatic pressure
-c      statev(9): Mises stress
-c      statev(10): predicted stress
-c      statev(11): drx fraction
-c      statev(12): drx grain size
-c      statev(13): average grain size
+c      statev(2): densification strain
+c      statev(3): creep equivalent strain
+c      statev(4): creep strain rate
+c      statev(5): creep strain increment
+c      statev(6): hydrostatic pressure
+c      statev(7): Mises stress
+c      statev(8): predicted stress
+c      statev(9): creep equivalent stress
+c      statev(10): creep pressure
+c      statev(11): relaxed equivalent stress
+c      statev(12): drx fraction
+c      statev(13): drx grain size
+c      statev(14): average grain size
+c      statev(15): plastic strain 11
+c      statev(16): plastic strain 22
+c      statev(17): plastic strain 33
+c      statev(18): plastic strain 12
+c      statev(19): plastic strain 13
+c      statev(20): plastic strain 23
+c      statev(21): creep softening factor
+c      statev(22): creep active flag
+c      statev(23): creep model temperature (K)
+c      statev(24): creep hold time
 c      plconloc: plastic curve 
 c      mpconloc: powder hardening curve
         
@@ -93,14 +104,14 @@ c input parameters and initial values
           end do
         end do
         do i = 1, 3
-          befrot(i,i)=statev(i+1)
+          befrot(i,i)=statev(i+14)
         end do
-        befrot(1,2)=statev(5)/two
-        befrot(2,1)=statev(5)/two
-        befrot(2,3)=statev(7)/two
-        befrot(3,2)=statev(7)/two
-        befrot(1,3)=statev(6)/two
-        befrot(3,1)=statev(6)/two
+        befrot(1,2)=statev(18)/two
+        befrot(2,1)=statev(18)/two
+        befrot(2,3)=statev(20)/two
+        befrot(3,2)=statev(20)/two
+        befrot(1,3)=statev(19)/two
+        befrot(3,1)=statev(19)/two
 
         aftrot = matmul(drot,matmul(befrot,transpose(drot)))
         do i = 1, 3
@@ -367,7 +378,7 @@ c update variables
         else
           do i = 1, 6
             stress(i) = s(i,1)
-            statev(i+1) = pe(i,1)
+            statev(i+14) = pe(i,1)
           enddo 
           tp = matmul(transpose(hv),pe)
           statev(1) = dens0*exp(tp(1,1))
@@ -377,13 +388,14 @@ c update variables
           
           e_vol=dabs(pe(1,1)+pe(2,1)+pe(3,1))
           e_rate=dabs(e_vol-e_vol0)/dtime
-          statev(8) = p
-          statev(9) = q
+          statev(2) = e_vol
+          statev(6) = p
+          statev(7) = q
            
           call drx_hip_weicme(e_vol,e_rate,temp+273.d0,dtime,statev,
      1     nstatv,kinc)
           
-          statev(10) = qa/qy*(885.32d0/dsqrt(statev(13))+822.34d0)
+          statev(8) = qa/qy*(885.32d0/dsqrt(statev(14))+822.34d0)
         
         endif
 
@@ -917,6 +929,5 @@ C!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         return
       end subroutine
-
 
 

@@ -716,7 +716,7 @@ void MainWindow::InitTree()
 */
 void MainWindow::creatRibbon()
 { 
-    //setWindowTitle(tr("WelCME"));
+    setWindowTitle(tr(""));
     // Keep the native window frame so the WSLg/Windows title bar remains draggable.
 	m_ribbon= ribbonBar();
 	m_FilBtn=m_ribbon->applitionButton();
@@ -2666,7 +2666,7 @@ void MainWindow::ClearSlot()
 void MainWindow::closeEvent(QCloseEvent *ev)
 {
     AppLog::Write("APP", "close requested");
-    QMessageBox::StandardButton bt = QMessageBox::question(this, "Close", "Exit AESim_FM?", QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
+    QMessageBox::StandardButton bt = QMessageBox::question(this, "Close", tr("Confirm exit?"), QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
     if (bt == QMessageBox::Yes) 
     {
         AppLog::Write("APP", "close accepted");
@@ -3384,13 +3384,9 @@ void MainWindow::HIPSolveActOpenSlot()
 
     QStringList solverCandidates;
 #if _MSC_VER
-    solverCandidates << QDir(allRoot).absoluteFilePath("solver/solver.exe")
-                     << QDir(allRoot).absoluteFilePath("solver/AESim-FM.exe")
-                     << QDir(allRoot).absoluteFilePath("Solver/WeICME.exe");
+    solverCandidates << QDir(allRoot).absoluteFilePath("solver/solver.exe");
 #else
-    solverCandidates << QDir(allRoot).absoluteFilePath("solver/solver")
-                     << QDir(allRoot).absoluteFilePath("solver/AESim-FM")
-                     << QDir(allRoot).absoluteFilePath("Solver/WeICME");
+    solverCandidates << QDir(allRoot).absoluteFilePath("solver/solver");
 #endif
 
     QString solverPath;

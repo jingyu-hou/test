@@ -37,8 +37,8 @@ c dynamic recrystallizaion
         x_drex=0.d0
         d_drex=0.d0
       else
-        x_drex=statev(11)
-        d_drex=statev(12)
+        x_drex=statev(12)
+        d_drex=statev(13)
       endif
       
       z=max(epsilon_rate*dexp(q/r/t),1.d-10)
@@ -82,9 +82,9 @@ c recrtallization grain size
 c averer grain size        
       d_ave=d0*(1.d0-x_drex)+d_drex*x_drex
       
-      statev(11)=x_drex
-      statev(12)=d_drex
-      statev(13)=d_ave
+      statev(12)=x_drex
+      statev(13)=d_drex
+      statev(14)=d_ave
 
       return
       end
@@ -96,5 +96,4 @@ c averer grain size
 
         drx_hip_size=a*epr**m*exp(-q/8.314d0/t)*ep**n
       end
-
 

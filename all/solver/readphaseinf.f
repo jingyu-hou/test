@@ -112,14 +112,14 @@
             endif
           enddo
 
-           read(textpart(3)(1:20),'(f20.0)',iostat=istat)
+           read(textpart(3)(1:20),*,iostat=istat)
      &       cphase(5+phaseinf(2),phaseinf(1),nmat)
 
-           read(textpart(4)(1:20),'(f20.0)',iostat=istat)
+           read(textpart(4)(1:20),*,iostat=istat)
      &       cphase(2+phaseinf(2),phaseinf(1),nmat)
            if(istat.gt.0) return
 
-           read(textpart(5)(1:20),'(f20.0)',iostat=istat)
+           read(textpart(5)(1:20),*,iostat=istat)
      &       cphase(1,phaseinf(1),nmat)
            if(istat.gt.0) return
 
@@ -129,7 +129,7 @@
      &                           inl,ipoinp,inp,ipoinpc)
                if((istat.lt.0).or.(key.eq.1)) return
                 do jj=1,2
-                  read(textpart(jj)(1:20),'(f20.0)',iostat=istat)
+                  read(textpart(jj)(1:20),*,iostat=istat)
      &              pphase(jj,ii,phaseinf(2),phaseinf(1),nmat)
                 enddo
              enddo
@@ -155,24 +155,24 @@
         read(textpart(2)(1:10),'(i10)',iostat=istat)phaseinf(3)
         if(ityp.eq.2)then
             if (kk.eq.7)then
-              read(textpart(2)(1:20),'(f20.0)',iostat=istat)
+              read(textpart(2)(1:20),*,iostat=istat)
      &         cphase(12,phaseinf(1),nmat)
             elseif(kk.eq.6)then
-              read(textpart(2)(1:20),'(f20.0)',iostat=istat)
+              read(textpart(2)(1:20),*,iostat=istat)
      &        cphase(11,phaseinf(1),nmat)
             endif
         elseif(ityp.eq.3)then
-          read(textpart(2)(1:20),'(f20.0)',iostat=istat)
+          read(textpart(2)(1:20),*,iostat=istat)
      &     cphase(9,phaseinf(1),nmat)
         elseif(ityp.eq.4)then
-          read(textpart(2)(1:20),'(f20.0)',iostat=istat)
+          read(textpart(2)(1:20),*,iostat=istat)
      &     cphase(10,phaseinf(1),nmat)
         endif
            do ii=1,phaseinf(3)
              call getnewline(inpc,textpart,istat,n,key,iline,ipol,
      &                   inl,ipoinp,inp,ipoinpc)
               do jj=1,2
-                read(textpart(jj)(1:20),'(f20.0)',iostat=istat)
+                read(textpart(jj)(1:20),*,iostat=istat)
      &              pphase(jj,ii,kk,phaseinf(1),nmat)
               enddo
            enddo
@@ -192,7 +192,7 @@
      &           ipoinp,inp,ipoinpc)
           if((istat.lt.0).or.(key.eq.1)) return
           read(textpart(1)(1:10),'(i10)',iostat=istat)phaseinf(1)
-          read(textpart(2)(1:20),'(f20.0)',iostat=istat)
+          read(textpart(2)(1:20),*,iostat=istat)
      &       cphase(ii,phaseinf(1),nmat)
         enddo
       elseif(ityp.eq.6)then
@@ -212,16 +212,16 @@
            do ii=1,3
              read(textpart(ii)(1:10),'(i10)',iostat=istat)phaseinf(ii)
            enddo
-           read(textpart(3)(1:20),'(f20.0)',iostat=istat)
+           read(textpart(3)(1:20),*,iostat=istat)
      &       cphase(12+phaseinf(2),phaseinf(1),nmat)      
 
-           read(textpart(4)(1:20),'(f20.0)',iostat=istat)
+           read(textpart(4)(1:20),*,iostat=istat)
      &      phaseother(12+phaseinf(1)+phaseinf(2),nmat)
            do ii=1,phaseinf(3)
              call getnewline(inpc,textpart,istat,n,key,iline,ipol,inl,
      &          ipoinp,inp,ipoinpc)
              do jj=1,2 
-               read(textpart(jj)(1:20),'(f20.0)',iostat=istat)
+               read(textpart(jj)(1:20),*,iostat=istat)
      &         pphase(jj,ii,7+phaseinf(2),phaseinf(1),nmat)
              enddo
            enddo
@@ -231,7 +231,7 @@
      &         ipoinp,inp,ipoinpc)
           if((istat.lt.0).or.(key.eq.1)) return
          do ii=1,3
-           read(textpart(ii)(1:20),'(f20.0)',iostat=istat)
+           read(textpart(ii)(1:20),*,iostat=istat)
      &      phaseother(ii,nmat)
            if(istat.gt.0) return
          enddo
@@ -240,7 +240,7 @@
      &         ipoinp,inp,ipoinpc)
           if((istat.lt.0).or.(key.eq.1)) return
          do ii=1,n
-           read(textpart(ii)(1:20),'(f20.0)',iostat=istat)
+           read(textpart(ii)(1:20),*,iostat=istat)
      &      phaseother(ii+3,nmat)
            if(istat.gt.0) return
          enddo

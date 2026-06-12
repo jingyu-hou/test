@@ -393,6 +393,28 @@ c         w(i)=log(w(i))
      &       abqtime,dtime,temp,dtemp,predef,dpred,amat,ndi,nshr,ntens,
      &       nstate_,elconloc(1:7),rdploc,gsloc,pgauss,drot,pnewdt,
      &       celent,xokl,xkl,iel,iint,layer,kspt,jstep,kinc)
+      elseif (kode.eq.-72) then
+        call creep_softening_model(stre,
+     &       xstate(1:nstate_,iint,iel),ddsdde,sse,spd,scd,
+     &       rpl,ddsddt,drplde,drpldt,stran,dstran,
+     &       abqtime,dtime,temp,dtemp,temp0,predef,dpred,amat,
+     &       ndi,nshr,ntens,nstate_,
+     &       elconloc,plconloc,mpconloc,pgauss,drot,pnewdt,
+     &       celent,xokl,xkl,iel,iint,layer,kspt,jstep,kinc)
+      elseif (kode.eq.-73) then
+        call metal_powder(stre,xstate(1:nstate_,iint,iel),ddsdde,sse,
+     &       spd,scd,
+     &       rpl,ddsddt,drplde,drpldt,stran,dstran,abqtime,dtime,temp,
+     &       dtemp,temp0,predef,dpred,amat,ndi,nshr,ntens,nstate_,
+     &       elconloc,plconloc,mpconloc,pgauss,drot,pnewdt,
+     &       celent,xokl,xkl,iel,iint,layer,kspt,jstep,kinc)
+        call creep_softening_model(stre,
+     &       xstate(1:nstate_,iint,iel),ddsdde,sse,spd,scd,
+     &       rpl,ddsddt,drplde,drpldt,stran,dstran,
+     &       abqtime,dtime,temp,dtemp,temp0,predef,dpred,amat,
+     &       ndi,nshr,ntens,nstate_,
+     &       elconloc,plconloc,mpconloc,pgauss,drot,pnewdt,
+     &       celent,xokl,xkl,iel,iint,layer,kspt,jstep,kinc)
       else
         call umat(stre,xstate(1:nstate_,iint,iel),ddsdde,sse,spd,scd,
      &       rpl,ddsddt,drplde,drpldt,stran,dstran,

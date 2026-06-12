@@ -62,6 +62,9 @@ solver/ 目录中**所有在 Makefile.inc 中编译的文件**（143 .f + 14 .c 
 | `constitutive.f` | 本构分派器，未编译 |
 | `crystallite.f` | 晶粒应力积分，未编译 |
 | `index.h` | DRX 状态变量索引 |
+| `srx_mrx_k90.f` | SRX/MRX 再结晶模型，已编译（kode=-71），SDV22-43 |
+| `creepsoftenings.f` | *CREEP-SOFTENING 关键词读取，已编译（kode=-72），16参数，SDV44-53 |
+| `creep_softening_model.f` | 蠕变/软化核心模型(Norton + 历史User Creep公式)，已编译（kode=-72），SDV44-53 |
 | `Rolling Soft.cpp` | 轧制工艺 MFC DLL |
 | `segregation.cpp` | 偏析模拟 MFC DLL |
 
@@ -126,6 +129,18 @@ D:\ccx\src 源码（1127 文件）
 
 **验证环境**：WSL Ubuntu，gfortran 11，AESim-FM（libcalculix_base.a 链接）
 
+### 6.2 蠕变/软化功能构建与最小算例验证（2026-06-08）
+
+| 测试项 | 算例 | 验证内容 | 结果 |
+|---|---|---|---|
+| 构建 | `make clean && make solver` + `make solver_split` | 新增 `creepsoftenings.o`、`creep_softening_model.o` 编译链接 | 通过：无编译错误 |
+| Norton 蠕变 | `inp/creep_softening/creep_single_element_norton.inp` | MODEL_TYPE=1，SDV44-53 输出 | 通过：SDV44 累积蠕变非零，温度单位 K 正确 |
+| User Creep 公式 | `inp/creep_softening/creep_single_element_user.inp` | MODEL_TYPE=2（历史 Creep.f 公式），GA/GAMMA 修复版 | 通过：软化因子正确，应力松弛明显 |
+| 应力松弛 | `inp/creep_softening/stress_relaxation_hold.inp` | 恒定应变保温 500s，偏应力松弛 | 通过：偏应力松弛 96.6%，SDV50 合理 |
+| 粉末+蠕变共存 | `inp/creep_softening/powder_creep_minimal.inp` | kode=-70 与 kode=-72 共存，SDV 不交叉污染 | 通过：SDV 范围完全分离 |
+| DRX 回归 | `inp/disk.inp` | 蠕变接入后 DRX 路径不受影响 | 通过：kode 隔离正确，DRX 正常运行 |
+| TTT 回归 | `inp/blade.inp` | 蠕变接入后 TTT 相变路径不受影响 | 通过：无 SDV 冲突 |
+
 ## 7. 自主率核算
 
 根据 all_core_plan.md 口径：
@@ -137,7 +152,7 @@ D:\ccx\src 源码（1127 文件）
 | ARPACK | **开源** | 已编译 so 库 | 分母（开源） |
 | LAPACK/BLAS | **开源** | 已编译 so 库 | 分母（开源） |
 | solver/ 覆盖层 | **自研**（B 类） | 158 对象 | 分子（自研派生） |
-| solver/ 自研 | **自研**（C 类） | 9 文件 | 分子（自研全新） |
+| solver/ 自研 | **自研**（C 类） | 11 文件 | 分子（自研全新） |
 | D 类 Abaqus 风格 | **历史遗留** | 3 文件 | 不计入 |
 | E 类独立程序 | **非求解器** | 6 文件 | 不计入 |
 | appkey.cpp/h | **授权** | 2 文件 | 不计入 |

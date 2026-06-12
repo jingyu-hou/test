@@ -51,24 +51,24 @@ C*****************************************************************
         INTEGER NTTCT_Point(NCurve_Number)
         REAL*8 tt(NCurve_Number),FF(NCurve_Number),
      &         V_Rate(NCurve_Number),V_Temp(2),Curave_Data(N1,2),
-     &         Curave_Data2(N1,2),f(N2)
+     &         Curave_Data2(N1,2),f(N3)
         REAL*8 An,An1,An2,Vni,Vnj,b,ta,fa,tb,fb,t,holding_time,ts,
      &         holding_temp,ef,ef1
 
         Nmin=1
         Curave_Data2(1:N1,2)=Curave_Data(1:N1,1)
         Curave_Data2(1:N1,1)=Curave_Data(1:N1,2)
-        IF(NTTTCCT_Type.eq.1.and.NCurve_Number.GE.3)THEN
+        IF(NCurve_Number.GE.3)THEN
            Nmax=3
         ELSE
           Nmax=2
         ENDIF
-      
+
         ta=tt(Nmin)
         fa=FF(Nmin)
         tb=tt(Nmax)
         fb=FF(Nmax)
-      
+
         IF(NTTTCCT_Type.eq.1.or.Whether_CCTIsothermal.eq.1)THEN
           An=dlog(dlog(1.d0-fa)/dlog(1.d0-fb))/dlog((ta-ts)/(tb-ts))
            b=-dlog(1.d0-fa)/(ta-ts)**An
@@ -121,7 +121,7 @@ C*****************************************************************
         ef1=0.d0
         Curave_Data2(1:N1,2)=Curave_Data(1:N1,1)
         Curave_Data2(1:N1,1)=Curave_Data(1:N1,2)
-        IF(NTTTCCT_Type.eq.1.and.NCurve_Number.GE.3)THEN
+        IF(NCurve_Number.GE.3)THEN
            Nmax=3
         ELSE
            Nmax=2
@@ -177,7 +177,7 @@ C*****************************************************************
         INTEGER NTTCT_Point(NCurve_Number)
 
         REAL*8 tt(NCurve_Number),FF(NCurve_Number),V_Rate(NCurve_Number)
-     &,Curave_Data(N1,2),holding_temp,Curave_Data2(N1,2),V_TEMP(2),f(N2)
+     &,Curave_Data(N1,2),holding_temp,Curave_Data2(N1,2),V_TEMP(2),f(N3)
         REAL*8 An,b,holding_time,Dm,Dz,Cm,ts,t,fa,fb,ta,tb,AN1,AN2,
      &   VNI,VNJ,ef,ef1
       
@@ -185,7 +185,7 @@ C*****************************************************************
        Curave_Data2(1:N1,2)=Curave_Data(1:N1,1)
        Curave_Data2(1:N1,1)=Curave_Data(1:N1,2)
 
-       IF(NTTTCCT_Type.eq.1.and.NCurve_Number.GE.3)THEN
+       IF(NCurve_Number.GE.3)THEN
           Nmax=3
        ELSE
           Nmax=2
@@ -194,7 +194,7 @@ C*****************************************************************
        fa=FF(Nmin)
        tb=tt(Nmax)
        fb=FF(Nmax)
-      
+
        IF(NTTTCCT_Type.eq.1.or.Whether_CCTIsothermal.eq.1)THEN
          An=dlog(dlog(1.d0-fa)/dlog(1.d0-fb))/dlog((ta-ts)/(tb-ts))
          b=-dlog(1.d0-fa)/(ta-ts)**An

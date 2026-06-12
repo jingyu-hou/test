@@ -10,6 +10,7 @@ integraterhocp.f \
 lump.f \
 materialdata_dtdh.f \
 materialdata_h2temp.f \
+materialdata_me.f \
 materialdata_temp2h.f \
 materialdata_th_h.f \
 materialdata_th_h2.f \
@@ -53,6 +54,8 @@ closefilefluid.f \
 convert2slapcol.f \
 correctrhoelcomp.f \
 correctvel.f \
+creepsoftenings.f \
+creep_softening_model.f \
 createialnk.f \
 damage.f \
 damages.f \
@@ -138,12 +141,14 @@ writestadiv.f \
 writevfa.f \
 calcvol.f \
 calcvol2.f \
+calinput.f \
 readphaseinf.f \
 phasetransition.f \
 phasetransition1.f \
 phaseother.f \
 
 SCCXC = \
+	frd.c \
 readxstateini.c \
 getSystemCPUs.c \
 stof.c \
@@ -158,5 +163,4 @@ drxc.c \
 output_mtx.c \
 itinerate_print.c \
 random_print.c \
-
 # SCCXCXX removed: umatp_dl.cpp source not found

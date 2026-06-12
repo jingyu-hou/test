@@ -260,8 +260,10 @@ C************************************************************************
         REAL*8 ::TTT_Temp1(NT1),TTT_Time1(NT1) 
       
         DO II=1,NT1
-          IF(TTT_Temp1(II).LE.holding_temp.AND.         
-     &      TTT_Temp1(II+1).GE.holding_temp.and.(II+1).LE.NT1)THEN 
+          IF(((TTT_Temp1(II).LE.holding_temp.AND.
+     &      TTT_Temp1(II+1).GE.holding_temp).OR.
+     &      (TTT_Temp1(II).GE.holding_temp.AND.
+     &      TTT_Temp1(II+1).LE.holding_temp)).and.(II+1).LE.NT1)THEN 
             CALL Proportional(TTT_Temp1(II),TTT_Time1(II),
      &      TTT_Temp1(II+1),TTT_Time1(II+1),holding_temp,t,IB)
             return

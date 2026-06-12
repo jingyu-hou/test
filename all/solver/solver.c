@@ -120,6 +120,7 @@ else{
   }
 }
 setenv("CCX_JOBNAME_GETJOBNAME",jobnamec,1);
+if(!getenv("CCX_NPROC_EQUATION_SOLVER") && !getenv("OMP_NUM_THREADS")) setenv("OMP_NUM_THREADS","4",1);
 
 #ifdef BAM
 ITG lop=0,lrestart=0,kstep=1,kinc=1;
@@ -132,7 +133,7 @@ FORTRAN(openfile,(jobnamef,output));
 printf("\n************************************************************\n\n");
 printf("AESim_FM solver\n");
 printf("************************************************************\n\n");
-printf("You are using an executable made on Sun Jun  7 11:28:46 EDT 2026\n");
+printf("You are using an executable made on Fri Jun 12 02:53:37 EDT 2026\n");
 fflush(stdout);
 
 istep=0;
@@ -359,7 +360,7 @@ while(istat>=0) {
 
     NNEW(pphase,double,2*phase_inf[2]*(7+phase_inf[3])*phase_inf[0]*nmat);
     NNEW(cphase,double,(13+phase_inf[3])*phase_inf[0]*nmat);
-    NNEW(phaseother,double,(3+12+phase_inf[3]*phase_inf[1])*nmat);
+    NNEW(phaseother,double,(3+12+phase_inf[3]*phase_inf[0])*nmat);
     //9为计算屈服强度所需的输入参数个数，有待确定。
     NNEW(nphase,ITG,11*nmat);
 
@@ -798,7 +799,7 @@ while(istat>=0) {
 
     RENEW(pphase,double,2*phase_inf[2]*(7+phase_inf[3])*phase_inf[0]*nmat);
     RENEW(cphase,double,(13+phase_inf[3])*phase_inf[0]*nmat);
-    RENEW(phaseother,double,(3+12+phase_inf[3]*phase_inf[1])*nmat);
+    RENEW(phaseother,double,(3+12+phase_inf[3]*phase_inf[0])*nmat);
     //9为计算屈服强度所需的输入参数个数，有待确定。
     RENEW(nphase,ITG,11*nmat);
 
