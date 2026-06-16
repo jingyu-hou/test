@@ -294,8 +294,12 @@ void QPostWigResultOutput::BtnSectionSlot()
         SectionZoneSlot(cutId, it.value()->m_ZoneVisible->isChecked());
         SectionShowSlot(cutId, it.value()->m_gbBox3->isChecked(),0);
     }
-    
-    //frdVISObj_->Update();  
+
+    if (m_CutWidgetMap.isEmpty() && !m_Var.isEmpty()) {
+        BtnSectionAddSlot();
+    }
+
+    frdVISObj_->Update();
 
 }
 /*

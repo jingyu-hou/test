@@ -571,20 +571,31 @@ map<double, double> FrdDataSource::GetPointScalar_TimeValueMap(int pointId, cons
             }
         }
     }else{//--time
+        QString simpleScalarName = scalarName;
+        if (scalarName.contains(":")) {
+            QStringList colonParts = scalarName.split(":");
+            if (colonParts.size() >= 2) {
+                QString headerPart = colonParts.at(0);
+                QString compPart = colonParts.at(1);
+                if (headerPart.contains("-")) {
+                    simpleScalarName = headerPart.split("-").at(1) + "-" + compPart;
+                }
+            }
+        }
         for (map<QString, QStringList>::const_iterator cit = varHeaderScalarMap_.begin(); cit != varHeaderScalarMap_.end(); ++cit)
         {
             QString header(cit->first);
             QStringList varName=cit->second;
             QStringList varTmp;varTmp.clear();
-            
+
             for (int kk=0;kk<varName.size();kk++){
                 varTmp<<header.split("-").at(1)+"-"+varName.at(kk);
             }
-            
-            
-            if (varTmp.contains(scalarName)){  
+
+
+            if (varTmp.contains(simpleScalarName)){
                 double time = headerTimeStepMap_[header].toDouble();
-                QString scalar(QString("%1:%2").arg(header).arg(scalarName.split("-").at(1)));
+                QString scalar(QString("%1:%2").arg(header).arg(simpleScalarName.split("-").at(1)));
                 int scalarId = gSource_->GetScalarIndex(scalar.toLatin1().constData());
                 double value = pointResults_[scalarId]->GetValue(pointId);
                 resultMap[time] = value;

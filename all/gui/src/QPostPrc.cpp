@@ -499,24 +499,24 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
     }
 
     bool bGridVisable = ResultVis.bCurGrid;
-    static QString oldDispName=strOrigCurrentName;
+    QString oldDispName=strOrigCurrentName;
     m_PosWigFile->frdVIS_.SetDisplacementColor(ResultVis.m_gridShowColor);
 
     if (bGridVisable == true)
     {
         if (iOrigCurrent==0){//鏄剧ず鍘熷鐨勭綉鏍?
+            QString dispHeader = "L"+strNumLabel+"-DISP";
             vector<int>::const_iterator it=m_WholeActorData.begin();
-            QString header;header.clear(); 
             for (it;it!=m_WholeActorData.end();it++){
                 if (std::find(m_ActorListData.begin(),m_ActorListData.end(),*it)!=m_ActorListData.end()){
                     m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+oldDispName.left(oldDispName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//闅愯棌涔嬪墠鐨?
-                    m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,header,true); 
+                    m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,dispHeader,true);
                 }else{
                     m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,"L"+oldDispName.left(oldDispName.indexOf("-")).remove("L",Qt::CaseInsensitive)+"-DISP",false);//闅愯棌涔嬪墠鐨?
-                    m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,header,false); 
+                    m_PosWigFile->frdVIS_.SetDisplacementVisible(*it,dispHeader,false);
                 }
             }
-            oldDispName=header;
+            oldDispName=dispHeader;
         }else{
             if (strOrigCurrentName==oldDispName){
                 vector<int>::const_iterator it=m_WholeActorData.begin();

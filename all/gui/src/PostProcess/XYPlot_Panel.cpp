@@ -346,7 +346,8 @@ void XYPlot_Panel::Callback_PickPoint(vtkObject *caller, unsigned long, void *cl
 void XYPlot_Panel::UpdataSelectedPoint(vtkActor *actor,QString strMapperName,int pointId, double x, double y, double z)
 {
     if (!frdVISObj_)return;
-    pointId=frdVISObj_->GetPointId(m_varPositionComb,x,y,z);
+    int foundId = frdVISObj_->GetPointId(m_varPositionComb,x,y,z);
+    if (foundId >= 0) pointId = foundId;
     selectedPointId_=pointId;
     SelectedPointS TmpSelectP;
     TmpSelectP.selectedPointId_=pointId;
