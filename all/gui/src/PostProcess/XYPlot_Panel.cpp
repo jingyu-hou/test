@@ -490,7 +490,7 @@ void XYPlot_Panel::CreateXYTimePlot()
         plot_.SetLegendLabel(i,(QString("Id=%1").arg(m_SelectedPointS[i].selectedPointId_)).toLatin1().data());
         for (map<double, double>::iterator it = timeValueMap.begin(); it != timeValueMap.end(); ++it)
         {
-            plot_.AddPointXValue(it->first);
+            if (i == 0) plot_.AddPointXValue(it->first);
             plot_.AddPointYValue(i, it->second);
         }
     }
