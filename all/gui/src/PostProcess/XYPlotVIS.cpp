@@ -124,6 +124,7 @@ void XYPlot::CreateXYPlot(vector<bool> &curveShowOnFlagVec)
         xyPlot_->SetGlyphTypeTo(i, const_cast<char*>("Point"));
         xyPlot_->SetXYPlotColor(i, ColorList[i%20][0], ColorList[i%20][1], ColorList[i%20][2]);
     }
+    xyPlot_->ShowOn();
 }
 
 void XYPlot::AddPointXValue(double step, bool updateXRange)
