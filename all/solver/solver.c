@@ -133,7 +133,7 @@ FORTRAN(openfile,(jobnamef,output));
 printf("\n************************************************************\n\n");
 printf("AESim_FM solver\n");
 printf("************************************************************\n\n");
-printf("You are using an executable made on Fri Jun 12 02:53:37 EDT 2026\n");
+printf("You are using an executable made on Sat Jun 13 21:52:00 EDT 2026\n");
 fflush(stdout);
 
 istep=0;

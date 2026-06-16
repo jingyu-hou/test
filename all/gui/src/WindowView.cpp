@@ -5,6 +5,7 @@
 #include "QTextEdit"
 #include <QMessageBox>
 #include <QTimer>
+#include <vtkRendererCollection.h>
 
  int QWindowView::m_indexCnt=0;
 QWindowView::QWindowView(QWidget *parent): QWidget(parent)//QDockWidget(parent)
@@ -66,6 +67,7 @@ QWindowView::QWindowView(QWidget *parent,int index): QWidget(parent)//QDockWidge
     this->setAcceptDrops(true);
     m_indexCnt++;
 	connect(tabView_,SIGNAL(currentChanged(int)),this,SLOT(TabViewSlot()));
+    QTimer::singleShot(0, this, SLOT(RenderCurrentTabSlot()));
 }
 //--
 QWindowView::~QWindowView()
@@ -105,11 +107,29 @@ void QWindowView::TabViewSlot()
     tabView_->setTabEnabled(0,true);
     tabView_->setTabEnabled(1,true);
     AppLog::Write("VIEW", QString("TabViewSlot AFTER: current=%1").arg(tabView_->currentIndex()));
+    QTimer::singleShot(0, this, SLOT(RenderCurrentTabSlot()));
 }
 
 void QWindowView::RenderCurrentTabSlot()
 {
-    AppLog::Write("VIEW", "explicit tab render skipped");
+    if (!tabView_) return;
+    QVTKWidget *vtkWidget = qobject_cast<QVTKWidget*>(tabView_->currentWidget());
+    if (!vtkWidget) {
+        AppLog::Write("VIEW", "explicit tab render skipped: current widget is not QVTKWidget");
+        return;
+    }
+    vtkRenderWindow *renWin = vtkWidget->GetRenderWindow();
+    if (!renWin) {
+        AppLog::Write("VIEW", "explicit tab render skipped: render window is null");
+        return;
+    }
+    vtkRenderer *renderer = renWin->GetRenderers()->GetFirstRenderer();
+    if (renderer) {
+        renderer->SetGradientBackground(0);
+        renderer->SetBackground(1.0, 1.0, 1.0);
+    }
+    renWin->Render();
+    AppLog::Write("VIEW", QString("explicit tab render current=%1").arg(tabView_->currentIndex()));
 }
 //--center window change tab hide/shown
 void QWindowView::TabView(int index)

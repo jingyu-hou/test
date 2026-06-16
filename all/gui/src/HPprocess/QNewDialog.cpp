@@ -1,20 +1,20 @@
-#include "QNewDialog.h"
+﻿#include "QNewDialog.h"
 #include <QMessageBox>
 
 QNewDialog::QNewDialog(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle(tr("新建"));
+    setWindowTitle("Data Curve");
     QHBoxLayout *Hlayout1 = new QHBoxLayout();
-    QLabel *lab = new QLabel(tr("数据:"));
+    QLabel *lab = new QLabel(tr("鏁版嵁:"));
     m_LineEdit = new QLineEdit();
     Hlayout1->addWidget(lab);
     Hlayout1->addWidget(m_LineEdit);
     Hlayout1->addStretch();
     
     QHBoxLayout *Hlayout2 = new QHBoxLayout();
-    m_OKBtn = new QPushButton(tr("确定"));
-    m_CancelBtn = new QPushButton(tr("取消"));
+    m_OKBtn = new QPushButton(tr("纭畾"));
+    m_CancelBtn = new QPushButton(tr("鍙栨秷"));
     Hlayout2->addStretch();
     Hlayout2->addWidget(m_OKBtn);
     Hlayout2->addWidget(m_CancelBtn);
@@ -41,28 +41,28 @@ QString QNewDialog::GetEditText()
 }
 
 //--------------------------------------
-//--------------  相变积分 -------------
+//--------------  鐩稿彉绉垎 -------------
 //--------------------------------------
 
 QChangePointDialog::QChangePointDialog(QWidget *parent)
 : QDialog(parent)
 {
-    setWindowTitle(tr("相变积分"));
+    setWindowTitle("Data Curve");
     QWidget *Widge1=new QWidget(this);
     QWidget *Widge2=new QWidget(this);
     QWidget *Widge3=new QWidget(this);
-    m_AddTabBtn=new QPushButton(tr("增加曲线"),Widge1);
-    m_DelTabBtn=new QPushButton(tr("删除曲线"),Widge1);
-    m_AutoReName = new QPushButton(tr("自动命名"),Widge1);
-    m_PlotBtn=new QPushButton(tr("绘图"),Widge1);
+    m_AddTabBtn=new QPushButton(tr("澧炲姞鏇茬嚎"),Widge1);
+    m_DelTabBtn=new QPushButton(tr("鍒犻櫎鏇茬嚎"),Widge1);
+    m_AutoReName = new QPushButton(tr("鑷姩鍛藉悕"),Widge1);
+    m_PlotBtn=new QPushButton(tr("缁樺浘"),Widge1);
 
     QAddTab *TmpTab = new QAddTab(Widge1);
     m_addNewTab.insert(1, TmpTab);
     m_tabView = new QTabWidget(Widge1);
-    m_tabView->addTab(TmpTab, tr("曲线1"));
+    m_tabView->addTab(TmpTab, tr("鏇茬嚎1"));
     m_tabView->setMovable(true);
     m_tabView->setUsesScrollButtons(true);
-    //m_ChartProp.strListLabel<<tr("曲线1");
+    //m_ChartProp.strListLabel<<tr("鏇茬嚎1");
     //m_groupBoxPlot=new QGroupBox();
 
     QGridLayout *W1Layout = new QGridLayout(Widge1);
@@ -82,10 +82,10 @@ QChangePointDialog::QChangePointDialog(QWidget *parent)
     //HLastLayout->addWidget(m_OKBtn,4,0,1,1);
     //HLastLayout->addWidget(m_CancelBtn,4,1,1,1);
     QVBoxLayout *vlayoutW3 = new QVBoxLayout(Widge3);
-    m_OKBtn = new QPushButton(tr("确定"),Widge3);
-    m_CancelBtn = new QPushButton(tr("取消"),Widge3);
-    m_ImportBtn = new QPushButton(tr("导入"),Widge3);
-    m_ExportBtn = new QPushButton(tr("导出"),Widge3);
+    m_OKBtn = new QPushButton(tr("纭畾"),Widge3);
+    m_CancelBtn = new QPushButton(tr("鍙栨秷"),Widge3);
+    m_ImportBtn = new QPushButton(tr("瀵煎叆"),Widge3);
+    m_ExportBtn = new QPushButton(tr("瀵煎嚭"),Widge3);
     vlayoutW3->addStretch();
     //vlayoutW3->addWidget(m_ImportBtn);//luo
     //vlayoutW3->addWidget(m_ExportBtn);//luo
@@ -106,7 +106,7 @@ QChangePointDialog::QChangePointDialog(QWidget *parent)
     connect(m_CancelBtn,SIGNAL(clicked()),this,SLOT(reject()));
     PlotBtnSlot();
     QStringList strList;
-    strList<<tr("时间")<<tr("温度");
+    strList<<tr("鏃堕棿")<<tr("娓╁害");
     TmpTab->m_TabData->ChangeLable(strList);
     m_ChartProp.xLabel=strList.at(0);
     m_ChartProp.yLabel=strList.at(1);
@@ -127,40 +127,40 @@ QString QChangePointDialog::GetEditText()
     str = m_LineEditName->text()+"-"+m_LineEditCurveTh->text()+"-"+m_LineEditChangeP->text();
     return str;
 }
-//--增加Tab
+//--澧炲姞Tab
 void QChangePointDialog::AddTabBtnSlot()
 {
     QAddTab *TmpTab = new QAddTab(this);
     QStringList strList;
-    strList<<tr("时间")<<tr("温度");
+    strList<<tr("鏃堕棿")<<tr("娓╁害");
     TmpTab->m_TabData->ChangeLable(strList);
 
     int nSize=m_tabView->count();
-    m_tabView->addTab(TmpTab,(tr("曲线")+QString("%1").arg(nSize+1)));
+    m_tabView->addTab(TmpTab,(tr("鏇茬嚎")+QString("%1").arg(nSize+1)));
     m_addNewTab.insert(nSize+1,TmpTab);
-    //m_ChartProp.strListLabel<<(tr("曲线")+QString("%1").arg(nSize+1));
+    //m_ChartProp.strListLabel<<(tr("鏇茬嚎")+QString("%1").arg(nSize+1));
 }
-//--删除Tab
+//--鍒犻櫎Tab
 void QChangePointDialog::DelTabBtnSlot()
 {
     int iPage=m_tabView->currentIndex();
     if (iPage<0)return;
-    QMessageBox::StandardButton bt= QMessageBox::question(this, tr("删除"), tr("确定删除？"), QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
+    QMessageBox::StandardButton bt = QMessageBox::question(this, "Delete", "Delete this curve?", QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
     if (bt==QMessageBox::No)return;
     m_tabView->removeTab(iPage);
 }
-//--自动命名Tab
+//--鑷姩鍛藉悕Tab
 void QChangePointDialog::AutoRenameSlot()
 {
     int nSize =m_tabView->count();
     m_ChartProp.strListLabel.clear();
     for (int i=0; i<nSize; i++){
-        m_tabView->setTabText(i, tr("曲线%1").arg(i+1));
-        //m_ChartProp.strListLabel<<(tr("曲线")+QString("%1").arg(i+1));
+        m_tabView->setTabText(i, tr("鏇茬嚎%1").arg(i+1));
+        //m_ChartProp.strListLabel<<(tr("鏇茬嚎")+QString("%1").arg(i+1));
     }
     
 }
-//相变积分数据点数获取
+//鐩稿彉绉垎鏁版嵁鐐规暟鑾峰彇
 int QChangePointDialog::GetDataNum(int iPage)
 {
     QAddTab *TmpTab=(QAddTab *)m_tabView->widget(iPage);
@@ -170,14 +170,14 @@ int QChangePointDialog::GetDataNum(int iPage)
         QString strTmpX,strTmpY;
         strTmpX = TmpTab->m_TabData->m_TabCurveWiget->item(i,0)->text();
         strTmpY = TmpTab->m_TabData->m_TabCurveWiget->item(i,1)->text();
-        if (strTmpX==""&&strTmpY=="")continue;//均为"",则无数据   
+        if (strTmpX==""&&strTmpY=="")continue;//鍧囦负"",鍒欐棤鏁版嵁   
         iPointNum++;
     }
     return iPointNum;//m_TCurveDataPlot->m_TabCurveWiget->rowCount();
 }
 
 //
-//格式: dataX1,dataY1; dataX2,dataY2; dataX3,dataY3;
+//鏍煎紡: dataX1,dataY1; dataX2,dataY2; dataX3,dataY3;
 //
 QString QChangePointDialog::GetPlotData(int iPage)
 {
@@ -189,13 +189,13 @@ QString QChangePointDialog::GetPlotData(int iPage)
         QString strTmpX,strTmpY;
         strTmpX = TmpTab->m_TabData->m_TabCurveWiget->item(i,0)->text();
         strTmpY = TmpTab->m_TabData->m_TabCurveWiget->item(i,1)->text();
-        if (strTmpX==""&&strTmpY=="")continue;//均为"",则无数据 
+        if (strTmpX==""&&strTmpY=="")continue;//鍧囦负"",鍒欐棤鏁版嵁 
         strList<<strTmpX+","+strTmpY;   
      }
     return strData=strList.join(";");
 }
 
-//--绘图
+//--缁樺浘
 void QChangePointDialog::PlotBtnSlot()
 {
     /*int curId = m_tabView->currentIndex();
@@ -203,8 +203,7 @@ void QChangePointDialog::PlotBtnSlot()
 
     QAddTab*tmpTab = (QAddTab*)(curWidget);
     int id=m_addNewTab.key(tmpTab); */ 
-    //获取所有Tab中数据进行绘制
-    int nSize =m_tabView->count();
+    int nSize = m_tabView->count();
     m_ChartProp.strListLabel.clear();
     for (int kk=0;kk<nSize;kk++){
      m_ChartProp.strListLabel<<m_tabView->tabText(kk);
@@ -215,7 +214,7 @@ void QChangePointDialog::PlotBtnSlot()
     for (int i=0; i<nSize; i++){
         tmpTab=(QAddTab*) m_tabView->widget(i);
         //int id=m_addNewTab.key(tmpTab);  
-        tmpTab->m_TabData->m_TabCurveWiget->sortByColumn(1, Qt::AscendingOrder);//默认第1列是温度，其以升序排列；
+        tmpTab->m_TabData->m_TabCurveWiget->sortByColumn(1, Qt::AscendingOrder);//榛樿绗?鍒楁槸娓╁害锛屽叾浠ュ崌搴忔帓鍒楋紱
        
         int nRow=tmpTab->m_TabData->m_TabCurveWiget->rowCount();
         int nCol=tmpTab->m_TabData->m_TabCurveWiget->columnCount();
@@ -252,7 +251,6 @@ void QChangePointDialog::ChartShow2XY(vector<DoubleArray> dataX, vector<DoubleAr
     chartViewers->setVisible(d->noOfCharts);
 }
 
-//--获取当前ipage下转变分数
 QString QChangePointDialog::GetCurveThPoint(int iPage)
 {
     QString str;
@@ -277,7 +275,7 @@ bool QChangePointDialog::setData(QMap<int,NewPhaseChangeS> MapData)
     int i=0;
     for (it,i;it!=MapData.end();it++,i++)
     {
-        AddTabBtnSlot();//添加一个Tab;
+        AddTabBtnSlot();//娣诲姞涓€涓猅ab;
         m_addNewTab[i+1]->m_Edit->setText(it->strChangeP);
         m_addNewTab[i+1]->m_TabData->SetData(it->iNum,it->strData);
     }
@@ -285,20 +283,20 @@ bool QChangePointDialog::setData(QMap<int,NewPhaseChangeS> MapData)
 }
 
 //--------------------------------------
-//---------------  相平衡 --------------
+//---------------  鐩稿钩琛?--------------
 //--------------------------------------
 QPhaseBalanceDialog::QPhaseBalanceDialog(QWidget *parent)
 : QDialog(parent)
 {
-    setWindowTitle(tr("相平衡"));
+    setWindowTitle("Phase Balance");
 
     QHBoxLayout *HPlotlayout = new QHBoxLayout();
     m_TCurveDataPlot = new QTCurveDataPlot(this);
     HPlotlayout->addWidget(m_TCurveDataPlot);
  
     QHBoxLayout *HlayoutLast = new QHBoxLayout();
-    m_OKBtn = new QPushButton(tr("确定"));
-    m_CancelBtn = new QPushButton(tr("取消"));
+    m_OKBtn = new QPushButton(tr("纭畾"));
+    m_CancelBtn = new QPushButton(tr("鍙栨秷"));
     HlayoutLast->addStretch();
     HlayoutLast->addWidget(m_OKBtn);
     HlayoutLast->addWidget(m_CancelBtn);
@@ -328,7 +326,7 @@ int QPhaseBalanceDialog::GetDataNum()
         QString strTmpX,strTmpY;
         strTmpX = m_TCurveDataPlot->m_TabCurveWiget->item(i,0)->text();
         strTmpY = m_TCurveDataPlot->m_TabCurveWiget->item(i,1)->text();
-        if (strTmpX==""&&strTmpY=="")continue;//均为"",则无数据   
+        if (strTmpX==""&&strTmpY=="")continue;//鍧囦负"",鍒欐棤鏁版嵁   
         iPointNum++;
     }
  return iPointNum;
@@ -350,21 +348,21 @@ QString QPhaseBalanceDialog::GetPlotData()
 }
 
 //--------------------------------------
-//----------------  潜热 ---------------
+//----------------  娼滅儹 ---------------
 //--------------------------------------
 QPhaseLatentHeatDialog::QPhaseLatentHeatDialog(QWidget *parent)
 : QDialog(parent)
 {
-    setWindowTitle(tr("潜热"));
+    setWindowTitle("Latent Heat");
     QHBoxLayout *Hlayout1 = new QHBoxLayout();
-    QLabel *lab = new QLabel(tr("项:"));
+    QLabel *lab = new QLabel(tr("椤?"));
     m_LineName = new QLineEdit();
     Hlayout1->addWidget(lab);
     Hlayout1->addWidget(m_LineName);
     Hlayout1->addStretch();
 
     QHBoxLayout *Hlayout2 = new QHBoxLayout();
-    QLabel *lab1 = new QLabel(tr("潜热值:"));
+    QLabel *lab1 = new QLabel(tr("娼滅儹鍊?"));
     m_LineValue = new QLineEdit();
     Hlayout2->addWidget(lab1);
     Hlayout2->addWidget(m_LineValue);
@@ -376,8 +374,8 @@ QPhaseLatentHeatDialog::QPhaseLatentHeatDialog(QWidget *parent)
     m_TCurveDataPlot.push_back(tmpCurvePlot);*/
 
     QHBoxLayout *HlayoutLast = new QHBoxLayout();
-    m_OKBtn = new QPushButton(tr("确定"));
-    m_CancelBtn = new QPushButton(tr("取消"));
+    m_OKBtn = new QPushButton(tr("纭畾"));
+    m_CancelBtn = new QPushButton(tr("鍙栨秷"));
     HlayoutLast->addStretch();
     HlayoutLast->addWidget(m_OKBtn);
     HlayoutLast->addWidget(m_CancelBtn);
@@ -408,7 +406,7 @@ QString QPhaseLatentHeatDialog::GetEditText()
 }
 
 //--------------------------------------
-//--------------比热、导热--------------
+//--------------姣旂儹銆佸鐑?-------------
 //--------------------------------------
 QPhasePropDialog::QPhasePropDialog(QWidget *parent)
 : QDialog(parent)
@@ -420,8 +418,8 @@ QPhasePropDialog::QPhasePropDialog(QWidget *parent)
 
 
     QHBoxLayout *HlayoutLast = new QHBoxLayout();
-    m_OKBtn = new QPushButton(tr("确定"));
-    m_CancelBtn = new QPushButton(tr("取消"));
+    m_OKBtn = new QPushButton(tr("纭畾"));
+    m_CancelBtn = new QPushButton(tr("鍙栨秷"));
     HlayoutLast->addStretch();
     HlayoutLast->addWidget(m_OKBtn);
     HlayoutLast->addWidget(m_CancelBtn);
@@ -454,7 +452,7 @@ int QPhasePropDialog::GetDataNum()
         QString strTmpX,strTmpY;
         strTmpX = m_TCurveDataPlot->m_TabCurveWiget->item(i,0)->text();
         strTmpY = m_TCurveDataPlot->m_TabCurveWiget->item(i,1)->text();
-        if (strTmpX==""&&strTmpY=="")continue;//均为"",则无数据   
+        if (strTmpX==""&&strTmpY=="")continue;//鍧囦负"",鍒欐棤鏁版嵁   
         iPointNum++;
     }
     return iPointNum;
@@ -476,12 +474,12 @@ QString QPhasePropDialog::GetPlotData()
 }
 
 //--------------------------------------------
-//--------孕育期INCUBATIONPERIOD--------------
+//--------瀛曡偛鏈烮NCUBATIONPERIOD--------------
 //--------------------------------------------
 QIncubationPeriod::QIncubationPeriod(QWidget *parent)
 : QDialog(parent)
 {
-    setWindowTitle(tr("孕育期"));
+    setWindowTitle("Incubation Period");
  
     QHBoxLayout *HPlotlayout = new QHBoxLayout();
     m_TCurveDataPlot = new QTCurveDataPlot(this);
@@ -489,8 +487,8 @@ QIncubationPeriod::QIncubationPeriod(QWidget *parent)
 
 
     QHBoxLayout *HlayoutLast = new QHBoxLayout();
-    m_OKBtn = new QPushButton(tr("确定"));
-    m_CancelBtn = new QPushButton(tr("取消"));
+    m_OKBtn = new QPushButton(tr("纭畾"));
+    m_CancelBtn = new QPushButton(tr("鍙栨秷"));
     HlayoutLast->addStretch();
     HlayoutLast->addWidget(m_OKBtn);
     HlayoutLast->addWidget(m_CancelBtn);
@@ -504,7 +502,7 @@ QIncubationPeriod::QIncubationPeriod(QWidget *parent)
     connect(m_CancelBtn,SIGNAL(clicked()),this,SLOT(reject()));
 
     QStringList strList;
-    strList<<tr("温度")<<tr("时间");
+    strList<<tr("娓╁害")<<tr("鏃堕棿");
     m_TCurveDataPlot->ChangeLable(strList);
 }
 
@@ -526,7 +524,7 @@ int QIncubationPeriod::GetDataNum()
         QString strTmpX,strTmpY;
         strTmpX = m_TCurveDataPlot->m_TabCurveWiget->item(i,0)->text();
         strTmpY = m_TCurveDataPlot->m_TabCurveWiget->item(i,1)->text();
-        if (strTmpX==""&&strTmpY=="")continue;//均为"",则无数据   
+        if (strTmpX==""&&strTmpY=="")continue;//鍧囦负"",鍒欐棤鏁版嵁   
         iPointNum++;
     }
     return iPointNum;
@@ -547,21 +545,21 @@ QString QIncubationPeriod::GetPlotData()
     return strData=strList.join(";");
 }
 //--------------------------------------
-//--------------  曲线及显示 -------------
+//--------------  鏇茬嚎鍙婃樉绀?-------------
 //--------------------------------------
 QTCurveDataPlot::QTCurveDataPlot(QWidget *parent)
 : QWidget(parent)
 {  
-    //setMaximumHeight(400);//去掉黄色logo
+    //setMaximumHeight(400);//鍘绘帀榛勮壊logo
     m_Hwid1=new QWidget(this);
     m_HwidCommon=new QWidget(this);
-    setWindowTitle(QString::fromUtf8("新建"));
-    m_Hwid1->setMaximumHeight(300);//去掉黄色logo
+    setWindowTitle("Data Curve");
+    m_Hwid1->setMaximumHeight(300);//鍘绘帀榛勮壊logo
     m_HLayout3= new QHBoxLayout(m_HwidCommon);
-    m_TabAddBtn = new QPushButton(tr("增加"),m_HwidCommon);
-    m_TabDelBtn = new QPushButton(tr("删除"),m_HwidCommon);
-    m_TabInsertBtn = new QPushButton(tr("插入"),m_HwidCommon);
-    m_ApplyBtn = new QPushButton(tr("绘图"),m_HwidCommon);
+    m_TabAddBtn = new QPushButton(tr("澧炲姞"),m_HwidCommon);
+    m_TabDelBtn = new QPushButton(tr("鍒犻櫎"),m_HwidCommon);
+    m_TabInsertBtn = new QPushButton(tr("鎻掑叆"),m_HwidCommon);
+    m_ApplyBtn = new QPushButton(tr("缁樺浘"),m_HwidCommon);
     m_HLayout3->addWidget(m_TabAddBtn);
     m_HLayout3->addWidget(m_TabDelBtn);
     m_HLayout3->addWidget(m_TabInsertBtn);
@@ -622,13 +620,13 @@ QTCurveDataPlot::QTCurveDataPlot(QWidget *parent, int PlotId)
     
     m_Hwid1=new QWidget(this);
     m_HwidCommon=new QWidget(this);
-    m_Hwid1->setMaximumHeight(300);//去掉黄色logo
-    setWindowTitle(QString::fromUtf8("新建"));
+    m_Hwid1->setMaximumHeight(300);//鍘绘帀榛勮壊logo
+    setWindowTitle("Data Curve");
     m_HLayout3= new QHBoxLayout(m_HwidCommon);
-    m_TabAddBtn = new QPushButton(tr("增加"),m_HwidCommon);
-    m_TabDelBtn = new QPushButton(tr("删除"),m_HwidCommon);
-    m_TabInsertBtn = new QPushButton(tr("插入"),m_HwidCommon);
-    m_ApplyBtn = new QPushButton(tr("绘图"),m_HwidCommon);
+    m_TabAddBtn = new QPushButton(tr("澧炲姞"),m_HwidCommon);
+    m_TabDelBtn = new QPushButton(tr("鍒犻櫎"),m_HwidCommon);
+    m_TabInsertBtn = new QPushButton(tr("鎻掑叆"),m_HwidCommon);
+    m_ApplyBtn = new QPushButton(tr("缁樺浘"),m_HwidCommon);
     m_HLayout3->addWidget(m_TabAddBtn);
     m_HLayout3->addWidget(m_TabDelBtn);
     m_HLayout3->addWidget(m_TabInsertBtn);
@@ -690,12 +688,11 @@ QTCurveDataPlot::~QTCurveDataPlot()
 {
 
 }
-//应用，将参数写入Inp
+//搴旂敤锛屽皢鍙傛暟鍐欏叆Inp
 void QTCurveDataPlot::CurveApplyBtnSlot()
 {
     Plot();
 }
-//--tab增加行
 void QTCurveDataPlot::CurveAddBtnSlot()
 {
     int nRow = m_TabCurveWiget->rowCount();
@@ -709,7 +706,7 @@ void QTCurveDataPlot::CurveAddBtnSlot()
         }
     }
 }
-//--tab插入行(当前行的上一行增加)
+//--tab鎻掑叆琛?褰撳墠琛岀殑涓婁竴琛屽鍔?
 void QTCurveDataPlot::CurveInsertBtnSlot()
 {
     int curRow = m_TabCurveWiget->currentRow();
@@ -722,7 +719,6 @@ void QTCurveDataPlot::CurveInsertBtnSlot()
         m_TabCurveWiget->setItem(curRow,j,itemX);
     }
 }
-//--tab删除行
 void QTCurveDataPlot::CurveDelBtnSlot()
 {
     int curRow = m_TabCurveWiget->currentRow();
@@ -731,13 +727,13 @@ void QTCurveDataPlot::CurveDelBtnSlot()
         m_TabCurveWiget->removeRow(curRow);
     }
 }
-//-绘图(数据进行排序+绘制)
+//-缁樺浘(鏁版嵁杩涜鎺掑簭+缁樺埗)
 void QTCurveDataPlot::Plot()
 { 
     int nRow=m_TabCurveWiget->rowCount();
     int nCol=m_TabCurveWiget->columnCount();
    // m_TabCurveWiget->setSortingEnabled(true);
-    m_TabCurveWiget->sortByColumn(0, Qt::AscendingOrder);//默认第零列是温度，其以升序排列；
+    m_TabCurveWiget->sortByColumn(0, Qt::AscendingOrder);//榛樿绗浂鍒楁槸娓╁害锛屽叾浠ュ崌搴忔帓鍒楋紱
     int num=nRow;
     QString *dataTmpX = new QString[num];
     double *dataTmpY = new double[num];   
@@ -777,28 +773,25 @@ void QTCurveDataPlot::ChartShow2XY(StringArray dataX, vector<DoubleArray> dataY,
 
     chartViewers->setVisible(d->noOfCharts);
 }
-//--将当前表头标签进行修改
 void QTCurveDataPlot::ChangeLable(QStringList strList)
 {
     if(strList.isEmpty())
-     strList<<tr("时间")<<tr("温度℃");
+        strList << "Time" << "Temperature";
      m_TabCurveWiget->setHorizontalHeaderLabels(strList);
      m_ChartProp.xLabel=strList.at(0);m_ChartProp.yLabel=strList.at(1);
 
 }
-//--将数据写入Table中
-//nRow写入行数，strData写入的数据
-//              strData格式：strData={{600,0.1093}{640,0.1014}{680,0.1014}...}
+//--灏嗘暟鎹啓鍏able涓?//nRow鍐欏叆琛屾暟锛宻trData鍐欏叆鐨勬暟鎹?//              strData鏍煎紡锛歴trData={{600,0.1093}{640,0.1014}{680,0.1014}...}
 void QTCurveDataPlot::SetData(int nRow, QStringList strData)
 {
   /* int nOrigRow= m_TabCurveWiget->rowCount();
    for (int i=0;i<nOrigRow;i++){
        m_TabCurveWiget->removeRow(nOrigRow);
    }*/
-    m_TabCurveWiget->clearContents();//清除全部内容
+    m_TabCurveWiget->clearContents();//娓呴櫎鍏ㄩ儴鍐呭
     m_TabCurveWiget->setRowCount(nRow);
     QString DataX,DataY;
-    for (int i=0;i<nRow;i++)//按行写入
+    for (int i=0;i<nRow;i++)//鎸夎鍐欏叆
     {
         QStringList tmpstrList=strData.at(i).split(",");
         DataX=tmpstrList.at(0).simplified();
@@ -827,9 +820,9 @@ void QTCurveDataPlot::TableCopyBtnSlot()
     QString strSelectText;
     for (int i=0;i<nCount;i++)
     {
-        int topRow=ranges.at(i).topRow();//第几行开始
-        int bottomRow=ranges.at(i).bottomRow();//第几行结束
-        int leftColumn=ranges.at(i).leftColumn();
+        int topRow = ranges.at(i).topRow();
+        int bottomRow = ranges.at(i).bottomRow();
+        int leftColumn = ranges.at(i).leftColumn();
         int rightColumn=ranges.at(i).rightColumn();
 
         for (int j=topRow;j<=bottomRow;j++)
@@ -853,7 +846,7 @@ void QTCurveDataPlot::TablePasteBtnSlot()
     QClipboard *clipBoard= QApplication::clipboard();
     QString strPasterText=clipBoard->text(QClipboard::Clipboard);
     QStringList strRowList=strPasterText.split("\n",QString::SkipEmptyParts);
-    int nPasteRow=strRowList.count();//需要粘贴的行数
+    int nPasteRow=strRowList.count();//闇€瑕佺矘璐寸殑琛屾暟
     int nPasteCol=0;
     for (int i=0;i<nPasteRow;i++)
     {
@@ -867,12 +860,12 @@ void QTCurveDataPlot::TablePasteBtnSlot()
 
     for (int i=0;i<nCount;i++)
     {
-        int topRow=ranges.at(i).topRow();//第几行开始
-        int bottomRow=ranges.at(i).bottomRow();//第几行结束
-        int leftColumn=ranges.at(i).leftColumn();
+        int topRow = ranges.at(i).topRow();
+        int bottomRow = ranges.at(i).bottomRow();
+        int leftColumn = ranges.at(i).leftColumn();
         int rightColumn=ranges.at(i).rightColumn();
         int nSizeCol=abs(rightColumn-leftColumn)+1;
-        int nSizeRow=abs(bottomRow-topRow)+1;//所选片段的大小
+        int nSizeRow=abs(bottomRow-topRow)+1;//鎵€閫夌墖娈电殑澶у皬
         
         //if (nSizeCol !=nPasteCol ||nSizeRow!=nPasteRow)
         //{
@@ -888,10 +881,9 @@ void QTCurveDataPlot::TablePasteBtnSlot()
                     m_TabCurveWiget->item(j,kk)->setData(Qt::DisplayRole,strColumnList.at(mm).toDouble());    
                 } 
             }
-        }else{//增加table行数，进行数值填充
             int nRow = m_TabCurveWiget->rowCount();
-            int iInSertRow=nPasteRow+topRow-nRow;//需要进行增行数
-            for (int i = nRow,tt=0; i<nRow+iInSertRow; i++,tt++){//增加Table行数
+            int iInSertRow=nPasteRow+topRow-nRow;//闇€瑕佽繘琛屽琛屾暟
+            for (int i = nRow,tt=0; i<nRow+iInSertRow; i++,tt++){//澧炲姞Table琛屾暟
                 m_TabCurveWiget->insertRow(i);
                 for(int j=0;j<=m_TabCurveWiget->columnCount();j++){
                     QTableWidgetItem *itemX =new QTableWidgetItem();  
@@ -900,7 +892,7 @@ void QTCurveDataPlot::TablePasteBtnSlot()
                     m_TabCurveWiget->setItem(i,j,itemX);
                 }              
             }
-            //进行赋值及填充
+            //杩涜璧嬪€煎強濉厖
             for (int j=topRow,tt=0;j<=topRow+nPasteRow;j++,tt++){  
                 if (tt>=nPasteRow)continue;
                 QStringList strColumnList=strRowList.at(tt).split("\t",QString::SkipEmptyParts);
@@ -921,9 +913,9 @@ void QTCurveDataPlot::TableClearRBtnSlot()//clear
     if (nCount<=0)return;
 
     for (int i=0;i<nCount;i++){
-        int topRow=ranges.at(i).topRow();//第几行开始
-        int bottomRow=ranges.at(i).bottomRow();//第几行结束
-        int leftColumn=ranges.at(i).leftColumn();
+        int topRow = ranges.at(i).topRow();
+        int bottomRow = ranges.at(i).bottomRow();
+        int leftColumn = ranges.at(i).leftColumn();
         int rightColumn=ranges.at(i).rightColumn();
 
         for (int j=topRow;j<=bottomRow;j++){
@@ -934,13 +926,13 @@ void QTCurveDataPlot::TableClearRBtnSlot()//clear
     }
 }
 //--------------------------------------
-//----------------  冷速 ---------------
+//----------------  鍐烽€?---------------
 //--------------------------------------
 QPhaseZBFDialog::QPhaseZBFDialog(QWidget *parent)
 {
-    setWindowTitle(tr("相变积分"));
+    setWindowTitle("Phase Integral");
     QHBoxLayout *Hlayout0 = new QHBoxLayout();
-    QLabel *lab0=new QLabel(tr("相:"));
+    QLabel *lab0=new QLabel(tr("鐩?"));
     m_LineEditName=new QLineEdit();
     Hlayout0->addWidget(lab0);
     Hlayout0->addWidget(m_LineEditName);
@@ -948,13 +940,13 @@ QPhaseZBFDialog::QPhaseZBFDialog(QWidget *parent)
 
 
     QHBoxLayout *Hlayout1 = new QHBoxLayout();
-    QLabel *lab = new QLabel(tr("冷速序:"));
+    QLabel *lab = new QLabel(tr("鍐烽€熷簭:"));
     m_LineEditCurveTh = new QLineEdit();
     Hlayout1->addWidget(lab);
     Hlayout1->addWidget(m_LineEditCurveTh);
     //Hlayout1->addStretch();
     //QHBoxLayout *Hlayout2 = new QHBoxLayout();
-    QLabel *lab1 = new QLabel(tr("冷速:"));
+    QLabel *lab1 = new QLabel(tr("鍐烽€?"));
     m_LineEditChangeP = new QLineEdit();
     Hlayout1->addWidget(lab1);
     Hlayout1->addWidget(m_LineEditChangeP);
@@ -966,8 +958,8 @@ QPhaseZBFDialog::QPhaseZBFDialog(QWidget *parent)
     //m_TCurveDataPlot.push_back(tmpCurvePlot);
 
     QHBoxLayout *HlayoutLast = new QHBoxLayout();
-    m_OKBtn = new QPushButton(tr("确定"));
-    m_CancelBtn = new QPushButton(tr("取消"));
+    m_OKBtn = new QPushButton(tr("纭畾"));
+    m_CancelBtn = new QPushButton(tr("鍙栨秷"));
     HlayoutLast->addStretch();
     HlayoutLast->addWidget(m_OKBtn);
     HlayoutLast->addWidget(m_CancelBtn);
@@ -998,7 +990,7 @@ QString QPhaseZBFDialog::GetEditText()
     str = m_LineEditName->text()+"-"+m_LineEditCurveTh->text()+"-"+m_LineEditChangeP->text();
     return str;
 }
-//相变积分数据点数获取
+//鐩稿彉绉垎鏁版嵁鐐规暟鑾峰彇
 int QPhaseZBFDialog::GetDataNum()
 {
     int nRow=m_TCurveDataPlot->m_TabCurveWiget->rowCount();
@@ -1007,13 +999,13 @@ int QPhaseZBFDialog::GetDataNum()
         QString strTmpX,strTmpY;
         strTmpX = m_TCurveDataPlot->m_TabCurveWiget->item(i,0)->text();
         strTmpY = m_TCurveDataPlot->m_TabCurveWiget->item(i,1)->text();
-        if (strTmpX==""&&strTmpY=="")continue;//均为"",则无数据   
+        if (strTmpX==""&&strTmpY=="")continue;//鍧囦负"",鍒欐棤鏁版嵁   
         iPointNum++;
     }
     return iPointNum;
 }
 //
-//格式: dataX1,dataY1; dataX2,dataY2; dataX3,dataY3;
+//鏍煎紡: dataX1,dataY1; dataX2,dataY2; dataX3,dataY3;
 //
 QString QPhaseZBFDialog::GetPlotData()
 {
@@ -1034,7 +1026,7 @@ QAddTab::QAddTab(QWidget *parent)
 : QWidget(parent)
 {
     QWidget *TmpTab = new QWidget(); 
-    QLabel *tmpLab = new QLabel(tr("转变分数"));
+    QLabel *tmpLab = new QLabel(tr("杞彉鍒嗘暟"));
     m_Edit= new QLineEdit(tr("0.01"));
     m_TabData = new QTCurveDataPlot(this,1);
     QVBoxLayout *Gridlayout3 = new QVBoxLayout(TmpTab);

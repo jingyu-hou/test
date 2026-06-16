@@ -45,14 +45,17 @@ C        open(unit=10000,file='10000.dat')
         Whether_Cal_AIncubationtime=nphase(7)
         NTTTCCT_Type=nphase(3)
         Whether_CCTIsothermal=nphase(8)
+        IF(NTTTCCT_Type.eq.3)THEN
+            CALL PhaseTransition_CCT(STATEV1,temp1,temp2,
+     &      time1,time2,cphase,phase_inf,pphase,phaseother)
+            RETURN
+        ENDIF
         FF(1:NCurve_Number,1:NSTATV1)=
      &               cphase(3:NCurve_Number+2,1:NSTATV1)
 
 
         Logi3=NTran_Type.ne.1.and.NCurve_Number.GE.3.and.
-     &  Whether_Cal_AIncubationtime.eq.1.and.NTTTCCT_Type.eq.1.or.
-     &  NTran_Type.ne.1.and.NCurve_Number.GE.3.and.
-     &  Whether_Cal_AIncubationtime.eq.1.and.Whether_CCTIsothermal.eq.1
+     &       Whether_Cal_AIncubationtime.eq.1
  
         if(nphase(9).eq.1)then
           dA0=phaseother(4)
@@ -154,13 +157,17 @@ C***************************************************************************
      &              (NCurve_Number,holding_temp,V_Rate,
      &                Curave_Data(1:N1,1:2),
      &                NTTCT_Point(1:NCurve_Number,III1),N1)
+                   CALL CurveData_Intersection
+     &              (NCurve_Number,holding_temp,TIME_T,
+     &                Curave_Data(1:N1,1:2),
+     &                NTTCT_Point(1:NCurve_Number,III1),N1)
                  ENDIF
 C***************************************************************************
-C                以上几行用于计算当前温度下与TTT曲线的交点 
+C                以上几行用于计算当前温度下与TTT曲线的交点
 C***************************************************************************
-      
+
 C***************************************************************************
-C                          开始孕育期计算 
+C                          开始孕育期计算
 C***************************************************************************
                 IF(Logi3)THEN
                   CALL Incubation_time(TIME_T,FF(1:NCurve_Number,III1)
@@ -193,7 +200,8 @@ C!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      &               Curave_Data2(1:NTTCT_Point(1,III1),2),
      &               NTTCT_Point(1,III1),ts)
                    ELSE
-                     ts=TIMEINC
+                     ts=TIME_T(1)
+                     if(ts.le.Residual) ts=TIMEINC
                    ENDIF
                  ENDIF
                  IF(NTran_Type.ne.1.and.ts.le.Residual)ts=TIMEINC

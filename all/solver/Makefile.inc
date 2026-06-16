@@ -145,6 +145,7 @@ calinput.f \
 readphaseinf.f \
 phasetransition.f \
 phasetransition1.f \
+phasetransition_cct.f \
 phaseother.f \
 
 SCCXC = \

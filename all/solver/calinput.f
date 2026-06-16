@@ -1142,6 +1142,12 @@ c
      &        imat,ntmat_,ncmat_,iperturb,iumat,irstrt,istep,istat,n,
      &        iline,ipol,inl,ipoinp,inp,cocon,ncocon,ipoinpc,ier)
 !
+         elseif(textpart(1)(1:17).eq.'*PHASECCTCRITICAL') then
+            call readphaseinf(inpc,textpart,pphase,cphase,phaseother,
+     &       nphase,imat,irstrt,istep,istat,n,iline,ipol,inl,
+     &       ipoinp,inp,ipoinpc,ier,phase_inf,xstate,mi,ne,lakon,
+     &       ipkon,nstate_)
+!
          elseif(textpart(1)(1:17).eq.'*PHASEEQUILIBRIUM'.or.
      &      textpart(1)(1:17).eq.'*INCUBATIONPERIOD'.or.
      &      textpart(1)(1:12).eq.'*PHASECURVE'.or.

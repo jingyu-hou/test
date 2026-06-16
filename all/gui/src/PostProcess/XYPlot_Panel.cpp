@@ -1,4 +1,4 @@
-#include <vector>
+﻿#include <vector>
 #include <map>
 using namespace std;
 #include <QLabel>
@@ -27,26 +27,26 @@ XYPlot_Panel::XYPlot_Panel(QWidget *parent) : QDialog(parent), frdVISObj_(0), se
 {
     m_HisCurveDlg = 0;
    
-    QLabel *lb2 = new QLabel(tr("选点类型："),this);
+    QLabel *lb2 = new QLabel("Pick mode:", this);
 
     PickStyleComb_=new QComboBox(this);
     QStringList strList;
-    //strList<<tr("添加点")<<tr("删除点")<<tr("删除所有点");
-    strList<<tr("添加点")<<tr("删除所有点");
+    // point pick modes
+    strList << "Add point" << "Clear all";
     PickStyleComb_->clear();
     PickStyleComb_->addItems(strList);
    
-    //--时间、位置历史曲线
+    //--鏃堕棿銆佷綅缃巻鍙叉洸绾?
     m_gbHisCurve = new QGroupBox(this);
     m_gbHisCurve->setStyleSheet(QString::fromUtf8("::title{color:blue}"));
-    m_gbHisCurve->setTitle(tr("历史曲线"));
-    QLabel *lb = new QLabel(tr("变量:"), m_gbHisCurve);
-    QLabel *lb3 = new QLabel(tr("曲线类型："),m_gbHisCurve);
-	QLabel *lb22= new QLabel(tr("集合名称:"), m_gbHisCurve);
+    m_gbHisCurve->setTitle("History Curve");
+    QLabel *lb = new QLabel("Variable:", m_gbHisCurve);
+    QLabel *lb3 = new QLabel("Curve type:", m_gbHisCurve);
+    QLabel *lb22 = new QLabel("Set name:", m_gbHisCurve);
     PickCurveComb_=new QComboBox(m_gbHisCurve);
 	SetNameComb_=new QComboBox(m_gbHisCurve);
     strList.clear();
-    strList<<tr("时间历史曲线")<<tr("位置历史曲线")<<tr("压力曲线");
+    strList << "Time history" << "Position history" << "Pressure";
     PickCurveComb_->clear();
     PickCurveComb_->addItems(strList);
 	SetNameComb_->clear();
@@ -88,20 +88,20 @@ XYPlot_Panel::XYPlot_Panel(QWidget *parent) : QDialog(parent), frdVISObj_(0), se
 
     pickPointBT_ = new QToolButton(this);
     pickPointBT_->setIcon(QIcon(":/images/arrow.png"));
-    pickPointBT_->setText(tr("选择点"));
+    pickPointBT_->setText("Pick point");
     pickPointBT_->setCheckable(true);
     pickPointBT_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    createPlotBT_ = new QPushButton(tr("创建曲线"), this);
+    createPlotBT_ = new QPushButton("Create curve", this);
     
     m_gbPoint=new QGroupBox(this);
     m_gbPoint->setStyleSheet(QString::fromUtf8("::title{color:blue}"));
-    m_gbPoint->setTitle(tr("点设置"));
+    m_gbPoint->setTitle("Point");
     
-    m_pointSizeLab = new QLabel(tr("点大小:"),m_gbPoint);
+    m_pointSizeLab = new QLabel("Size:", m_gbPoint);
     m_pointSizeEdit = new QLineEdit(m_gbPoint);
-    m_pointClrBtn = new QPushButton(tr("颜色"),m_gbPoint);
-    m_PointLabChk = new QCheckBox(tr("标签"),m_gbPoint);
-    m_PointApplyBtn = new QPushButton(tr("应用"),m_gbPoint);
+    m_pointClrBtn = new QPushButton("Color", m_gbPoint);
+    m_PointLabChk = new QCheckBox("Label", m_gbPoint);
+    m_PointApplyBtn = new QPushButton("Apply", m_gbPoint);
     m_pointClrBtn->setFixedWidth(50);m_PointApplyBtn->setFixedWidth(50);
     QHBoxLayout *layoutGB=new QHBoxLayout(m_gbPoint);
     layoutGB->addWidget(m_pointSizeLab);
@@ -202,13 +202,14 @@ void XYPlot_Panel::InitPlotData(FrdDataVIS *frdObj)
     frdVISObj_->ClearHisPointVtkShow();
     m_SelectedPointS.clear();
     m_TableWiget->clearContents();
+    m_TableWiget->setRowCount(0);
 }
 void XYPlot_Panel::InitPlotDatData(resultDatS DatObj)
 {
 	DatObj_ = DatObj;
 	SetNameComb_->addItems(DatObj_.SetName);
 }
-//--时间、历史曲线切换
+//--鏃堕棿銆佸巻鍙叉洸绾垮垏鎹?
 void XYPlot_Panel::ChangeCombCurveSlot(int curId)
 {
     if(curId==0){
@@ -222,7 +223,7 @@ void XYPlot_Panel::ChangeCombCurveSlot(int curId)
         m_xRbtn->show();m_yRbtn->show();m_zRbtn->show();m_disRbtn->show();
     }
 }
-//--添加点，删除所有点
+//--娣诲姞鐐癸紝鍒犻櫎鎵€鏈夌偣
 void XYPlot_Panel::ChangeCombStyleSlot(int curId)
 {
     m_CombIndex=curId;
@@ -241,7 +242,7 @@ void XYPlot_Panel::ReleaseCurrentPointPick()
 }
 void XYPlot_Panel::SwitchPointPick(bool flag)
 {
-	if(PickCurveComb_->currentText()=="压力曲线")return;
+    if (PickCurveComb_->currentIndex() == 2) return;
     if (!frdVISObj_)  return;
 
     vtkRenderWindow *renWin = frdVISObj_->GetBindedRenderer()->GetRenderWindow();
@@ -331,12 +332,14 @@ void XYPlot_Panel::Callback_PickPoint(vtkObject *caller, unsigned long, void *cl
     double xyz[3];
     picker->GetPickPosition(xyz);
     if (pointId<0){
-        Information_Widget::GetInstance()->ShowInformation("No Acotor selected.");
+        Information_Widget::GetInstance()->ShowInformation("No point picked.");
+        picker->Delete();
         return;
     }
-    QString str=picker->GetMapper()->GetClassName();
+    QString str;
+    if (picker->GetMapper()) str = picker->GetMapper()->GetClassName();
     
-    w->UpdataSelectedPoint(picker->GetActor(),str,pointId+1, xyz[0], xyz[1], xyz[2]);//Frd data 对应的ID值从1开始，因此需要+1;
+    w->UpdataSelectedPoint(picker->GetActor(),str,pointId+1, xyz[0], xyz[1], xyz[2]);//Frd data 瀵瑰簲鐨処D鍊间粠1寮€濮嬶紝鍥犳闇€瑕?1;
     //cout << xyz[0] << ", " << xyz[1] << ", " << xyz[2] << endl;
 }
 
@@ -351,15 +354,15 @@ void XYPlot_Panel::UpdataSelectedPoint(vtkActor *actor,QString strMapperName,int
     TmpSelectP.selectedPointY_=y;
     TmpSelectP.selectedPointZ_=z;
     
-   if (m_CombIndex==0){//添加
+   if (m_CombIndex==0){//娣诲姞
        if(selectedPointId_<0) {
            Information_Widget::GetInstance()->ShowInformation("No point picked.");
            return;
        }
-       if (strMapperName!="vtkDataSetMapper" && strMapperName!="vtkPolyDataMapper"){
-           Information_Widget::GetInstance()->ShowInformation("Point has picked...");
-           return;
-       }
+        if (strMapperName.isEmpty()){
+            Information_Widget::GetInstance()->ShowInformation("No point mapper found.");
+            return;
+        }
        QString info(QString("Point%1(%2,%3,%4) picked.").arg(pointId).arg(x).arg(y).arg(z));
        Information_Widget::GetInstance()->ShowInformation(info);
         QMapIterator<int,SelectedPointS> it(m_SelectedPointS);
@@ -389,7 +392,7 @@ void XYPlot_Panel::RemoveSelectedPoint(vtkActor *actor,int pointId, double x, do
     TmpSelectP.selectedPointY_=y;
     TmpSelectP.selectedPointZ_=z;
    
-    //if (delPickPointBtn_->isChecked()){//删除点
+    //if (delPickPointBtn_->isChecked()){//鍒犻櫎鐐?
     //    QMapIterator<int,SelectedPointS> it(m_SelectedPointS);
     //    while (it.hasNext()){
     //        it.next();
@@ -415,7 +418,7 @@ bool XYPlot_Panel::clearAllDisp()
     int nRow=m_TableWiget->rowCount();
     if (!m_SelectedPointS.isEmpty())
     {
-       QMessageBox::StandardButton bt= QMessageBox::warning(this, tr("删除"), tr("确定删除？"), QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
+       QMessageBox::StandardButton bt = QMessageBox::warning(this, "Clear", "Clear selected points?", QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
         if (bt==QMessageBox::Yes){
             m_SelectedPointS.clear();
             frdVISObj_->ClearHisPointVtkShow();
@@ -461,10 +464,10 @@ void XYPlot_Panel::CreateXYPlot()
 	}else if(PickCurveComb_->currentIndex()==2){
 		CreateXYPressPlot();
     }  
-    //plot_.Update();
+    plot_.Update();
     m_HisCurveDlg->Show();
 }
-//时间历史曲线
+//鏃堕棿鍘嗗彶鏇茬嚎
 void XYPlot_Panel::CreateXYTimePlot()
 {
     QString var(m_varCombParam);//(varComb_->currentText());
@@ -478,7 +481,10 @@ void XYPlot_Panel::CreateXYTimePlot()
     for (int i=0;i<iPlotNum;i++)
     {
         map<double, double> timeValueMap(frdVISObj_->GetPointScalar_TimeValueMap(m_SelectedPointS[i].selectedPointId_-1, var));
-        if (timeValueMap.empty())  return;
+        if (timeValueMap.empty()) {
+            Information_Widget::GetInstance()->ShowInformation(QString("No curve data for %1 at point %2.").arg(var).arg(m_SelectedPointS[i].selectedPointId_));
+            continue;
+        }
         plot_.SetGlyphType(i, const_cast<char*>("Point"));
         plot_.SetLegendLabel(i,(QString("Id=%1").arg(m_SelectedPointS[i].selectedPointId_)).toLatin1().data());
         for (map<double, double>::iterator it = timeValueMap.begin(); it != timeValueMap.end(); ++it)
@@ -488,7 +494,7 @@ void XYPlot_Panel::CreateXYTimePlot()
         }
     }
 }
-//压力曲线
+//鍘嬪姏鏇茬嚎
 void XYPlot_Panel::CreateXYPressPlot()
 {
     QString var("Press");
@@ -532,14 +538,17 @@ void XYPlot_Panel::CreateXYPressPlot()
 		Str.clear();
     }
 }
-//位置历史曲线
+//浣嶇疆鍘嗗彶鏇茬嚎
 void XYPlot_Panel::CreateXYPositionPlot()
 {
     QString var(m_varPositionComb+"-"+m_varCombParam.split("-").at(1));//varPositionComb_->currentText()+"-"+varComb_->currentText());
     plot_.DestroyXYPlot();
 
     int iPlotNum=m_SelectedPointS.size();
-    if (iPlotNum==1)return;
+    if (iPlotNum==1) {
+        Information_Widget::GetInstance()->ShowInformation("Position history needs at least two picked points.");
+        return;
+    }
 
     plot_.AllocateXYPlot(1);
     vector<bool> showFlag(1, true);
@@ -554,7 +563,10 @@ void XYPlot_Panel::CreateXYPositionPlot()
     for (int i=0;i<iPlotNum;i++)
     {
         map<double, double> PoistionValueMap(frdVISObj_->GetPointScalar_TimeValueMap(m_SelectedPointS[i].selectedPointId_-1, var));
-        if (PoistionValueMap.empty())  return;
+        if (PoistionValueMap.empty()) {
+            Information_Widget::GetInstance()->ShowInformation(QString("No curve data for %1 at point %2.").arg(var).arg(m_SelectedPointS[i].selectedPointId_));
+            continue;
+        }
         if(i!=0){
            int iDis=m_ChgxyzShow->checkedId();
            if (iDis==0){
@@ -582,12 +594,12 @@ void XYPlot_Panel::SaveDataSlot()
     if (fileName.isEmpty())return;
     QFile file(fileName);
     if (!file.open(QFile::WriteOnly | QFile::Text))return;
-    if (PickCurveComb_->currentIndex()==0)//时间历史曲线
+    if (PickCurveComb_->currentIndex()==0)//鏃堕棿鍘嗗彶鏇茬嚎
     {
         QString data;
         data = "*Time History Curve\n";//
         file.write(data.toAscii());
-        data="Style="+m_varCombParam+"\n";//varComb_->currentText()+"\n";//类型
+        data="Style="+m_varCombParam+"\n";//varComb_->currentText()+"\n";//绫诲瀷
         file.write(data.toAscii());
         int iPlotNum=m_SelectedPointS.size();
         for (int i=0;i<iPlotNum;i++)
@@ -602,19 +614,19 @@ void XYPlot_Panel::SaveDataSlot()
                 file.write(data.toAscii());
             }
         }
-	}else if (PickCurveComb_->currentIndex()==1){//位置历史曲线
+	}else if (PickCurveComb_->currentIndex()==1){//浣嶇疆鍘嗗彶鏇茬嚎
         QString data;
         data = "*Position Curve\n";//
         file.write(data.toAscii());
         data="Style=" + m_varPositionComb;//varPositionComb_->currentText();
-        data+="-"+m_varCombParam.split("-").at(1)+"\n";//varComb_->currentText()+"\n";//类型
+        data+="-"+m_varCombParam.split("-").at(1)+"\n";//varComb_->currentText()+"\n";//绫诲瀷
         file.write(data.toAscii());
 
         data="Position Distance="+m_ChgxyzShow->checkedButton()->text()+"\n";
         file.write(data.toAscii());
         int iPlotNum=m_SelectedPointS.size();
 
-		 data="节点号      X        Y        Z       值\n";/*;*/
+		 data="鑺傜偣鍙?     X        Y        Z       鍊糪n";/*;*/
          file.write(data.toAscii());
         for (int i=0;i<iPlotNum;i++)
         {
@@ -636,10 +648,10 @@ void XYPlot_Panel::SaveDataSlot()
 		if(iDis==0)Direction="X";
 		else if(iDis==1)Direction="Y";
 		else if(iDis==2)Direction="Z";
-		else if(iDis==3)Direction="合力";
-		data = "压力曲线集合名称："+SetNameComb_->currentText()+"  压力方向:"+Direction+"\n";//
+        else if(iDis==3) Direction="Resultant";
+        data = "Pressure curve set: " + SetNameComb_->currentText() + "  Direction: " + Direction + "\n";
 		file.write(data.toAscii());
-		data="时间  压力值\n";/*;*/
+        data = "Time  Pressure\n";
 		file.write(data.toAscii());
 		for(int Ij=0;Ij<infNase.size();Ij++){
 		data=infNase.at(Ij)+"\n";
@@ -648,15 +660,21 @@ void XYPlot_Panel::SaveDataSlot()
 	}
     file.close();
 }
-//--更新变量
+//--鏇存柊鍙橀噺
 void XYPlot_Panel::UpDataComb(int iStyle, QString str)
 {
     if (iStyle == 1){
         QStringList strList=str.split(":"); 
+        if (strList.size() < 2 || !strList.at(0).contains("-")) {
+            m_varPositionComb = "undeformed";
+            m_varCombParam = str;
+            return;
+        }
         m_varPositionComb=strList.at(0);  
         m_varCombParam=m_varPositionComb.split("-").at(1)+"-"+strList.at(1);
     }else{
         m_varPositionComb="undeformed";
+        m_varCombParam=str;
     }
     
 }

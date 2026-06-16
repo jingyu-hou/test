@@ -1,4 +1,4 @@
-#include "InpDataSource.h"
+﻿#include "InpDataSource.h"
 #include <vtkObjectFactory.h>
 #include <vtkDoubleArray.h>
 #include <vtkPoints.h>
@@ -14,7 +14,7 @@
 #include <vtkQuadraticQuad.h>//10
 #include <vtkUnstructuredGrid.h>
 #include <vtkVISUnstructuredGridSource.h>
-#include <vtkLine.h>//画线
+#include <vtkLine.h>//鐢荤嚎
 #include <vtkQuadraticEdge.h>
 #include <vtkPolyLine.h>
 #include "CRWManage.h"
@@ -133,7 +133,7 @@ bool InpDataSource::InitGridFromFrd(ReadInpResultS *Inp)
                 accumulated = line;
                 expectedNextElId = firstVal + 1;
             } else if (firstVal == expectedNextElId && parts.size() >= 4) {
-                // Starts with the next expected element ID + enough nodes → new element
+                // Starts with the next expected element ID + enough nodes 鈫?new element
                 merged.append(accumulated);
                 accumulated = line;
                 expectedNextElId = firstVal + 1;
@@ -232,7 +232,7 @@ vtkVISUnstructuredGridSource* InpDataSource::GetSourceGrid()
 vtkUnstructuredGrid* InpDataSource::GetWholeData(QString str)
 {
 	if (str.isEmpty() || str == "hell"){
-		return wholeGrid_;//返回全部
+		return wholeGrid_;//杩斿洖鍏ㄩ儴
 	}else{
 		if (disSurfSourceMap_.find(str)!=disSurfSourceMap_.end()){//have no
 			return disSurfSourceMap_[str];
@@ -245,22 +245,22 @@ vtkUnstructuredGrid* InpDataSource::GetSurfGridData()
 {
     return wholeSurfGrid_;
 }
-//--点集合
+// Point set source grid.
 vtkVISUnstructuredGridSource* InpDataSource::GetNSetSourceGrid()
 {
     return gBCSource_;
 }
-//--单元集合
+//--鍗曞厓闆嗗悎
 vtkVISUnstructuredGridSource* InpDataSource::GetElSourceGrid()
 {
     return gELSource_;
 }
-//--表面集合
+//--琛ㄩ潰闆嗗悎
 vtkVISUnstructuredGridSource* InpDataSource::GetSurfaceSourceGrid()
 {
     return gSurfaceSource_;
 }
-//--整个网格
+//--鏁翠釜缃戞牸
 bool InpDataSource::SetInpDataSource(const QString &header)
 {
     if (header.isEmpty()){ //init grid
@@ -270,7 +270,7 @@ bool InpDataSource::SetInpDataSource(const QString &header)
         return false;
     }
 }
-//--获取点集合的grid;
+//--鑾峰彇鐐归泦鍚堢殑grid;
 bool InpDataSource::SetInpNSetDataSource(const QString &header)
 {
    if (header.isEmpty()){ //init grid
@@ -290,7 +290,7 @@ bool InpDataSource::SetInpNSetDataSource(const QString &header)
         return true;
     }
 }
-//--获取单元集合的grid;
+//--鑾峰彇鍗曞厓闆嗗悎鐨刧rid;
 bool InpDataSource::SetInpElSetDataSource(const QString &header)
 {
     if (header.isEmpty()){ //init grid
@@ -310,7 +310,7 @@ bool InpDataSource::SetInpElSetDataSource(const QString &header)
          return true;
     }
 }
-//--获取表面集合的grid;
+//--鑾峰彇琛ㄩ潰闆嗗悎鐨刧rid;
 bool InpDataSource::SetInpSurfDataSource(const QString &header)
 {
     if (header.isEmpty()){ //init grid
@@ -330,7 +330,7 @@ bool InpDataSource::SetInpSurfDataSource(const QString &header)
          return true;
     }
 }
-//获取inp中单元的类型，进行分类
+// Return internal cell type id for INP element type.
 int InpDataSource::getInpCellType(QString strType)
 {
     //throw std::logic_error("The method or operation is not implemented.");
@@ -350,7 +350,7 @@ int InpDataSource::getInpCellType(QString strType)
     }
     return intCellType;
 }
-//--进行集合的数据Map整理;
+//--杩涜闆嗗悎鐨勬暟鎹甅ap鏁寸悊;
 bool InpDataSource::InitBCFromFrd(ReadInpResultS *Inp)
 {
     QList<QString> strElData = Inp->TmpElInpS.strData;
@@ -364,8 +364,7 @@ bool InpDataSource::InitBCFromFrd(ReadInpResultS *Inp)
    QStringList NSetName = Inp->TmpNsetInps.strNSetName;
    for (int i=0;i<NSetName.size();i++){
         GenerateSetData.strDataList = Inp->TmpNsetInps.strData.at(i);
-        if(Inp->TmpNsetInps.strNSetStyle.at(i).toLower()=="generate"){GenerateSetData.iDataGenerate = 0;//有间隔
-        }else{GenerateSetData.iDataGenerate = 1;//无间隔，直接去点
+        if(Inp->TmpNsetInps.strNSetStyle.at(i).toLower()=="generate"){GenerateSetData.iDataGenerate = 0;//鏈夐棿闅?        }else{GenerateSetData.iDataGenerate = 1;//鏃犻棿闅旓紝鐩存帴鍘荤偣
         }
         varNSetMap_.insert(NSetName.at(i),GenerateSetData);
    }
@@ -373,8 +372,7 @@ bool InpDataSource::InitBCFromFrd(ReadInpResultS *Inp)
    QStringList ESetName = Inp->TmpElSetInps.strElSetName;
    
    for (int i=0;i<ESetName.size();i++){ 
-       if(Inp->TmpElSetInps.strElSetStyle.at(i).toLower()=="generate"){GenerateSetData.iDataGenerate = 0;//有间隔
-       }else{GenerateSetData.iDataGenerate = 1;//无间隔，直接去点
+       if(Inp->TmpElSetInps.strElSetStyle.at(i).toLower()=="generate"){GenerateSetData.iDataGenerate = 0;//鏈夐棿闅?       }else{GenerateSetData.iDataGenerate = 1;//鏃犻棿闅旓紝鐩存帴鍘荤偣
        }
        GenerateSetData.strDataList = Inp->TmpElSetInps.strData.at(i).split(",",QString::SkipEmptyParts);
        varElSetMap_.insert(ESetName.at(i),GenerateSetData);
@@ -383,7 +381,7 @@ bool InpDataSource::InitBCFromFrd(ReadInpResultS *Inp)
     //DecodeSurfaceS tmpSurfaceData;
     QList<QString> strSurfaceData = Inp->TmpSurfaceInps.strData;
     int iTmpCnt=0;
-    int iBaseCnt=0;//数据增加基准
+    int iBaseCnt=0;//鏁版嵁澧炲姞鍩哄噯
     for (int i=0;i<Inp->TmpSurfaceInps.strSurfaceName.size();i++)
     {
         iTmpCnt=Inp->TmpSurfaceInps.strSurfaceDataNum.at(i).toInt();
@@ -397,7 +395,7 @@ bool InpDataSource::InitBCFromFrd(ReadInpResultS *Inp)
     }
     return true;
 }
-//--点集合的显示；
+// Build point-set display grid.
 vtkUnstructuredGrid* InpDataSource::BCDisplacementGrid(const QString &header)
 {
    if (!wholeGrid_)  return 0;
@@ -430,7 +428,7 @@ vtkUnstructuredGrid* InpDataSource::BCDisplacementGrid(const QString &header)
    ungrid->SetPoints(points);
    return ungrid;
 }
-//--单元集合的显示；
+//--鍗曞厓闆嗗悎鐨勬樉绀猴紱
 vtkUnstructuredGrid* InpDataSource::ELDisplacementGrid(const QString &header)
 {
     if (!wholeGrid_)  return 0;
@@ -502,7 +500,7 @@ vtkUnstructuredGrid* InpDataSource::ELDisplacementGrid(const QString &header)
     ungrid->SetPoints(points);
     return ungrid;
 }
-//--表面集合的显示；
+//--琛ㄩ潰闆嗗悎鐨勬樉绀猴紱
 vtkUnstructuredGrid* InpDataSource::SurfDisplacementGrid(const QString &header)
 {
     if (!wholeGrid_)  return 0;
@@ -518,7 +516,7 @@ vtkUnstructuredGrid* InpDataSource::SurfDisplacementGrid(const QString &header)
     ungrid->Allocate(nCell);
     vtkPoints *points = wholeGrid_->GetPoints();
     for (int i=0; i<CellNewStyle.size(); i++){//s2,s3
-		int m_iCelltype=9;//单元类型,先初始化
+		int m_iCelltype=9;//鍗曞厓绫诲瀷,鍏堝垵濮嬪寲
         QStringList tmpList = tmpVList.at(i);
         for(int j = 0; j < tmpVList.at(i).size(); ++j){
 			QStringList dataList=tmpList.at(j).split(",");
@@ -544,85 +542,72 @@ vtkUnstructuredGrid* InpDataSource::SurfDisplacementGrid(const QString &header)
     ungrid->SetPoints(points);
     return ungrid;
 }
-//--点集合中数据转换
+//--鐐归泦鍚堜腑鏁版嵁杞崲
 bool InpDataSource::GetNCellData(QStringList *CellListData, QString header)
 {
-    QStringList tmpList;
-    QMap<QString, DecodeGenerateS>::Iterator it=varNSetMap_.begin();
-    DecodeGenerateS GenerateSetData;
-    for (it;it!=varNSetMap_.end();it++){ //数据转换
-        if (header==it.key()){
-            GenerateSetData = it.value();
-            tmpList = GenerateSetData.strDataList;
-            int NListSize=tmpList.size();
-            if (NListSize<=0)return false;
-            int iTmp=tmpList.at(0).split(",").size();
-            if (GenerateSetData.iDataGenerate==0 && NListSize==1 && iTmp == 3){//只有一行，“1,1592,1 -->第1个：开始点；第2个：结束点；第三个间隔数字”
-                QStringList StrWholeLine=tmpList.at(0).split(",");
-                for (int kk =StrWholeLine.at(0).toInt();kk<=StrWholeLine.at(1).toInt();kk=kk+StrWholeLine.at(2).toInt()){
-                    QString str = QString("%1").arg(kk);
-                    *CellListData<<str;  
-                }
-                break;
-            }else{//按点数解析
-                iTmp = 0;
-                for (int j=0; j<NListSize;j++){
-                    iTmp+=tmpList.at(j).split(",").size();
-                    *CellListData<<tmpList.at(j).split(",",QString::SkipEmptyParts);
-                }
-                break;
-            }
-        }
+    if (CellListData == 0) return false;
+    QMap<QString, DecodeGenerateS>::Iterator it = varNSetMap_.find(header);
+    if (it == varNSetMap_.end()) return false;
+    DecodeGenerateS data = it.value();
+    QStringList tokens;
+    for (int i = 0; i < data.strDataList.size(); ++i) {
+        tokens << data.strDataList.at(i).split(",", QString::SkipEmptyParts);
     }
-    return false;
+    if (tokens.isEmpty()) return false;
+    if (data.iDataGenerate == 0 && tokens.size() >= 3) {
+        int start = tokens.at(0).simplified().toInt();
+        int end = tokens.at(1).simplified().toInt();
+        int step = tokens.at(2).simplified().toInt();
+        if (step == 0) return false;
+        for (int id = start; id <= end; id += step) *CellListData << QString::number(id);
+    } else {
+        for (int i = 0; i < tokens.size(); ++i) *CellListData << tokens.at(i).simplified();
+    }
+    return !CellListData->isEmpty();
 }
 /*
-//--单元集合中，数据转换
+//--鍗曞厓闆嗗悎涓紝鏁版嵁杞崲
 */
-bool InpDataSource::GetElCellData(QStringList *CellListData,QString header)
+bool InpDataSource::GetElCellData(QStringList *CellListData, QString header)
 {
-    QStringList tmpList;
-    QMap<QString, DecodeGenerateS>::Iterator it=varElSetMap_.begin();
-    DecodeGenerateS GenerateSetData;
-    for (it;it!=varElSetMap_.end();it++){ //数据转换
-        if (header==it.key()){
-            GenerateSetData=it.value();
-            tmpList = GenerateSetData.strDataList;
-            int NListSize=tmpList.size();
-            if (NListSize<=0)return false;
-
-            if (GenerateSetData.iDataGenerate==0 && NListSize==3){//只有一行，“1,1592,1 -->第1个：开始点；第2个：结束点；第三个间隔数字”
-                for(int kk=tmpList.at(0).toInt();kk<=tmpList.at(1).toInt();kk+=tmpList.at(2).toInt()){
-                    if (m_ElementData.find(kk-1) != m_ElementData.end())
-                        *CellListData<<m_ElementData.find(kk-1).value();
-                    else
-                        qDebug() << "GetElCellData: element" << kk << "not found in element data map";
-                }
-                break;
-            }else{//按点数解析
-                for (int j=0; j<NListSize;j++){
-                    if (m_ElementData.find(tmpList.at(j).toInt()-1)!=m_ElementData.end()){
-                        *CellListData<<m_ElementData.find(tmpList.at(j).toInt()-1).value();
-                    } else {
-                        qDebug() << "GetElCellData: element" << tmpList.at(j) << "not found in element data map";
-                    }
-                }
-                break;
-            }
-        }
-        //return false;
+    if (CellListData == 0) return false;
+    QMap<QString, DecodeGenerateS>::Iterator it = varElSetMap_.find(header);
+    if (it == varElSetMap_.end()) return false;
+    DecodeGenerateS data = it.value();
+    QStringList tokens;
+    for (int i = 0; i < data.strDataList.size(); ++i) {
+        tokens << data.strDataList.at(i).split(",", QString::SkipEmptyParts);
     }
-    return false;
+    if (tokens.isEmpty()) return false;
+    QStringList elementIds;
+    if (data.iDataGenerate == 0 && tokens.size() >= 3) {
+        int start = tokens.at(0).simplified().toInt();
+        int end = tokens.at(1).simplified().toInt();
+        int step = tokens.at(2).simplified().toInt();
+        if (step == 0) return false;
+        for (int id = start; id <= end; id += step) elementIds << QString::number(id);
+    } else {
+        for (int i = 0; i < tokens.size(); ++i) elementIds << tokens.at(i).simplified();
+    }
+    for (int i = 0; i < elementIds.size(); ++i) {
+        int elementId = elementIds.at(i).toInt();
+        if (m_ElementData.find(elementId - 1) != m_ElementData.end()) {
+            *CellListData << m_ElementData.find(elementId - 1).value();
+        } else {
+            qDebug() << "GetElCellData: element" << elementId << "not found in element data map";
+        }
+    }
+    return !CellListData->isEmpty();
 }
 /*
-//--表面集合中，数据转换
+//--琛ㄩ潰闆嗗悎涓紝鏁版嵁杞崲
 */
 bool InpDataSource:: GetSurfCellData(QVector<QStringList> *CellListData,QStringList *CellNewStyle, QString header)
 {
     QStringList tmpList;
     QMap<QString, QStringList>::Iterator it=varSurfaceSetMap_.begin();
     QStringList qListString;
-    for (it; it != varSurfaceSetMap_.end(); it++){ //数据转换
+    for (it; it != varSurfaceSetMap_.end(); it++){ //鏁版嵁杞崲
         if (header==it.key()){
            qListString=it.value();
            int nSize=qListString.size();
@@ -647,290 +632,153 @@ bool InpDataSource:: GetSurfCellData(QVector<QStringList> *CellListData,QStringL
     //bool b=GetElCellData(&tmpStrList,header);
     return false;
 }
-//--表面集合中获取当前面的点;
-bool InpDataSource::GetChooseData(QStringList *strRowData,QString strFName)
+//--琛ㄩ潰闆嗗悎涓幏鍙栧綋鍓嶉潰鐨勭偣;
+bool InpDataSource::GetChooseData(QStringList *strRowData, QString strFName)
 {
-    QStringList tmpStrL;
-    QStringList StrL = *strRowData;
-    for (int i=0;i<StrL.size();i++)
-	{
-        QString strTmp="";
-		int m_iCelltype0 = 0;
-		QStringList DataType=StrL.at(i).split(",");
-		int NodeNumber=DataType.size()-1;
-		if(n2D3D==2){
-			switch(NodeNumber){
-				case 3:{m_iCelltype0 =7;}break;
-			    case 4:{m_iCelltype0 =9;}break;
-		     	case 6:{m_iCelltype0 =8;}break;
-				case 8:{m_iCelltype0 =10;}break;
-				default: qDebug() << "GetChooseData: unsupported 2D node count" << NodeNumber; break; 
-			}
-		}else{
-			switch(NodeNumber){
-			    case 4:{m_iCelltype0 =3;}break;
-			    case 6:{m_iCelltype0 =2;}break;
-			    case 8:{m_iCelltype0 =1;}break;
-			    case 10:{m_iCelltype0 =6;}break;
-			    case 15:{m_iCelltype0 =5;}break;
-			    case 20:{m_iCelltype0 =4;}break;	
-				default: qDebug() << "GetChooseData: unsupported 3D node count" << NodeNumber; break; 
-			}
-		}
-		switch (m_iCelltype0){
-        case 1://8节点6面体->四边形
-        case 4:{//20节点6面体->四边形
-             QString strTmp,strTmp1,strTmp2,strTmp3;strTmp.clear();strTmp1.clear();strTmp2.clear();strTmp3.clear();
-             QStringList parts = StrL.at(i).split(",");
-             if (parts.size() <= 8) continue;
-             if (strFName =="s1"){
-                 strTmp =parts.at(1).simplified();
-                 strTmp1=parts.at(2).simplified();
-                 strTmp2=parts.at(3).simplified();
-                 strTmp3 =parts.at(4).simplified();
-                 strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
-             }else if(strFName=="s2"){
-                 strTmp =parts.at(5).simplified();
-                 strTmp1=parts.at(8).simplified();
-                 strTmp2=parts.at(7).simplified();
-                 strTmp3 =parts.at(6).simplified();
-                 strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
-             }else if(strFName=="s3"){
-                 strTmp =parts.at(1).simplified();
-                 strTmp1=parts.at(5).simplified();
-                 strTmp2=parts.at(6).simplified();
-                 strTmp3 =parts.at(2).simplified();
-                 strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
-             }else if(strFName=="s4"){
-                 strTmp =parts.at(2).simplified();
-                 strTmp1=parts.at(6).simplified();
-                 strTmp2=parts.at(7).simplified();
-                 strTmp3 =parts.at(3).simplified();
-                 strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
-             }else if(strFName=="s5"){
-                 strTmp =parts.at(3).simplified();
-                 strTmp1=parts.at(7).simplified();
-                 strTmp2=parts.at(8).simplified();
-                 strTmp3 =parts.at(4).simplified();
-                 strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
-             }else if(strFName=="s6"){
-                 strTmp =parts.at(4).simplified();
-                 strTmp1=parts.at(8).simplified();
-                 strTmp2=parts.at(5).simplified();
-                 strTmp3 =parts.at(1).simplified();
-                 strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
-             } 
-			 QString jj3=QString::number(m_iCelltype0,10);
-             strTmp.append(",").append(jj3);
-             tmpStrL<<strTmp;
-          }break; 
-        case 3://4节点4面体->三角形
-        case 6:{//10节点4面体->三角形
-            QString strTmp,strTmp1,strTmp2; strTmp.clear();strTmp1.clear();strTmp2.clear();
-             QStringList parts = StrL.at(i).split(",");
-             if (parts.size() <= 4) continue;
-             if (strFName =="s1"){
-                 strTmp =parts.at(1).simplified();
-                 strTmp1=parts.at(2).simplified();
-                 strTmp2=parts.at(3).simplified();
-             }else if(strFName=="s2"){
-                 strTmp =parts.at(1).simplified();
-                 strTmp1=parts.at(4).simplified();
-                 strTmp2=parts.at(2).simplified();
-             }else if(strFName=="s3"){
-                 strTmp =parts.at(2).simplified();
-                 strTmp1=parts.at(4).simplified();
-                 strTmp2=parts.at(3).simplified();
-             }else if(strFName=="s4"){
-                 strTmp =parts.at(3).simplified();
-                 strTmp1=parts.at(4).simplified();
-                 strTmp2=parts.at(1).simplified();
-             }
-           strTmp.append(",").append(strTmp1).append(",").append(strTmp2);
-		   QString jj3=QString::number(m_iCelltype0,10);
-           strTmp.append(",").append(jj3);
-           tmpStrL<<strTmp;
-        }break;//vtkTetra::New();}break;
-     case 7:
-     case 8:{//三角形-->直线
-         QString strTmp,strTmp1;strTmp.clear();strTmp1.clear();
-         QStringList parts = StrL.at(i).split(",");
-         if (parts.size() <= 3) continue;
-         if (strFName =="s1"){
-             strTmp =parts.at(1).simplified();
-             strTmp1=parts.at(2).simplified();
-         }else if(strFName=="s2"){
-             strTmp =parts.at(2).simplified();
-             strTmp1=parts.at(3).simplified();
-         }else if(strFName=="s3"){
-             strTmp =parts.at(3).simplified();
-             strTmp1=parts.at(1).simplified();
-         }
-         strTmp.append(",").append(strTmp1);
-		 QString jj3=QString::number(m_iCelltype0,10);
-         strTmp.append(",").append(jj3);
-         tmpStrL<<strTmp;
-        }break;
-     case 2:
-     case 5:{
-         QString strTmp,strTmp1,strTmp2,strTmp3;strTmp.clear();strTmp1.clear();strTmp2.clear();strTmp3.clear();
-         QStringList parts = StrL.at(i).split(",");
-         if (parts.size() <= 6) continue;
-         if (strFName =="s1"){//1-2-3三角形
-             strTmp =parts.at(1).simplified();
-             strTmp1=parts.at(2).simplified();
-             strTmp2=parts.at(3).simplified();
-             strTmp.append(",").append(strTmp1).append(",").append(strTmp2);
-			 QString jj3=QString::number(m_iCelltype0,10);
-             strTmp.append(",").append(jj3);
-             tmpStrL<<strTmp;
-         }else if(strFName=="s2"){//-4-5-6
-             strTmp =parts.at(4).simplified();
-             strTmp1=parts.at(5).simplified();
-             strTmp2=parts.at(6).simplified();
-             strTmp.append(",").append(strTmp1).append(",").append(strTmp2);
-			 QString jj3=QString::number(m_iCelltype0,10);
-             strTmp.append(",").append(jj3);
-             tmpStrL<<strTmp;
-         }else if(strFName=="s3"){//1-2-5-4
-             strTmp =parts.at(1).simplified();
-             strTmp1=parts.at(2).simplified();
-             strTmp2=parts.at(5).simplified();
-             strTmp3 =parts.at(4).simplified();
-             strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
-			 QString jj3=QString::number(m_iCelltype0,10);
-             strTmp.append(",").append(jj3);
-             tmpStrL<<strTmp;
-         }else if(strFName=="s4"){//2-3-6-5
-             strTmp =parts.at(2).simplified();
-             strTmp1=parts.at(3).simplified();
-             strTmp2=parts.at(6).simplified();
-             strTmp3 =parts.at(5).simplified();
-             strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
-			 QString jj3=QString::number(m_iCelltype0,10);
-             strTmp.append(",").append(jj3);
-             tmpStrL<<strTmp;
-         }else if(strFName=="s5"){//3-1-4-6
-             strTmp =parts.at(3).simplified();
-             strTmp1=parts.at(1).simplified();
-             strTmp2=parts.at(4).simplified();
-             strTmp3 =parts.at(6).simplified();
-             strTmp.append(",").append(strTmp1).append(",").append(strTmp2).append(",").append(strTmp3);
-			 QString jj3=QString::number(m_iCelltype0,10);
-             tmpStrL<<strTmp;
-         }
-       }break;
-     case 9: //4节点4边形--s1~s4:则表示为直线
-     case 10:{//8节点4边形--s1~s4:则表示为直线
-           QString strTmp,strTmp1; strTmp.clear();strTmp1.clear();
-	         QStringList parts = StrL.at(i).split(",");
-	         if (parts.size() <= 4) continue;
-         if (strFName =="s1"){
-             strTmp =parts.at(1).simplified();
-             strTmp1=parts.at(2).simplified();
-         }else if(strFName=="s2"){
-             strTmp =parts.at(2).simplified();
-             strTmp1=parts.at(3).simplified();
-         }else if(strFName=="s3"){
-             strTmp =parts.at(3).simplified();
-             strTmp1=parts.at(4).simplified();
-         }else if(strFName=="s4"){
-             strTmp =parts.at(4).simplified();
-             strTmp1=parts.at(1).simplified(); 
-         }
-         strTmp.append(",").append(strTmp1);
-		 QString jj3=QString::number(m_iCelltype0,10);
-         strTmp.append(",").append(jj3);
-         tmpStrL<<strTmp;
-       }break;   
-      default: qDebug() << "GetChooseData: unsupported cell type" << m_iCelltype0; break;  
+    if (strRowData == 0) return false;
+    QString faceName = strFName.toLower();
+    QStringList outRows;
+    QStringList rows = *strRowData;
+    for (int i = 0; i < rows.size(); ++i) {
+        QStringList parts = rows.at(i).split(",", QString::SkipEmptyParts);
+        if (parts.size() < 2) continue;
+        int nodeNumber = parts.size() - 1;
+        int cellType = 0;
+        if (n2D3D == 2) {
+            switch (nodeNumber) {
+            case 3: cellType = 7; break;
+            case 4: cellType = 9; break;
+            case 6: cellType = 8; break;
+            case 8: cellType = 10; break;
+            default: qDebug() << "GetChooseData: unsupported 2D node count" << nodeNumber; continue;
+            }
+        } else {
+            switch (nodeNumber) {
+            case 4: cellType = 3; break;
+            case 6: cellType = 2; break;
+            case 8: cellType = 1; break;
+            case 10: cellType = 6; break;
+            case 15: cellType = 5; break;
+            case 20: cellType = 4; break;
+            default: qDebug() << "GetChooseData: unsupported 3D node count" << nodeNumber; continue;
+            }
         }
+
+        QList<int> faceNodes;
+        if (cellType == 1 || cellType == 4) {
+            static const int hex8Faces[6][4] = {
+                {1, 2, 3, 4}, {5, 8, 7, 6}, {1, 5, 6, 2},
+                {2, 6, 7, 3}, {3, 7, 8, 4}, {4, 8, 5, 1}
+            };
+            static const int hex20Faces[6][8] = {
+                {1, 2, 3, 4, 9, 10, 11, 12},
+                {5, 8, 7, 6, 16, 15, 14, 13},
+                {1, 5, 6, 2, 17, 13, 18, 9},
+                {2, 6, 7, 3, 18, 14, 19, 10},
+                {3, 7, 8, 4, 19, 15, 20, 11},
+                {4, 8, 5, 1, 20, 16, 17, 12}
+            };
+            int face = faceName.mid(1).toInt() - 1;
+            if (face < 0 || face >= 6) continue;
+            int faceSize = (cellType == 4) ? 8 : 4;
+            for (int k = 0; k < faceSize; ++k) {
+                int idx = (cellType == 4) ? hex20Faces[face][k] : hex8Faces[face][k];
+                faceNodes << idx;
+            }
+        } else if (cellType == 3 || cellType == 6) {
+            static const int tet4Faces[4][3] = {{1,2,3}, {1,4,2}, {2,4,3}, {3,4,1}};
+            static const int tet10Faces[4][6] = {{1,2,3,5,6,7}, {1,4,2,8,9,5}, {2,4,3,9,10,6}, {3,4,1,10,8,7}};
+            int face = faceName.mid(1).toInt() - 1;
+            if (face < 0 || face >= 4) continue;
+            int faceSize = (cellType == 6) ? 6 : 3;
+            for (int k = 0; k < faceSize; ++k) {
+                int idx = (cellType == 6) ? tet10Faces[face][k] : tet4Faces[face][k];
+                faceNodes << idx;
+            }
+        } else if (cellType == 7 || cellType == 8 || cellType == 9 || cellType == 10) {
+            int face = faceName.mid(1).toInt();
+            int maxFace = (cellType == 7 || cellType == 8) ? 3 : 4;
+            if (face <= 0 || face > maxFace) continue;
+            int next = (face == maxFace) ? 1 : face + 1;
+            faceNodes << face << next;
+        } else if (cellType == 2 || cellType == 5) {
+            static const int wedgeFaces[5][8] = {
+                {1,2,3,0,7,8,9,0}, {4,5,6,0,13,14,15,0},
+                {1,2,5,4,7,11,13,10}, {2,3,6,5,8,12,14,11},
+                {3,1,4,6,9,10,15,12}
+            };
+            int face = faceName.mid(1).toInt() - 1;
+            if (face < 0 || face >= 5) continue;
+            int faceSize = (face < 2) ? ((cellType == 5) ? 6 : 3) : ((cellType == 5) ? 8 : 4);
+            for (int k = 0; k < faceSize; ++k) {
+                int idx = wedgeFaces[face][k];
+                if (idx > 0) faceNodes << idx;
+            }
+        }
+
+        if (faceNodes.isEmpty()) continue;
+        QString row = parts.at(faceNodes.at(0)).simplified();
+        for (int k = 1; k < faceNodes.size(); ++k) row += "," + parts.at(faceNodes.at(k)).simplified();
+        row += "," + QString::number(cellType);
+        outRows << row;
     }
-   
-    *strRowData=tmpStrL;
+    *strRowData = outRows;
     return true;
 }
+   
 /*
-inpcellType: 判断何种单元类型，
-iFace:s1,s2,s3,s4,s5,s6
+inpcellType: 鍒ゆ柇浣曠鍗曞厓绫诲瀷锛?iFace:s1,s2,s3,s4,s5,s6
 */
 vtkCell* InpDataSource::NewVTKCellS(int InpCellType, QString strFName)
 {
-      vtkCell *cell = NULL; 
-      switch (InpCellType){
-        case 1://8节点6面体->四边形
-        case 4:{//20节点6面体->四边形
-            //if (strFName =="S1"){
-            //}else if(strFName=="S2"){
-            // 
-            //}else if(strFName=="S3"){
- 
-            //}else if(strFName=="S4"){
-            //  
-            //}else if(strFName=="S5"){
- 
-            //}else if(strFName=="S6"){
-            //  
-            //} 
-            cell = vtkQuad::New();
-          }break; 
-        case 3://4节点4面体->三角形
-        case 6:{//10节点4面体->三角形
-       /*     if (strFName =="S1"){
-               
-            }else if(strFName=="S2"){
-
-            }else if(strFName=="S3"){
-             
-            }else if(strFName=="S4"){
-
-            }*/
-            cell = vtkTriangle::New();
-          }break;//vtkTetra::New();}break;
-        case 7:
-        case 8:{//三角形---直线
-            if (strFName =="s1"){
-            }else if(strFName=="s2"){
-            }else if(strFName=="s3"){
-            }
-             cell = vtkLine::New();
-          }break; 
-        case 9: //4节点4边形--s1~s4:则表示为直线
-        case 10:{//8节点4边形--s1~s4:则表示为直线
-           /* if (strFName =="S1"){
-            }else if(strFName=="S2"){
-            }else if(strFName=="S3"){
-            }else if(strFName=="S4"){
-            }*/
-            cell = vtkLine::New();
-          }break;   
-        case 2://楔形
-        case 5:{
-            if (strFName =="s1"){//1-2-3三角形
-                cell = vtkTriangle::New();
-            }else if(strFName=="s2"){//-4-5-6
-                cell = vtkTriangle::New();
-            }else if(strFName=="s3"){//1-2-5-4
-                cell = vtkQuad::New();
-            }else if(strFName=="s4"){//2-3-6-5
-                cell = vtkQuad::New();
-            }else if(strFName=="s5"){//3-1-4-6
-                cell = vtkQuad::New();
-            }
-          }break;
-        default: qDebug() << "NewVTKCellS: unsupported cell type" << InpCellType; break;  
-
-      }
+    vtkCell *cell = NULL;
+    switch (InpCellType) {
+    case 1:
+        cell = vtkQuad::New();
+        break;
+    case 4:
+        cell = vtkQuadraticQuad::New();
+        break;
+    case 3:
+        cell = vtkTriangle::New();
+        break;
+    case 6:
+        cell = vtkQuadraticTriangle::New();
+        break;
+    case 7:
+        cell = vtkLine::New();
+        break;
+    case 8:
+        cell = vtkQuadraticEdge::New();
+        break;
+    case 9:
+        cell = vtkLine::New();
+        break;
+    case 10:
+        cell = vtkQuadraticEdge::New();
+        break;
+    case 2:
+    case 5:
+        if (strFName == "s1" || strFName == "s2") {
+            cell = (InpCellType == 5) ? static_cast<vtkCell*>(vtkQuadraticTriangle::New()) : static_cast<vtkCell*>(vtkTriangle::New());
+        } else if (strFName == "s3" || strFName == "s4" || strFName == "s5") {
+            cell = (InpCellType == 5) ? static_cast<vtkCell*>(vtkQuadraticQuad::New()) : static_cast<vtkCell*>(vtkQuad::New());
+        }
+        break;
+    default:
+        qDebug() << "NewVTKCellS: unsupported cell type" << InpCellType;
+        break;
+    }
     return cell;
 }
 
 
-//--获取表面集合的拓扑结构
+// Build exterior surface grid from INP element rows.
 bool InpDataSource::InpRowDataToSurf(ReadInpResultS *Inp)
 {
     if (Inp == 0)  return false;
     int nPoint = Inp->TmpNodeInpS.strData.size();//nodalPoint.nNum;
-    PointCoordinate p;
+    PointCoordinate p; p.x = 0; p.y = 0; p.z = 0;
     vtkPoints *points = vtkPoints::New();
     if (nPoint < 1) return false;
 	QStringList TmpBasePoint=(Inp->TmpNodeInpS.strData.at(0).split(","));
@@ -949,17 +797,17 @@ bool InpDataSource::InpRowDataToSurf(ReadInpResultS *Inp)
         if (TmpNodeData.size() < (n2D3D==3 ? 4 : 3)) continue;
         p.x=TmpNodeData.at(1).toDouble();
         p.y=TmpNodeData.at(2).toDouble();
-        if (n2D3D==3){//体
+        if (n2D3D==3){
             p.z=TmpNodeData.at(3).toDouble();
-        }else if(n2D3D==2){//面
-            p.z=0;//mFrdData.nodalPoint.Data.z
+        }else if(n2D3D==2){
+            p.z=0;
         }
         points->SetPoint(i+TmpBasePoint.at(0).toInt()-1,p.x,p.y,p.z);
     }
 
     int nCell = Inp->TmpElInpS.strData.size();//Inp->elemBlock.nNum;
 
-    QList<QString> cellPointsList=Inp->TmpElInpS.strData;//单元编号和单元节点号
+    QList<QString> cellPointsList=Inp->TmpElInpS.strData;//鍗曞厓缂栧彿鍜屽崟鍏冭妭鐐瑰彿
 
     // Merge multi-line element definitions into single lines
     {

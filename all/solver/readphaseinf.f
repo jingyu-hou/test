@@ -80,11 +80,15 @@
           else
             nstate_=max(nstate_,phase_inf(1)+3)
           endif
+      elseif(textpart(1)(1:17).eq.'*PHASECCTCRITICAL') then
+          ityp=11
       endif
 
       if(ityp.eq.1)then
           if(textpart(2)(1:8).eq.'TYPE=TTT')then
               nphase(3,nmat)=1
+          else if(textpart(2)(1:8).eq.'TYPE=CCT')then
+              nphase(3,nmat)=3
           else
               nphase(3,nmat)=2
           endif
@@ -202,6 +206,15 @@
          do ii=1,5
            read(textpart(ii)(1:10),'(i10)',iostat=istat)
      &      nphase(ii+3,nmat)
+           if(istat.gt.0) return
+         enddo
+      elseif(ityp.eq.11)then
+         call getnewline(inpc,textpart,istat,n,key,iline,ipol,inl,
+     &         ipoinp,inp,ipoinpc)
+          if((istat.lt.0).or.(key.eq.1)) return
+         do ii=1,3
+           read(textpart(ii)(1:20),*,iostat=istat)
+     &      phaseother(ii+8,nmat)
            if(istat.gt.0) return
          enddo
       elseif(ityp.eq.7)then

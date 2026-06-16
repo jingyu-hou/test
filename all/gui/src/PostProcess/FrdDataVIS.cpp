@@ -937,6 +937,7 @@ bool FrdDataVIS::SetHisPointVtkShow(int PointId,double x, double y, double z)
     t->Delete();t=NULL;
     tf->Delete();tf=NULL;
 
+    Update();
     return true;
    
   /*  static int ttt=1;

@@ -1,4 +1,4 @@
-#include <QIcon>
+﻿#include <QIcon>
 #include <QPushButton>
 #include <QLabel>
 #include <QComboBox>
@@ -35,8 +35,8 @@ XYPlot_RenderDialog::XYPlot_RenderDialog(QWidget *parent) : QDialog(parent)
     renderer2DPlot_->SetBackground2(rgb2);
     renWin->AddRenderer(renderer2DPlot_);
 
-    QPushButton *save = new QPushButton(tr("保存图像"), this);
-    m_ExprotDataBtn = new QPushButton(tr("导出数据"),this);
+    QPushButton *save = new QPushButton("Save image", this);
+    m_ExprotDataBtn = new QPushButton("Export data", this);
     connect(save, SIGNAL(clicked()), this, SLOT(SavePicture()));
     save->setAutoDefault(false);
     QVBoxLayout *Vlayout=new QVBoxLayout();
@@ -47,7 +47,7 @@ XYPlot_RenderDialog::XYPlot_RenderDialog(QWidget *parent) : QDialog(parent)
     Hlayout->addWidget(m_ExprotDataBtn);
 
     this->setWindowIcon(QIcon(":/images/welcme.png"));
-    this->setWindowTitle(tr("曲线"));
+    this->setWindowTitle("Curve");
     QVBoxLayout *mainLayOut= new QVBoxLayout(this);
     mainLayOut->addLayout(Vlayout);
     mainLayOut->addLayout(Hlayout);
@@ -73,7 +73,7 @@ void XYPlot_RenderDialog::CleanRender()
 
 void XYPlot_RenderDialog::SavePicture()
 {
-    QString file = QFileDialog::getSaveFileName(this, tr("保存文件"), "", "PNG File(*.png)");
+    QString file = QFileDialog::getSaveFileName(this, "Save file", "", "PNG File(*.png)");
     if (file.isEmpty())  return;
     QString ext(".png");
     if (!file.endsWith(ext, Qt::CaseInsensitive)) file.append(ext);
@@ -93,9 +93,8 @@ void XYPlot_RenderDialog::Show()
     setWindowModality(Qt::ApplicationModal);
     showNormal();
     this->show();
-    this->raise();//最上层
-    this->activateWindow();//激活
-    QTimer::singleShot(0, this, SLOT(raise()));
+    this->raise();//鏈€涓婂眰
+    this->activateWindow();//婵€娲?    QTimer::singleShot(0, this, SLOT(raise()));
     QTimer::singleShot(50, this, SLOT(raise()));
     QTimer::singleShot(100, this, SLOT(activateWindow()));
 }
