@@ -187,7 +187,7 @@ void frd(double *co,ITG *nk,ITG *kon,ITG *ipkon,char *lakon,ITG *ne0,
     fprintf(f1,"%5sUHOST                                                              \n",p1);
     fprintf(f1,"%5sUPGM               WeICME                                        \n",p1);
     fprintf(f1,"%5sUVERSION           Version 2020                             \n",p1);
-    fprintf(f1,"%5sUCOMPILETIME       Sat Jun 13 21:52:00 EDT 2026                    \n",p1);
+    fprintf(f1,"%5sUCOMPILETIME       Wed Jun 17 07:26:03 EDT 2026                    \n",p1);
     fprintf(f1,"%5sUDIR                                                               \n",p1);
     fprintf(f1,"%5sUDBN                                                               \n",p1);
 

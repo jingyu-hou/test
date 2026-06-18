@@ -1,4 +1,4 @@
-#include "QStepPlayWidget.h"
+﻿#include "QStepPlayWidget.h"
 //-----------------设置-------------------------
 //--
 QPlaySetDlg* QPlaySetDlg::instance=0;
@@ -17,7 +17,7 @@ QPlaySetDlg::QPlaySetDlg( QWidget *parent/*=NULL*/ )
 	QGridLayout *VLayout2_1=new QGridLayout(gb1);
 	//movieChk_=new QCheckBox(tr("保存avi动画"),gb1);
 	QLabel *lab1=new QLabel(tr("动画名称"),gb1);
-	movieName_ = new QLineEdit(tr("WelCMEtest.avi"),gb1);
+	movieName_ = new QLineEdit(tr("AESim.avi"),gb1);
 	//QLabel *lab2=new QLabel(tr("帧/s:"),gb1);
 	//rateLab_=new QLabel(tr("20"),gb1); 
 	//SliderRate_ =new QSlider(gb1);
@@ -221,14 +221,13 @@ void QStepPlayWidget::GroupBtnSlot(int index)
         StepPlayBtn->setDown(false);
         break;
 	case Step_ENUM_MOVIE://打开Movie
-		//if (m_StepPlayParam.movieSet==0||m_StepPlayParam.movieSet==9){
-		m_StepPlayParam.movieSet=1;//start movie
-		//	MovieBtn->setIcon(QIcon(":/images/run.png"));
-		//}else if (m_StepPlayParam.movieSet==1||m_StepPlayParam.movieSet==2){//start /updata movie
-		//	m_StepPlayParam.movieSet=9;//end movie
-		//	MovieBtn->setIcon(QIcon(":/images/stop.png"));
-		//}
-		MovieBtn->setDown(true);
+		if (m_StepPlayParam.movieSet==0||m_StepPlayParam.movieSet==9){
+			m_StepPlayParam.movieSet=1;//start movie
+			MovieBtn->setDown(true);
+		}else{
+			m_StepPlayParam.movieSet=9;//end movie
+			MovieBtn->setDown(false);
+		}
 		break;
     default:break;
     } 

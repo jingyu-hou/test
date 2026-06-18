@@ -43,8 +43,13 @@ XYPlot_Panel::XYPlot_Panel(QWidget *parent) : QDialog(parent), frdVISObj_(0), se
     QLabel *lb = new QLabel("Variable:", m_gbHisCurve);
     QLabel *lb3 = new QLabel("Curve type:", m_gbHisCurve);
     QLabel *lb22 = new QLabel("Set name:", m_gbHisCurve);
+    QLabel *lb4 = new QLabel("Node ID:", m_gbHisCurve);
     PickCurveComb_=new QComboBox(m_gbHisCurve);
 	SetNameComb_=new QComboBox(m_gbHisCurve);
+    m_nodeIdEdit = new QLineEdit(m_gbHisCurve);
+    m_nodeIdEdit->setPlaceholderText("Input node ID");
+    m_addNodeIdBtn = new QPushButton("Add", m_gbHisCurve);
+    m_addNodeIdBtn->setFixedWidth(50);
     strList.clear();
     strList << "Time history" << "Position history" << "Pressure";
     PickCurveComb_->clear();
@@ -65,6 +70,10 @@ XYPlot_Panel::XYPlot_Panel(QWidget *parent) : QDialog(parent), frdVISObj_(0), se
 	QHBoxLayout *layoutH000 = new QHBoxLayout();
     layoutH000->addWidget(lb22);
 	layoutH000->addWidget(SetNameComb_);
+    QHBoxLayout *layoutNodeId = new QHBoxLayout();
+    layoutNodeId->addWidget(lb4);
+    layoutNodeId->addWidget(m_nodeIdEdit);
+    layoutNodeId->addWidget(m_addNodeIdBtn);
     QHBoxLayout *layoutH0=new QHBoxLayout();
     layoutH0->addWidget(lb3);
     layoutH0->addWidget(PickCurveComb_);
@@ -82,6 +91,7 @@ XYPlot_Panel::XYPlot_Panel(QWidget *parent) : QDialog(parent), frdVISObj_(0), se
 
     layoutGBHis->addLayout(layoutH0);
 	layoutGBHis->addLayout(layoutH000);
+	layoutGBHis->addLayout(layoutNodeId);
     layoutGBHis->addLayout(layoutH00);
     layoutGBHis->addLayout(layoutH1);
     layoutGBHis->addLayout(layoutH2);
@@ -135,6 +145,8 @@ XYPlot_Panel::XYPlot_Panel(QWidget *parent) : QDialog(parent), frdVISObj_(0), se
     connect(PickCurveComb_,SIGNAL(currentIndexChanged(int)),this,SLOT(ChangeCombCurveSlot(int)));
     connect(m_pointClrBtn, SIGNAL(clicked()), this, SLOT(PointClrBtnSlot()));
     connect(m_PointApplyBtn,SIGNAL(clicked()),this,SLOT(PointApplyBtnSlot()));
+    connect(m_addNodeIdBtn, SIGNAL(clicked()), this, SLOT(AddNodeIdSlot()));
+    connect(m_nodeIdEdit, SIGNAL(returnPressed()), this, SLOT(AddNodeIdSlot()));
    
     m_xRbtn->hide();m_yRbtn->hide();m_zRbtn->hide();m_disRbtn->hide();
     m_ChgxyzShow = new QButtonGroup(this);
@@ -173,6 +185,50 @@ void XYPlot_Panel::PointApplyBtnSlot()
     frdVISObj_->SetColorSize(m_pointSize, m_pointColor);
     frdVISObj_->SetPickPointLabVisible(m_PointLabChk->isChecked());
 }
+
+void XYPlot_Panel::AddNodeIdSlot()
+{
+    if (!frdVISObj_) return;
+    QString text = m_nodeIdEdit->text().trimmed();
+    if (text.isEmpty()) return;
+    bool ok = false;
+    int nodeId = text.toInt(&ok);
+    if (!ok || nodeId <= 0) {
+        Information_Widget::GetInstance()->ShowInformation("Invalid node ID.");
+        return;
+    }
+    // check for duplicate
+    QMapIterator<int, SelectedPointS> it(m_SelectedPointS);
+    while (it.hasNext()) {
+        it.next();
+        if (m_SelectedPointS[it.key()].selectedPointId_ == nodeId) {
+            Information_Widget::GetInstance()->ShowInformation(QString("Node %1 already added.").arg(nodeId));
+            return;
+        }
+    }
+    // get coordinates
+    double xyz[3] = {0, 0, 0};
+    int vtkId = nodeId - 1;
+    if (!frdVISObj_->GetPointCoord(vtkId, xyz)) {
+        Information_Widget::GetInstance()->ShowInformation(QString("Node %1 not found in model.").arg(nodeId));
+        return;
+    }
+    // add to point list
+    SelectedPointS TmpSelectP;
+    TmpSelectP.selectedPointId_ = nodeId;
+    TmpSelectP.selectedPointX_ = xyz[0];
+    TmpSelectP.selectedPointY_ = xyz[1];
+    TmpSelectP.selectedPointZ_ = xyz[2];
+    if (frdVISObj_->SetHisPointVtkShow(nodeId, xyz[0], xyz[1], xyz[2])) {
+        m_SelectedPointS.insert(m_SelectedPointS.size(), TmpSelectP);
+        AddTableData(TmpSelectP);
+        Information_Widget::GetInstance()->ShowInformation(QString("Node %1 added.").arg(nodeId));
+        m_nodeIdEdit->clear();
+    } else {
+        Information_Widget::GetInstance()->ShowInformation(QString("Failed to add node %1.").arg(nodeId));
+    }
+}
+
 void XYPlot_Panel::InitPlotData(FrdDataVIS *frdObj)
 {
     frdVISObj_ = frdObj;
@@ -215,12 +271,15 @@ void XYPlot_Panel::ChangeCombCurveSlot(int curId)
     if(curId==0){
 		m_TableWiget->show();
         m_xRbtn->hide();m_yRbtn->hide();m_zRbtn->hide();m_disRbtn->hide();
+        m_nodeIdEdit->show(); m_addNodeIdBtn->show();
     }else if(curId==1){
 		m_TableWiget->show();
         m_xRbtn->show();m_yRbtn->show();m_zRbtn->show();m_disRbtn->show();
+        m_nodeIdEdit->show(); m_addNodeIdBtn->show();
     }else if(curId==2){
 		m_TableWiget->hide();
         m_xRbtn->show();m_yRbtn->show();m_zRbtn->show();m_disRbtn->show();
+        m_nodeIdEdit->hide(); m_addNodeIdBtn->hide();
     }
 }
 //--娣诲姞鐐癸紝鍒犻櫎鎵€鏈夌偣

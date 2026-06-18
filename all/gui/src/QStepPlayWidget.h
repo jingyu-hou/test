@@ -1,4 +1,4 @@
-#ifndef QSTEPPLAYWIDGET_H
+﻿#ifndef QSTEPPLAYWIDGET_H
 #define QSTEPPLAYWIDGET_H
 #include <QWidget>
 #include <QObject>
@@ -93,7 +93,7 @@ typedef struct _S_STEPPLAY_VISParam_S
         CutIdList.clear();
 		//bMovie=0;//false
 		movieSet=0;
-		movieName="WelCMEtest.avi";
+		movieName="AESim.avi";
 		movieNameRate=15;
     }
 }StepPlayVisS;

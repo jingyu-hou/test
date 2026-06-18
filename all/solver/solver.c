@@ -18,6 +18,69 @@
 #include <string.h>
 #include "solver.h"
 #include <time.h>
+#include <signal.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+static char g_jobnamec[660];
+static time_t g_start_time;
+static volatile sig_atomic_t g_exit_status = 0;
+
+static char g_inpf[1024];
+
+static void write_timing(const char *status)
+{
+	char tp[1024];
+	time_t t;
+	char eb[128];
+	snprintf(tp,1024,"%s_time.txt",g_jobnamec);
+	time(&t);
+	ctime_r(&t,eb);
+	FILE *f=fopen(tp,"w");
+	if(f){
+		fprintf(f,"Job:          %s\n",g_jobnamec);
+		fprintf(f,"INP:          %s\n",g_inpf);
+		fprintf(f,"Start:        %s",ctime(&g_start_time));
+		if(status[0]!='s'){fprintf(f,"End:          %s",eb);}
+		fprintf(f,"Elapsed:      %.1f s\n",difftime(t,g_start_time));
+		fprintf(f,"Status:       %s\n",status);
+		fclose(f);
+	}
+}
+
+static void timing_atexit(void)
+{
+	if(g_exit_status==2) return;
+	write_timing(g_exit_status==1?"completed":"terminated (exit before completion)");
+}
+
+static void timing_signal(int sig)
+{
+	g_exit_status=2;
+	char tp[1024],tmpp[1024];
+	int n=sig;
+	snprintf(tp,1024,"%s_time.txt",g_jobnamec);
+	snprintf(tmpp,1024,"%s_time.tmp",g_jobnamec);
+	int fd=open(tmpp,O_WRONLY|O_CREAT|O_TRUNC,0644);
+	if(fd>=0){
+		time_t t;
+		time(&t);
+		char b[640];
+		int l=snprintf(b,sizeof(b),
+			"Job:          %s\n"
+			"INP:          %s\n"
+			"Start:        %s"
+			"Elapsed:      %.1f s\n"
+			"Status:       terminated by signal %d\n",
+			g_jobnamec,g_inpf,ctime(&g_start_time),difftime(t,g_start_time),n);
+		write(fd,b,l);
+		fsync(fd);
+		close(fd);
+		rename(tmpp,tp);
+	}
+	signal(sig,SIG_DFL);
+	raise(sig);
+}
 
 #ifdef WeICME_MPI
 ITG myid = 0, nproc = 0;
@@ -92,9 +155,7 @@ double fei[3],*xmodal=NULL,timepar[5],
     alpha,ttime=0.,qaold[2]={0.,0.},physcon[13]={0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
 ITG   phase_inf[4]={0,0,0,0};
 time_t current_time;
-char buf_time[1024];
 time(&current_time);
-ctime_r(&current_time,buf_time);
 
 #ifdef WeICME_MPI
 MPI_Init(&argc, &argv) ;
@@ -122,6 +183,17 @@ else{
 setenv("CCX_JOBNAME_GETJOBNAME",jobnamec,1);
 if(!getenv("CCX_NPROC_EQUATION_SOLVER") && !getenv("OMP_NUM_THREADS")) setenv("OMP_NUM_THREADS","4",1);
 
+strcpy(g_jobnamec,jobnamec);
+snprintf(g_inpf,1024,"%s.inp",jobnamec);
+g_start_time=current_time;
+write_timing("started");
+atexit(timing_atexit);
+signal(SIGINT,timing_signal);
+signal(SIGTERM,timing_signal);
+signal(SIGSEGV,timing_signal);
+signal(SIGFPE,timing_signal);
+signal(SIGABRT,timing_signal);
+
 #ifdef BAM
 ITG lop=0,lrestart=0,kstep=1,kinc=1;
 double time[2],dtime;
@@ -133,8 +205,15 @@ FORTRAN(openfile,(jobnamef,output));
 printf("\n************************************************************\n\n");
 printf("AESim_FM solver\n");
 printf("************************************************************\n\n");
-printf("You are using an executable made on Sat Jun 13 21:52:00 EDT 2026\n");
+printf("You are using an executable made on Wed Jun 17 07:26:03 EDT 2026\n");
 fflush(stdout);
+
+{
+	char logpath[1024];
+	snprintf(logpath,1024,"%s.log",jobnamec);
+	freopen(logpath,"w",stdout);
+	setvbuf(stdout,NULL,_IONBF,0);
+}
 
 istep=0;
 istat=0;
@@ -1658,6 +1737,8 @@ if((f1=fopen(fneig,"ab"))==NULL){
 }
 fprintf(f1," 9999\n");
 fclose(f1);
+
+g_exit_status=1;
 
 /* deallocating the fields
    this section is addressed immediately after leaving calinput */

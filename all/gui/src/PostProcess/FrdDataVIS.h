@@ -127,6 +127,7 @@ class FrdDataVIS
         //--pickerPoind ID
         //--get pointId
         int GetPointId(QString s,double x, double y, double z);
+        bool GetPointCoord(int pointId, double xyz[3]);
         //cut api begin
         void CreateCutObjects(int,int cutId, bool bInsiedeOut, QString &scalar, const QString &header="original");
         void AddCutCallBack(int,int cutId, vtkCallbackCommand *callback);

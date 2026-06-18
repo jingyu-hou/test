@@ -457,6 +457,39 @@ bool QFrdDataPro::ReadFileData(FrdDataVIS &FrdVis,QString fileName,resultFrdS &D
                                tmpStepFrd.nodeResultBlock.dataIndex<<strTmpList.at(0).toInt();
                                tmpStepFrd.nodeResultBlock.strDataRecord<<d;
                             }else{//-3
+                                // Compute derived values for last node (same as -1 branch)
+                                if(Striii=="STRESS"){
+                                    double equ[11];
+                                    int Numb=strTmpList.size();
+                                    for(int jj=0;jj<Numb-1 && jj<6;jj++){
+                                        equ[jj]=strTmpList.at(jj+1).toDouble();
+                                    }
+                                    equ[6]=1.0/qSqrt(2.0)*qSqrt(qPow(equ[0]-equ[1],2)+
+                                        qPow(equ[1]-equ[2],2)+qPow(equ[2]-equ[0],2)+6*(equ[3]*equ[3]+equ[4]*equ[4]+equ[5]*equ[5]));
+                                    int it_max=100;
+                                    double v[9],d_eigen[3];
+                                    int it_num,rot_num;
+                                    double a[9];
+                                    a[0]=equ[0];a[1]=equ[3];a[2]=equ[5];
+                                    a[3]=equ[3];a[4]=equ[1];a[5]=equ[4];
+                                    a[6]=equ[5];a[7]=equ[4];a[8]=equ[2];
+                                    jacobi_eigenvalue (3,a,it_max,v,d_eigen,it_num,rot_num);
+                                    equ[7]=d_eigen[2];equ[8]=d_eigen[1];equ[9]=d_eigen[0];equ[10]=(equ[0]+equ[1]+equ[2])/3.0;
+                                    for(int i=6;i<11;i++){
+                                        QString S=QString::number(equ[i],'d',6);
+                                        strTmpList.append(S);
+                                    }
+                                }else if(Striii=="TOSTRAIN"){
+                                    double equ[7];
+                                    int Numb=strTmpList.size();
+                                    for(int jj=0;jj<Numb-1 && jj<6;jj++){
+                                        equ[jj]=strTmpList.at(jj+1).toDouble();
+                                    }
+                                    equ[6]=2.0/3.0/qSqrt(2.0)*qSqrt(qPow(equ[0]-equ[1],2)+
+                                        qPow(equ[1]-equ[2],2)+qPow(equ[2]-equ[0],2)+6*(equ[3]*equ[3]+equ[4]*equ[4]+equ[5]*equ[5]));
+                                    QString S=QString::number(equ[6],'d',6);
+                                    strTmpList.append(S);
+                                }
                                 nNum1=strTmpList.size();
                                 if (nNum1 < 1) {
                                     infoW->ShowInformation("Invalid FRD file: empty result data record.");

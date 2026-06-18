@@ -1,4 +1,4 @@
-#ifndef QPOSTWIGRESULTOUTPUT_H
+﻿#ifndef QPOSTWIGRESULTOUTPUT_H
 #define QPOSTWIGRESULTOUTPUT_H
 
 #include <QWidget>
@@ -61,7 +61,7 @@ typedef struct _S_RESULT_VISParam_S
         m_gridShowColor.b=1.0;
         CutIdList.clear();
 		movieSet=0;
-		movieName="WelCMEtest.avi";
+		movieName="AESim.avi";
 		movieNameRate=1;
     }
 }ResultVisS;

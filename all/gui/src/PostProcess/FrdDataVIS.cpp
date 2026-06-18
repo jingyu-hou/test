@@ -103,6 +103,17 @@ void FrdDataVIS::Swap(FrdDataVIS &other)
 
 void FrdDataVIS::Clean()
 {
+    if (vtkWriter_)
+    {
+        vtkWriter_->End();
+        vtkWriter_->Delete();
+        vtkWriter_ = 0;
+    }
+    if (ImageFilter_)
+    {
+        ImageFilter_->Delete();
+        ImageFilter_ = 0;
+    }
     if (frdSource_)
     {
         delete frdSource_;
@@ -167,8 +178,6 @@ void FrdDataVIS::Clean()
     }
     m_PointProp.clear();
 
-	ImageFilter_=0;
-	vtkWriter_=0;
 	cutZoneHeaderMap_.clear();
 }
 
@@ -234,14 +243,16 @@ void FrdDataVIS::ResetCamera()
 //--add AVI begin
 int FrdDataVIS::StartAVI(QString name,int rate)
 {
-	//if (frdSource_ == 0)  return;
+	if (frdSource_ == 0 || renderer_ == 0 || renderer_->GetRenderWindow() == 0) return 0;
 	if (ImageFilter_==0){
-		ImageFilter_=vtkWindowToImageFilter::New(); 
+		ImageFilter_=vtkWindowToImageFilter::New();
 	}
-	
+
 	ImageFilter_->SetInput(renderer_->GetRenderWindow());
-	//ImageFilter_->SetInputBufferTypeToRGBA();
-	//ImageFilter_->ReadFrontBufferOff();
+	ImageFilter_->SetInputBufferTypeToRGB();
+	ImageFilter_->ReadFrontBufferOff();
+	renderer_->GetRenderWindow()->Render();
+	ImageFilter_->Modified();
 	ImageFilter_->Update();
  
 	if (vtkWriter_==0){
@@ -264,12 +275,14 @@ int FrdDataVIS::StartAVI(QString name,int rate)
 		return 1;//宸茬粡鍚姩
 	}else{
 		if (name=="")
-			name ="WelCMEtest.avi";
+			name ="AESim.avi";
 		if (!name.contains(".avi",Qt::CaseSensitive))
 			name+=".avi";
+		if (rate < 1) rate = 1;
+		if (rate > 5000) rate = 5000;
+		vtkWriter_->SetRate(rate);
 		vtkWriter_->SetFileName(name.toAscii().data());
-		vtkWriter_->Start();//绗竴娆″惎鍔?		//vtkWriter_->SetRate(2000);
-		//vtkWriter_->SetRate(5000);//(rate);
+		vtkWriter_->Start();
 		Information_Widget::GetInstance()->ShowInformation("movie is ready");
 		return 2;
 	}
@@ -277,24 +290,21 @@ int FrdDataVIS::StartAVI(QString name,int rate)
 void FrdDataVIS::ModifiedAVI()
 {
 	if (frdSource_ == 0)  return;
-	if(vtkWriter_)
+	if(vtkWriter_ && ImageFilter_ && renderer_ && renderer_->GetRenderWindow())
 	{
-		//for (int kk=0;kk<5;kk++)
-		//{
-			ImageFilter_->Modified();
-			
-			vtkWriter_->Write();
-		//}
-		
+		renderer_->GetRenderWindow()->Render();
+		ImageFilter_->Modified();
+		ImageFilter_->Update();
+		vtkWriter_->Write();
 	}
 }
 void FrdDataVIS::EndAVI()
 {
-	if (frdSource_ == 0)  return;
 	if(vtkWriter_)
 	{
 		vtkWriter_->End();
 		Information_Widget::GetInstance()->ShowInformation("movie record ok");
+		vtkWriter_->Delete();
 		vtkWriter_=0;
 	}
 }
@@ -1081,6 +1091,12 @@ int FrdDataVIS::GetPointId(QString sLabel, double x, double y, double z)
     return id;
 }
 
+bool FrdDataVIS::GetPointCoord(int pointId, double xyz[3])
+{
+    if (frdSource_) return frdSource_->GetPointCoord(pointId, xyz);
+    return false;
+}
+
 //cut api begin
 void FrdDataVIS::CreateCutObjects(int gridId,int cutId, bool bInsideOut,QString &scalar, const QString &header)
 {
@@ -1334,4 +1350,3 @@ bool FrdDataVIS::GetCutZoneBounds(int gridId,int cutId, double *bounds)
 }
 
 //cut api end
-

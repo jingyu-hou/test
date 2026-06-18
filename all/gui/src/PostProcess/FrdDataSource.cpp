@@ -655,3 +655,14 @@ int FrdDataSource::GetPointID(QString strLabel,double x,double y,double z)
     }
     return id;
 }
+
+bool FrdDataSource::GetPointCoord(int pointId, double xyz[3])
+{
+    if (gridIdsVec_.empty()) return false;
+    int gridId = gridIdsVec_[0];
+    if (idGridMap_.find(gridId) == idGridMap_.end()) return false;
+    vtkPoints *points = idGridMap_[gridId]->GetPoints();
+    if (!points || pointId < 0 || pointId >= points->GetNumberOfPoints()) return false;
+    points->GetPoint(pointId, xyz);
+    return true;
+}

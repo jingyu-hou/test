@@ -41,6 +41,7 @@ public:
     map<double, double> GetPointScalar_TimeValueMap(int pointId, const QString &scalarName);  //key type = double.  for sorting
      TextStepIncTimeS GetStepTimeIncMap(int pointId, const QString &scalarName);
      int GetPointID(QString t,double x,double y,double z);
+    bool GetPointCoord(int pointId, double xyz[3]);
 private:
     vtkCell* NewVTKCell(int frdCellType);
     vtkUnstructuredGrid* BuildDisplacementGrid(int gridId, const QString &header);

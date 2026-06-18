@@ -1,6 +1,7 @@
 ﻿#include "./PostProcess/XYPlot_Panel.h"
 #include "QPostPrc.h"
 #include "Information_Widget.h"
+#include <QFileInfo>
 #include <QTimer>
 
 static void ShowPostDialogInFront(QDialog *dlg, QWidget *owner)
@@ -584,7 +585,13 @@ void QPostPrc::UpDataScalar(ResultVisS ResultVis)
 
 	//--Writer Player(鍐橝VI)
 	if (ResultVis.movieSet==1){
-		if(m_PosWigFile->frdVIS_.StartAVI(ResultVis.movieName,ResultVis.movieNameRate));
+			QString aviName = ResultVis.movieName;
+			QFileInfo aviInfo(aviName);
+			if (aviInfo.path() == "." || aviInfo.path().isEmpty()) {
+				QString frdDir = QFileInfo(m_PosWigFile->frdFilePath()).absolutePath();
+				aviName = frdDir + "/" + aviInfo.fileName();
+			}
+		if(m_PosWigFile->frdVIS_.StartAVI(aviName,ResultVis.movieNameRate))
 			m_PosWigFile->frdVIS_.ModifiedAVI();
 	}else if (ResultVis.movieSet==2){
 		m_PosWigFile->frdVIS_.ModifiedAVI();
@@ -636,5 +643,4 @@ void QPostPrc::SectionCutAddSlot(int CutId)
    // m_PosWigFile->frdVIS_.SetContourVisible(m_FileScalarName,false,m_FileScalarName.split(":").at(0)); 
    // //m_PosWigFile->frdVIS_.Update();
 }
-
 

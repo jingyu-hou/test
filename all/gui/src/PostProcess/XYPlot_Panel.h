@@ -71,7 +71,8 @@ private slots:
     void SaveDataSlot();
     void PointClrBtnSlot();
     void PointApplyBtnSlot();
-    
+    void AddNodeIdSlot();
+
 private:
     //FrdDataVIS *frdVISObj_;
     XYPlot plot_;
@@ -82,6 +83,8 @@ private:
     QComboBox *PickStyleComb_;//del or Add;
     QComboBox *PickCurveComb_;//时间曲线 or 位置曲线;
 	QComboBox *SetNameComb_;//集合名称
+	QLineEdit *m_nodeIdEdit;
+	QPushButton *m_addNodeIdBtn;
 	QList<QString> infNase;
 
     //--点设置

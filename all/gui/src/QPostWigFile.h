@@ -60,6 +60,7 @@ signals:
 public:
 	FrdDataVIS frdVIS_;
     TextVIS frdTextVIS_;
+    QString frdFilePath() const { return m_ReadEdit->text(); }
     
 };
 
